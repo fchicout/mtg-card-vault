@@ -1,6 +1,6 @@
 # 02 — User Stories
 
-**Docs set version:** 0.1.0
+**Docs set version:** 0.2.1
 **Document:** 02 User Stories (Connextra format, INVEST, Gherkin acceptance criteria)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -695,13 +695,15 @@ Scenario: Hardened containers
 - **Requirements:** NFR-SEC-03, NFR-SEC-04, NFR-SEC-05, NFR-MNT-01, NFR-MNT-02, NFR-MNT-03, NFR-MNT-04, NFR-TST-01
 - **Use cases:** —
 
-**As a** Maintainer, **I want** the CI pipeline to run tests, linters, SonarQube and security scans on every pull request and refuse to merge on failure, **so that** quality is not optional.
+**As a** Maintainer, **I want** the CI pipeline to run tests, linters, the project-owned quality gate and security scans on every pull request and refuse to merge on failure, **so that** quality is not optional.
 
 ```gherkin
 Scenario: Pull request checks
   When I open a pull request to develop or main
   Then CI runs lint, type checks, unit, integration, contract and end-to-end tests
-  And SonarQube analysis, dependency audits (pip-audit, npm audit), secret scanning and container scanning
+  And the quality gate judged by scripts/quality_gate.py (coverage of new code, duplicated lines, open bugs/vulnerabilities/Blocker-Critical issues), never by SonarQube's own gate
+  And SonarQube analysis as an issue source, dependency audits (pip-audit, npm audit), secret scanning and container scanning
+  And the same gates run on a developer machine with scripts/run_local_gates.py
   And merging is blocked unless every required check passes
 
 Scenario: Commit and branch policy
@@ -748,7 +750,7 @@ Scenario: Accessibility
 
 - Every UI state has loading, empty and error views using Clarity patterns.
 - Errors are displayed in plain language; technical details only in logs with the correlation id.
-- No story is done until: automated tests exist for each scenario, coverage gate on new code passes, SonarQube gate passes, docs and traceability are updated, and `scripts/check_docs_sync.py` passes.
+- No story is done until: automated tests exist for each scenario, coverage gate on new code passes, the project quality gates pass (locally and in CI), docs and traceability are updated, and `scripts/check_docs_sync.py` passes.
 
 ## 12. Backlog ordering rule
 

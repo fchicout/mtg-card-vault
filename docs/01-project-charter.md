@@ -1,6 +1,6 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.1.0
+**Docs set version:** 0.2.1
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -45,7 +45,7 @@ A web application (Angular + VMware Clarity front end, Python/FastAPI REST back 
 1. lets an authenticated collector (Authelia single sign-on) maintain a **private vault** of owned cards (printing, quantity, condition, finish);
 2. lets the collector **add a card by holding it in front of a webcam**: the back end reads the printed text with OCR, matches it against **Scryfall** (the public MTG database/API) using fuzzy search, and the user confirms the exact printing;
 3. keeps card data and **prices** accurate by refreshing from Scryfall (scheduled and on demand);
-4. is delivered with **full test suite, SonarQube quality gate, security scanning in CI/CD**, GitHub-hosted git with gitflow, semantic versioning and atomic commits.
+4. is delivered with **full test suite, project-owned quality gates (run locally and in CI; SonarQube supplies analysis only), security scanning in CI/CD**, GitHub-hosted git with gitflow, semantic versioning and atomic commits.
 
 ### 2.4 Business objectives
 
@@ -57,7 +57,7 @@ Objectives are SMART where possible. They are traced to requirements in `06-trac
 | BO-02 | Drastically cut the effort to catalogue cards by using the webcam. | On a reference set of 100 English cards photographed under normal indoor light, the correct printing is within the **top 3 candidates for ≥ 90 %** of scans and a scan-to-confirmed-entry takes ≤ 15 s for the user. |
 | BO-03 | Keep card data and collection value accurate and current using remote APIs. | Prices never older than 24 h when viewed; total collection value shown with a count of unpriced cards; all catalogue data sourced from Scryfall. |
 | BO-04 | Guarantee private, secure multi-user use. | A user can never read or change another user's vault; every API call requires a valid Authelia-issued JWT; zero High/Critical known vulnerabilities at release. |
-| BO-05 | Demonstrate professional engineering practice end-to-end. | SonarQube quality gate green on every merge; ≥ 80 % coverage on new code; security scans in CI; gitflow + semver + atomic commits; documentation set always in sync. |
+| BO-05 | Demonstrate professional engineering practice end-to-end. | project quality gates (`scripts/quality_gate.py`) green on every merge, locally and in CI; ≥ 80 % coverage on new code; security scans in CI; gitflow + semver + atomic commits; documentation set always in sync. |
 
 ## 3. Stakeholders
 
@@ -85,7 +85,7 @@ Objectives are SMART where possible. They are traced to requirements in `06-trac
 
 - All **Must** and **Should** stories in `02-user-stories.md` are implemented and their acceptance criteria pass as automated tests.
 - All **Must** requirements in `03-requirements-specification.md` are verified by the method stated per requirement.
-- SonarQube quality gate "passed" on `main`; no open Blocker/Critical issues; all security hotspots reviewed.
+- The project quality gates pass on `main` (`scripts/run_local_gates.py` locally, `ci.yml` in GitHub); no open Blocker/Critical issues; all security hotspots reviewed.
 - CI security scans (dependency audit, secret scan, container scan) report no unaddressed High/Critical findings.
 - `scripts/check_docs_sync.py` exits 0.
 - A fresh clone can be deployed with documented commands and a first user can sign in, scan a card and see the vault value.
@@ -102,7 +102,7 @@ Objectives are SMART where possible. They are traced to requirements in `06-trac
 | Scanning | Webcam capture in the browser; OCR on the back end; fuzzy match to Scryfall; user confirms; manual-search fallback; scan images never stored. |
 | Pricing | Latest Scryfall prices per card; collection total value; daily scheduled refresh + lazy refresh when stale. |
 | Platform | REST API with OpenAPI; JWT validation on every call; health checks; structured logs; docker-compose deployment. |
-| Engineering | Test suite, SonarQube gate, security scans, gitflow/semver/atomic commits, synchronized docs. |
+| Engineering | Test suite, project-owned quality gates, security scans, gitflow/semver/atomic commits, synchronized docs. |
 
 ### 5.2 Out of scope (v1.0) — explicit non-goals
 
@@ -140,7 +140,7 @@ Detailed, testable requirements live in `03-requirements-specification.md`. High
 | CON-04 | Authentication through Authelia (OIDC); every API transaction carries a JWT validated by the back end. |
 | CON-05 | Git is mandatory; gitflow branching, semantic versioning, atomic commits (Conventional Commits). |
 | CON-06 | GitHub hosts the public remote repository and runs CI/CD (GitHub Actions). |
-| CON-07 | SonarQube (self-hosted Community Edition) provides the quality gate. |
+| CON-07 | SonarQube (self-hosted Community Edition) provides analysis and issue data. Quality gates are evaluated by project-owned scripts, locally and in GitHub Actions, and never by SonarQube's own quality gate. |
 | CON-08 | Code quality principles: SOLID, DRY, KISS, YAGNY; full automated test suite. |
 | CON-09 | Scryfall terms apply: send `User-Agent` and `Accept` headers, keep ≥ 100 ms between requests (≤ 10 req/s), cache data, do not paywall Scryfall data, do not crop or distort card images, do not imply endorsement by Scryfall or Wizards of the Coast. |
 | CON-10 | Deployment is self-hosted via docker compose; PostgreSQL is the database. |
@@ -183,7 +183,7 @@ Versions follow semantic versioning. Pre-1.0 versions may change anything. Each 
 
 | Milestone | Version | Content | Epics / stories |
 |---|---|---|---|
-| M0 Foundation | 0.1.0 | Repo scaffolding, docs set, CI skeleton, SonarQube gate, security scans, compose stack with Authelia, empty Angular/Clarity shell, FastAPI skeleton with health. | EP-06 (US-027..US-031, US-033 partial) |
+| M0 Foundation | 0.1.0 | Repo scaffolding, docs set, CI skeleton, quality gates, security scans, compose stack with Authelia, empty Angular/Clarity shell, FastAPI skeleton with health. | EP-06 (US-027..US-031, US-033 partial) |
 | M1 Identity | 0.2.0 | Sign in/out, JWT validation, user provisioning, CORS. | EP-01 (US-001..US-004), US-026 |
 | M2 Catalogue | 0.3.0 | Scryfall integration, search, card detail, printings, rate-limited client, resilience. (Needed first: adding to the vault requires choosing a printing.) | EP-03, US-024, US-025 |
 | M3 Vault | 0.4.0 | Vault CRUD, filtering, privacy, duplicate merge, card cache. | EP-02 (US-005..US-011) |
@@ -198,7 +198,7 @@ The order may change, but each milestone must leave `develop` releasable.
 - **Branching (gitflow):** `main` = released; `develop` = integration; `feature/<short-name>`, `release/<x.y.z>`, `hotfix/<x.y.z>`. Pull requests into `develop`/`main` are mandatory, with required checks.
 - **Commits:** atomic (one logical change that builds and passes tests), Conventional Commits (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`), referencing story/requirement IDs. Commit types drive the semantic version bump.
 - **Versioning:** Semantic Versioning 2.0.0; git tags `vMAJOR.MINOR.PATCH`; changelog generated from commits (tooling per `OQ-04`).
-- **Definition of Done (per story):** acceptance criteria automated and green; unit + integration tests; coverage gate on new code; SonarQube gate passed; security scans clean; docs and traceability updated; sync check green; PR reviewed.
+- **Definition of Done (per story):** acceptance criteria automated and green; unit + integration tests; coverage gate on new code; project quality gates passed (locally and in CI); security scans clean; docs and traceability updated; sync check green; PR reviewed.
 - **Decision records:** architectural decisions are ADRs in `05-architecture.md` §9.
 - **Documentation:** governed by the mandate in `docs/README.md`.
 
@@ -215,7 +215,7 @@ Resolved questions become requirements, ADRs or assumptions, and the row is mark
 | OQ-05 | Can the Authelia OIDC client be configured to issue RS256-signed JWT access tokens with the API as audience? Else use introspection. | M1 | Open |
 | OQ-06 | Which open-source licence (MIT vs Apache-2.0) for the public repository? | M0 | Open |
 | OQ-07 | Should prices be shown in USD only, or USD + EUR? (Docs currently assume both are shown.) | M5 | Open |
-| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (else SonarCloud or a post-merge gate)? | M0 | Open |
+| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is project-owned)? Status: project `mtg-vault-backend` exists and the GitHub secrets `SONAR_TOKEN` and `SONAR_HOST_URL` are set; project `mtg-vault-frontend` still has to be created. | M0 | Open |
 
 ## 13. Approval
 

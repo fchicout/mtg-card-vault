@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.1.0
+**Docs set version:** 0.2.1
 **Status:** Draft
 **Last updated:** 2026-10-31
 
@@ -77,4 +77,6 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.2.1 | 2026-10-31 | SonarQube status recorded (backend project and CI secrets exist; frontend project pending) in OQ-08. |
+| 0.2.0 | 2026-10-31 | Quality gates are project-owned (`scripts/quality_gate.py`, run locally and in CI); SonarQube is an analysis/issue source only: CON-07, NFR-MNT-01, ADR-011, US-030, Definition of Done, CI job table. |
 | 0.1.0 | 2026-10-31 | Initial documentation set: charter, stories, SRS, use cases, architecture, traceability. |

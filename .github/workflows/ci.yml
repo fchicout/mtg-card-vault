@@ -1,0 +1,374 @@
+name: CI
+
+# Every job below is a candidate required status check (issue #2). Job ids are stable names:
+# do not rename them without updating branch protection and docs/05-architecture.md section 7.4.
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  # ------------------------------------------------------------------ documentation
+  docs-sync:
+    name: docs-sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Documentation set is synchronized (NFR-DOC-01)
+        run: python3 -I scripts/check_docs_sync.py
+
+  gate-tests:
+    name: gate-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Unit tests of the quality-gate tooling
+        run: python3 -I -m unittest discover -s scripts/tests -v
+
+  # ------------------------------------------------------------------ backend
+  backend-quality:
+    name: backend-quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen
+      - name: Lint (ruff)
+        run: uv run ruff check .
+      - name: Format (ruff)
+        run: uv run ruff format --check .
+      - name: Types (mypy --strict)
+        run: uv run mypy
+      - name: Architecture contracts (import-linter)
+        run: uv run lint-imports
+
+  backend-tests:
+    name: backend-tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen
+      - name: Unit, contract and integration tests (PostgreSQL via testcontainers) with coverage
+        run: uv run pytest --cov --cov-report=xml --cov-report=term-missing
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------ frontend
+  frontend-quality:
+    name: frontend-quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/frontend/lcov.info
+          if-no-files-found: error
+
+  # ------------------------------------------------------------------ quality gate (project-owned)
+  # The gate is judged by scripts/quality_gate.py, never by SonarQube's own quality gate. The same
+  # script runs on developer machines (see scripts/run_local_gates.py). NFR-MNT-01.
+  quality-gate:
+    name: quality-gate
+    needs: [backend-tests, frontend-quality, gate-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/frontend
+      - run: npm ci --prefix frontend
+      - name: Choose the base that defines "new code"
+        id: base
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            echo "ref=origin/$BASE_REF" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT" = "push" ] && [ "${BEFORE#0000000}" = "$BEFORE" ]; then
+            echo "ref=$BEFORE" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Coverage of new code >= 80%
+        run: python3 -I scripts/quality_gate.py coverage --base "${{ steps.base.outputs.ref }}"
+      - name: Duplicated lines <= 3%
+        run: python3 -I scripts/quality_gate.py duplication
+
+  # ------------------------------------------------------------------ contract
+  contract-drift:
+    name: contract-drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Regenerate the OpenAPI document from the code
+        run: |
+          uv sync --frozen --directory backend
+          uv run --directory backend python -m mtgvault.export_openapi openapi.json
+      - name: Regenerate the Angular client from the OpenAPI document
+        run: |
+          npm ci --prefix frontend
+          npm run api:generate --prefix frontend
+      - name: Fail when committed contract or client differ from what the code generates (FR-API-01)
+        run: |
+          git diff --exit-code -- backend/openapi.json frontend/src/app/api \
+            || { echo "::error::OpenAPI document or generated client is stale. Run 'uv run python -m mtgvault.export_openapi openapi.json' in backend/ and 'npm run api:generate' in frontend/, then commit."; exit 1; }
+
+  # ------------------------------------------------------------------ end to end
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Create an ephemeral environment file
+        run: |
+          {
+            echo "POSTGRES_USER=mtgvault"
+            echo "POSTGRES_DB=mtgvault"
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "HTTP_PORT=8080"
+          } > deploy/.env
+      - name: Start the stack and wait until every service is healthy
+        run: docker compose -f deploy/compose.yaml up -d --build --wait --wait-timeout 240
+      - name: Install Playwright and Chromium
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run end-to-end tests
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://127.0.0.1:8080
+        run: npm run e2e
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose -f deploy/compose.yaml logs --no-color --tail 200
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+      - name: Tear down
+        if: always()
+        run: docker compose -f deploy/compose.yaml down -v
+
+  # ------------------------------------------------------------------ security
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - name: gitleaks over the full git history (NFR-SEC-03)
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" ghcr.io/gitleaks/gitleaks:latest \
+            git /repo --redact --verbose --exit-code 1
+
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: pip-audit (NFR-SEC-04)
+        run: |
+          uv sync --frozen --directory backend
+          uv run --directory backend pip-audit
+      - name: npm audit, fail on high or critical (NFR-SEC-04)
+        run: npm audit --prefix frontend --audit-level=high
+      - name: npm audit of production dependencies, fail on moderate or above
+        run: npm audit --prefix frontend --omit=dev --audit-level=moderate
+
+  container-scan:
+    name: container-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Build images
+        run: |
+          docker build -t mtgvault-api:ci backend
+          docker build -t mtgvault-frontend:ci frontend
+      - name: Images run as non-root (NFR-SEC-05)
+        run: |
+          for image in mtgvault-api:ci mtgvault-frontend:ci; do
+            uid="$(docker run --rm --entrypoint id "$image" -u)"
+            echo "$image runs as uid $uid"
+            test "$uid" != "0"
+          done
+      - name: Trivy scan, fail on unfixed High/Critical (NFR-SEC-05)
+        run: |
+          for image in mtgvault-api:ci mtgvault-frontend:ci; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
+              image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$image"
+          done
+
+  # ------------------------------------------------------------------ sonarqube
+  # SonarQube is an analysis and issue source only: the verdict is produced by
+  # scripts/quality_gate.py (open bugs, vulnerabilities, Blocker/Critical issues), never by
+  # SonarQube's own quality gate (mandate, ADR-011). Its server-side gate status is printed for
+  # information only. Two projects: mtg-vault-backend, mtg-vault-frontend.
+  # Needs the secrets SONAR_TOKEN and SONAR_HOST_URL (a repository variable also works for the
+  # host); without them the jobs warn and pass, so forks and unconfigured clones are not blocked.
+  # The Community edition may lack pull-request analysis (ADR-011): on pull requests the scan
+  # runs only when the repository variable SONAR_PR_ANALYSIS is "true"; it always runs on pushes
+  # and manual dispatches.
+  sonar-backend:
+    name: sonar-backend
+    needs: backend-tests
+    if: github.event_name != 'pull_request' || vars.SONAR_PR_ANALYSIS == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # shallow clones degrade the relevance of the analysis
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend
+      - name: Is SonarQube configured?
+        id: sonar
+        run: |
+          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
+            echo "::warning::SONAR_TOKEN / SONAR_HOST_URL are not configured: skipping the SonarQube analysis."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: SonarQube analysis (mtg-vault-backend)
+        if: steps.sonar.outputs.configured == 'true'
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        with:
+          projectBaseDir: backend
+      - name: Quality gate judged by the project (mtg-vault-backend)
+        if: steps.sonar.outputs.configured == 'true'
+        run: |
+          report="$(find "$GITHUB_WORKSPACE" -name report-task.txt -path '*.scannerwork*' | head -n 1)"
+          test -n "$report" || { echo "::error::the scanner left no report-task.txt"; exit 1; }
+          python3 -I scripts/quality_gate.py sonar --project mtg-vault-backend --require --report-task "$report"
+
+  sonar-frontend:
+    name: sonar-frontend
+    needs: frontend-quality
+    if: github.event_name != 'pull_request' || vars.SONAR_PR_ANALYSIS == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # shallow clones degrade the relevance of the analysis
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/frontend
+      - name: Is SonarQube configured?
+        id: sonar
+        run: |
+          if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
+            echo "::warning::SONAR_TOKEN / SONAR_HOST_URL are not configured: skipping the SonarQube analysis."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: SonarQube analysis (mtg-vault-frontend)
+        if: steps.sonar.outputs.configured == 'true'
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        with:
+          projectBaseDir: frontend
+      - name: Quality gate judged by the project (mtg-vault-frontend)
+        if: steps.sonar.outputs.configured == 'true'
+        run: |
+          report="$(find "$GITHUB_WORKSPACE" -name report-task.txt -path '*.scannerwork*' | head -n 1)"
+          test -n "$report" || { echo "::error::the scanner left no report-task.txt"; exit 1; }
+          python3 -I scripts/quality_gate.py sonar --project mtg-vault-frontend --require --report-task "$report"
