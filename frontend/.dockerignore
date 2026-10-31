@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+.angular
+playwright-report
+test-results
+Dockerfile
+.dockerignore
