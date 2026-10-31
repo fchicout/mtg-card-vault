@@ -217,6 +217,13 @@ def fetch_optional_number(url: str, token: str, get: HttpGet, extract: Callable[
     return extract(body) if status == 200 else None
 
 
+def fetch_server_gate_status(host: str, key: str, token: str, get: HttpGet) -> str | None:
+    """SonarQube's own gate status. Shown for information; it never influences the verdict."""
+    query = urllib.parse.urlencode({"projectKey": key})
+    status, body = get(f"{host}/api/qualitygates/project_status?{query}", token)
+    return str(body["projectStatus"]["status"]) if status == 200 else None
+
+
 def sonar_conditions(counts: IssueCounts, hotspots_to_review: float | None,
                      maintainability_rating: float | None) -> list[Condition]:
     def at_most_zero(name: str, value: int, detail: str) -> Condition:
@@ -321,6 +328,10 @@ def cmd_sonar(args: argparse.Namespace) -> int:
         lambda body: next((float(m["value"]) for m in body["component"]["measures"]), None))
     conditions = sonar_conditions(counts, hotspots, maintainability)
     print(render(f"Quality gate - SonarQube issues for {args.project} (judged by this script)", conditions))
+    server = fetch_server_gate_status(host, args.project, token, sonar_get)
+    print("INFO     SonarQube's own gate: "
+          + (f"{server} (informational only, never used for the verdict)" if server
+             else "not readable with this token (never used for the verdict)"))
     return verdict(conditions)
 
 

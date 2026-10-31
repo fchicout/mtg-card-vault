@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.2.0
+**Docs set version:** 0.2.1
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-10-31

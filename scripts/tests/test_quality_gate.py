@@ -147,6 +147,11 @@ class SonarClientTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             gate.fetch_issue_counts("https://s", "k", "t", lambda url, token: (403, {"errors": []}))
 
+    def test_server_gate_status_is_informational(self) -> None:
+        body = {"projectStatus": {"status": "ERROR"}}
+        self.assertEqual(gate.fetch_server_gate_status("https://s", "k", "t", lambda u, t: (200, body)), "ERROR")
+        self.assertIsNone(gate.fetch_server_gate_status("https://s", "k", "t", lambda u, t: (403, {})))
+
     def test_optional_number_is_none_when_not_readable(self) -> None:
         self.assertIsNone(gate.fetch_optional_number("u", "t", lambda url, token: (403, {}), lambda b: 1.0))
         self.assertEqual(
@@ -221,6 +226,19 @@ class CliTest(unittest.TestCase):
         code, out = self.sonar_run({"paging": {"total": 0}, "facets": []})
         self.assertEqual(code, 0, out)
         self.assertIn("SKIPPED", out)
+
+    def test_sonar_own_failing_gate_does_not_change_our_verdict(self) -> None:
+        def fake_get(url: str, token: str) -> tuple[int, dict]:
+            if "/api/issues/search" in url:
+                return 200, {"paging": {"total": 0}, "facets": []}
+            if "/api/qualitygates/project_status" in url:
+                return 200, {"projectStatus": {"status": "ERROR"}}
+            return 403, {}
+
+        with mock.patch.object(gate, "sonar_get", fake_get):
+            code, out, _ = self.run_cli(["sonar", "--project", "p"], {"SONAR_TOKEN": "t", "SONAR_HOST_URL": "https://s"})
+        self.assertEqual(code, 0, out)
+        self.assertIn("SonarQube's own gate: ERROR (informational only", out)
 
     def test_sonar_gate_fails_on_an_open_vulnerability(self) -> None:
         body = {"paging": {"total": 1}, "facets": [

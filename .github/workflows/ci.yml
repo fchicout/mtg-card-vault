@@ -25,7 +25,7 @@ jobs:
     name: docs-sync
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
@@ -36,7 +36,7 @@ jobs:
     name: gate-tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
@@ -51,7 +51,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -73,7 +73,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -95,7 +95,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -121,7 +121,7 @@ jobs:
     needs: [backend-tests, frontend-quality, gate-tests]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v6
@@ -165,7 +165,7 @@ jobs:
     name: contract-drift
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -193,7 +193,7 @@ jobs:
     name: e2e
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -237,7 +237,7 @@ jobs:
     name: secret-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
       - name: gitleaks over the full git history (NFR-SEC-03)
@@ -249,7 +249,7 @@ jobs:
     name: dependency-audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -270,7 +270,7 @@ jobs:
     name: container-scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Build images
         run: |
           docker build -t mtgvault-api:ci backend
@@ -292,23 +292,25 @@ jobs:
   # ------------------------------------------------------------------ sonarqube
   # SonarQube is an analysis and issue source only: the verdict is produced by
   # scripts/quality_gate.py (open bugs, vulnerabilities, Blocker/Critical issues), never by
-  # SonarQube's own quality gate. Two projects: mtg-vault-backend, mtg-vault-frontend.
-  # Configure repository secret SONAR_TOKEN and variable SONAR_HOST_URL (issue #5). Without them
-  # the jobs warn and pass, so forks and unconfigured clones are not blocked.
+  # SonarQube's own quality gate (mandate, ADR-011). Its server-side gate status is printed for
+  # information only. Two projects: mtg-vault-backend, mtg-vault-frontend.
+  # Needs the secrets SONAR_TOKEN and SONAR_HOST_URL (a repository variable also works for the
+  # host); without them the jobs warn and pass, so forks and unconfigured clones are not blocked.
   # The Community edition may lack pull-request analysis (ADR-011): on pull requests the scan
-  # runs only when the repository variable SONAR_PR_ANALYSIS is "true", otherwise on pushes.
+  # runs only when the repository variable SONAR_PR_ANALYSIS is "true"; it always runs on pushes
+  # and manual dispatches.
   sonar-backend:
     name: sonar-backend
     needs: backend-tests
     if: github.event_name != 'pull_request' || vars.SONAR_PR_ANALYSIS == 'true'
     runs-on: ubuntu-latest
     env:
-      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # shallow clones degrade the relevance of the analysis
       - uses: actions/download-artifact@v4
         with:
           name: backend-coverage
@@ -317,23 +319,22 @@ jobs:
         id: sonar
         run: |
           if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
-            echo "::warning::SONAR_TOKEN / SONAR_HOST_URL are not configured: skipping the quality gate (issue #5)."
+            echo "::warning::SONAR_TOKEN / SONAR_HOST_URL are not configured: skipping the SonarQube analysis."
             echo "configured=false" >> "$GITHUB_OUTPUT"
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
       - name: SonarQube analysis (mtg-vault-backend)
         if: steps.sonar.outputs.configured == 'true'
-        run: |
-          docker run --rm -e SONAR_HOST_URL -e SONAR_TOKEN -v "$GITHUB_WORKSPACE:/usr/src" \
-            sonarsource/sonar-scanner-cli \
-            -Dsonar.projectBaseDir=/usr/src/backend \
-            -Dproject.settings=/usr/src/backend/sonar-project.properties
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        with:
+          projectBaseDir: backend
       - name: Quality gate judged by the project (mtg-vault-backend)
         if: steps.sonar.outputs.configured == 'true'
         run: |
-          python3 -I scripts/quality_gate.py sonar --project mtg-vault-backend --require \
-            --report-task backend/.scannerwork/report-task.txt
+          report="$(find "$GITHUB_WORKSPACE" -name report-task.txt -path '*.scannerwork*' | head -n 1)"
+          test -n "$report" || { echo "::error::the scanner left no report-task.txt"; exit 1; }
+          python3 -I scripts/quality_gate.py sonar --project mtg-vault-backend --require --report-task "$report"
 
   sonar-frontend:
     name: sonar-frontend
@@ -341,12 +342,12 @@ jobs:
     if: github.event_name != 'pull_request' || vars.SONAR_PR_ANALYSIS == 'true'
     runs-on: ubuntu-latest
     env:
-      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # shallow clones degrade the relevance of the analysis
       - uses: actions/download-artifact@v4
         with:
           name: frontend-coverage
@@ -355,20 +356,19 @@ jobs:
         id: sonar
         run: |
           if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
-            echo "::warning::SONAR_TOKEN / SONAR_HOST_URL are not configured: skipping the quality gate (issue #5)."
+            echo "::warning::SONAR_TOKEN / SONAR_HOST_URL are not configured: skipping the SonarQube analysis."
             echo "configured=false" >> "$GITHUB_OUTPUT"
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
       - name: SonarQube analysis (mtg-vault-frontend)
         if: steps.sonar.outputs.configured == 'true'
-        run: |
-          docker run --rm -e SONAR_HOST_URL -e SONAR_TOKEN -v "$GITHUB_WORKSPACE:/usr/src" \
-            sonarsource/sonar-scanner-cli \
-            -Dsonar.projectBaseDir=/usr/src/frontend \
-            -Dproject.settings=/usr/src/frontend/sonar-project.properties
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        with:
+          projectBaseDir: frontend
       - name: Quality gate judged by the project (mtg-vault-frontend)
         if: steps.sonar.outputs.configured == 'true'
         run: |
-          python3 -I scripts/quality_gate.py sonar --project mtg-vault-frontend --require \
-            --report-task frontend/.scannerwork/report-task.txt
+          report="$(find "$GITHUB_WORKSPACE" -name report-task.txt -path '*.scannerwork*' | head -n 1)"
+          test -n "$report" || { echo "::error::the scanner left no report-task.txt"; exit 1; }
+          python3 -I scripts/quality_gate.py sonar --project mtg-vault-frontend --require --report-task "$report"
