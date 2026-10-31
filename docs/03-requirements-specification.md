@@ -1,6 +1,6 @@
 # 03 — Software Requirements Specification (SRS)
 
-**Docs set version:** 0.1.0
+**Docs set version:** 0.2.0
 **Document:** 03 Requirements Specification (structured after ISO/IEC/IEEE 29148 / IEEE 830)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -195,7 +195,7 @@ Collector (primary), Operator, Maintainer, Scheduler: see `02` §1.
 
 | ID | Requirement | Priority | Stories | Verification |
 |---|---|---|---|---|
-| NFR-MNT-01 | The SonarQube quality gate shall pass on every PR and on `main`: coverage on new code ≥ 80 %, duplication on new code ≤ 3 %, reliability, security and maintainability rating A on new code, no new Blocker/Critical issues, 100 % security hotspots reviewed. | Must | US-030 | S |
+| NFR-MNT-01 | The project-owned quality gate (`scripts/quality_gate.py`, identical on developer machines via `scripts/run_local_gates.py` and in GitHub Actions) shall pass on every PR and on `main`: coverage of new code ≥ 80 %, duplicated lines ≤ 3 %, no open bugs or vulnerabilities (reliability and security rating A), no open Blocker/Critical issues, no security hotspot left to review, and maintainability rating A. SonarQube supplies analysis and issue data only; its own quality gate shall never decide pass or fail. Conditions whose data the token cannot read are reported as SKIPPED, never as passed. | Must | US-030 | S |
 | NFR-MNT-02 | Static quality: Python with `ruff` (lint + format) and `mypy --strict`; TypeScript `strict` with ESLint; all clean in CI. | Must | US-030 | S |
 | NFR-MNT-03 | The architecture rules of `05` §5 (layer dependency direction, ports/adapters) shall be enforced by automated import-contract tests (for example `import-linter`). | Should | US-030 | S |
 | NFR-MNT-04 | Gitflow branch names, Conventional Commit messages and semantic-version tags shall be checked in CI; `main` and `develop` are protected branches requiring PRs and green checks. | Must | US-030 | S, M |

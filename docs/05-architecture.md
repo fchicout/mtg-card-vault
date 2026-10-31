@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.1.0
+**Docs set version:** 0.2.0
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -37,7 +37,7 @@ See `01` §3 (`STK-01` … `STK-06`). Architecture-relevant expectations: STK-01
 | Technical | Authelia as OIDC provider; JWT on every call. | CON-04 |
 | Technical | HTTPS required for camera access. | CON-11 |
 | Organizational | GitHub public repo, gitflow, semver, atomic commits, GitHub Actions. | CON-05, CON-06 |
-| Organizational | SonarQube self-hosted quality gate. | CON-07 |
+| Organizational | Project-owned quality gates; SonarQube self-hosted as analysis source only. | CON-07 |
 | Principles | SOLID, DRY, KISS, YAGNY; full test suite. | CON-08 |
 | External | Scryfall API rules and legal terms. | CON-09 |
 | Privacy | Webcam images never persisted. | CON-12 |
@@ -282,7 +282,7 @@ All endpoints require a valid bearer JWT (`FR-AUTH-05`) unless marked *public*. 
 | ADP-JWT | JWKS cache and token verification | `adapters/auth` |
 | ADP-DB | Repositories, models, unit of work, migrations | `adapters/persistence`, `migrations` |
 | WRK | Scheduler and jobs | `backend/src/mtgvault/worker` |
-| INF-CI | GitHub Actions, quality/security tooling | `.github/workflows`, `sonar-project.properties` |
+| INF-CI | GitHub Actions, quality gates, security tooling | `.github/workflows`, `scripts/quality_gate.py`, `scripts/run_local_gates.py`, `backend/sonar-project.properties`, `frontend/sonar-project.properties` |
 | INF-DEPLOY | Compose, proxy, Authelia config, Dockerfiles | `deploy/`, `backend/Dockerfile`, `frontend/Dockerfile` |
 | DOCS | Documentation set and sync script | `docs/`, `scripts/check_docs_sync.py` |
 
@@ -403,11 +403,28 @@ flowchart LR
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | PR to `develop`/`main`; push to `develop` | commit/branch policy; docs-sync; backend lint (ruff, mypy strict, import-linter); backend unit + integration tests with coverage; frontend lint + unit tests with coverage; OpenAPI export + generated-client drift check; E2E (Playwright against ephemeral compose); gitleaks; pip-audit; npm audit; SonarQube scan + quality-gate wait; build images + Trivy scan. |
+| `ci.yml` | PR to `develop`/`main`; push to `develop` | commit/branch policy; docs-sync; the jobs listed below. |
 | `release.yml` | tag `vX.Y.Z` on `main` | build multi-arch images, scan, push to GHCR with semver tags, create GitHub Release from conventional commits. |
 | `dependabot` | weekly | PRs for Python, npm, Docker, Actions dependencies. |
 
-Branch protection on `main` and `develop`: PR required, required checks = all `ci.yml` jobs, linear-friendly merge (squash for features keeps atomic history; merge commits for releases/hotfixes per gitflow). SonarQube runs on a runner that can reach the self-hosted instance (self-hosted runner or tunnel; `ASM-05`, `RSK-04`, `OQ-08`).
+Jobs of `ci.yml` (job ids are the required status checks):
+
+| Job id | What it proves | Verdict from |
+|---|---|---|
+| `docs-sync` | the documentation set is synchronized (`NFR-DOC-01`) | `scripts/check_docs_sync.py` |
+| `gate-tests` | the quality-gate tooling itself works | `python -m unittest` |
+| `backend-quality` | ruff, ruff format, mypy `--strict`, import-linter contracts | the tools |
+| `backend-tests` | unit, contract and integration tests (real PostgreSQL via testcontainers); `coverage.xml` | pytest |
+| `frontend-quality` | ESLint, Prettier, Vitest with LCOV coverage, production build | the tools |
+| `quality-gate` | coverage of new code ≥ 80 %, duplicated lines ≤ 3 % (`NFR-MNT-01`) | `scripts/quality_gate.py` |
+| `contract-drift` | committed `openapi.json` and generated Angular client equal what the code generates | regenerate + `git diff` |
+| `e2e` | the compose stack becomes healthy and the UI works in Chromium | Playwright |
+| `secret-scan` | no secrets in the full git history (`NFR-SEC-03`) | gitleaks |
+| `dependency-audit` | no known High/Critical vulnerabilities (`NFR-SEC-04`) | pip-audit, npm audit |
+| `container-scan` | images run as non-root and have no unfixed High/Critical findings (`NFR-SEC-05`) | Trivy |
+| `sonar-backend`, `sonar-frontend` | analysis published to `mtg-vault-backend` / `mtg-vault-frontend`; no open bugs, vulnerabilities or Blocker/Critical issues | `scripts/quality_gate.py sonar` (warns and passes until `SONAR_TOKEN` / `SONAR_HOST_URL` are configured) |
+
+Branch protection on `main` and `develop`: PR required, required checks = all `ci.yml` jobs, linear-friendly merge (squash for features keeps atomic history; merge commits for releases/hotfixes per gitflow). The Sonar jobs must reach the self-hosted instance (self-hosted runner or tunnel if needed; `ASM-05`, `RSK-04`, `OQ-08`). SonarQube is never the judge: the same `scripts/quality_gate.py` runs on developer machines through `scripts/run_local_gates.py` and in `ci.yml`.
 
 ### 7.5 Versioning and branching
 Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`) → back-merge to `develop`; `hotfix/*` from `main`. Conventional Commits drive the version bump (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; pre-1.0 rules apply). Commit scopes: `auth`, `vault`, `catalog`, `scan`, `pricing`, `api`, `ui`, `deploy`, `ci`, `docs`.
@@ -450,7 +467,7 @@ In-memory TTL cache for catalogue searches (5 min). Cards cached in PostgreSQL f
 | End-to-end | sign in (dev Authelia), scan with fake camera stream and fixture image, add, edit, remove, value | Playwright (Chromium `--use-fake-device-for-media-stream`), axe | Runs against ephemeral compose. |
 | OCR accuracy | 100-card reference image set measuring top-3 hit rate (`BO-02`) | pytest marker `accuracy` | Nightly / on-demand, not a PR gate. |
 
-Quality gates: coverage ≥ 80 % on new code and SonarQube conditions (`NFR-MNT-01`).
+Quality gates are evaluated by `scripts/quality_gate.py` (`NFR-MNT-01`): coverage of new code ≥ 80 %, duplicated lines ≤ 3 % (computed locally with jscpd) and, from SonarQube's issue data, no open bugs, vulnerabilities or Blocker/Critical issues. `scripts/run_local_gates.py` runs every CI gate locally.
 
 ### 8.9 UI concepts
 Clarity components only; datagrid with server-side pagination/filtering; consistent loading/empty/error states; keyboard accessibility; i18n-ready strings.
@@ -534,12 +551,12 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Consequences:** Predictable history and automated changelog; requires discipline and protected branches.
 - **Alternatives:** Trunk-based development (user mandated gitflow).
 
-### ADR-011 — Self-hosted SonarQube Community as quality gate
-- **Status:** Accepted (connectivity pending OQ-08)
-- **Context:** CON-07.
-- **Decision:** SonarQube Community in its own compose stack; GitHub Actions run the scanner on a runner able to reach it; gate conditions in `NFR-MNT-01`; merges are blocked when the gate fails.
-- **Consequences:** Operational burden of SonarQube; CI network requirement (RSK-04). Caveat to verify first (OQ-08): historically the Community edition has no pull-request analysis, only a single main branch. If the current Community Build still lacks it, the gate is enforced by analysing `develop`/`main` after merge plus a pre-merge scan under a throwaway project key (new-code conditions evaluated against the target branch), or by switching to SonarCloud.
-- **Alternatives:** SonarCloud (free for public repos; PR analysis and decoration; the fallback).
+### ADR-011 — Project-owned quality gates; SonarQube as analysis source only
+- **Status:** Accepted (connectivity and project provisioning pending OQ-08)
+- **Context:** CON-07 and the mandate that quality gates are run by the project itself, locally and in GitHub Actions, and never by SonarQube's own quality gate. Observed: a read-only token on the shared Sonar instance can read issues but not measures, hotspots or gate status, so a server-side gate would give different verdicts to different callers.
+- **Decision:** `scripts/quality_gate.py` holds the conditions and thresholds of `NFR-MNT-01`; `scripts/run_local_gates.py` and `ci.yml` run it identically. SonarQube Community (self-hosted) analyses two projects, `mtg-vault-backend` and `mtg-vault-frontend`, and serves issue data; the scanner runs in a container in CI. Coverage of new code is computed from the git diff and the coverage reports; duplication with jscpd; bugs, vulnerabilities and Blocker/Critical issues from Sonar's issue search.
+- **Consequences:** Gate logic is versioned, unit-tested and edition-independent; whether the Community Build supports pull-request analysis (OQ-08) only affects where analysis results are published. Maintainability rating and hotspot review need a token with Browse permission; without it they are reported SKIPPED, never passed. Sonar projects and a scan token must be provisioned by a Sonar admin.
+- **Alternatives:** Using SonarQube's quality gate (rejected by the mandate); SonarCloud as the analysis source (possible fallback).
 
 ### ADR-012 — Scheduler runs in a separate worker container
 - **Status:** Proposed
