@@ -27,8 +27,10 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/mtgvault"]
+source = ["src"]
 branch = true
+# Relative paths in coverage.xml so SonarQube can map them inside the scanner container.
+relative_files = true
 
 [tool.coverage.report]
 show_missing = true
