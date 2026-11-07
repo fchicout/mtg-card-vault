@@ -167,6 +167,19 @@ class SonarClientTest(unittest.TestCase):
         self.assertIn("/api/hotspots/search answered HTTP 403: Insufficient privileges", err.getvalue())
         self.assertNotIn("project=k", err.getvalue())
 
+    def test_blocking_issues_are_listed_once_with_location_and_message(self) -> None:
+        issue = {"severity": "CRITICAL", "type": "VULNERABILITY", "rule": "python:S0000",
+                 "component": "mtg-vault-backend:src/x.py", "line": 7, "message": "Do not do this."}
+
+        def get(url: str, token: str) -> tuple[int, dict]:
+            return 200, {"issues": [issue]}
+
+        lines = gate.fetch_blocking_issues("https://s", "k", "t", get)
+        self.assertEqual(lines, ["CRITICAL VULNERABILITY python:S0000 mtg-vault-backend:src/x.py:7 Do not do this."])
+
+    def test_blocking_issues_are_empty_when_the_search_is_not_allowed(self) -> None:
+        self.assertEqual(gate.fetch_blocking_issues("https://s", "k", "t", lambda u, t: (403, {})), [])
+
     def test_wait_for_analysis_polls_until_success(self) -> None:
         states = iter(["PENDING", "IN_PROGRESS", "SUCCESS"])
         with tempfile.TemporaryDirectory() as tmp:

@@ -9,6 +9,7 @@ description = "MTG Card Vault REST API"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.18",
     "fastapi>=0.162.0",
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.16.2",
@@ -79,8 +80,28 @@ forbidden_modules = ["mtgvault.adapters"]
 name = "Domain and application are framework-free"
 type = "forbidden"
 source_modules = ["mtgvault.domain", "mtgvault.application"]
-forbidden_modules = ["fastapi", "starlette", "sqlalchemy", "pydantic", "httpx"]
+forbidden_modules = [
+    "fastapi", "starlette", "sqlalchemy", "pydantic", "pydantic_settings", "httpx", "psycopg", "uvicorn",
+]
 allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Adapters never depend on the HTTP layer"
+type = "forbidden"
+source_modules = ["mtgvault.adapters"]
+forbidden_modules = ["mtgvault.api"]
+
+[[tool.importlinter.contracts]]
+name = "Cross-cutting helpers (correlation, logging, config) never depend on the layers"
+type = "forbidden"
+source_modules = ["mtgvault.correlation", "mtgvault.logging_setup", "mtgvault.config"]
+forbidden_modules = ["mtgvault.api", "mtgvault.application", "mtgvault.domain", "mtgvault.adapters"]
+
+[[tool.importlinter.contracts]]
+name = "Only the composition root and the OpenAPI exporter import main"
+type = "forbidden"
+source_modules = ["mtgvault.api", "mtgvault.application", "mtgvault.domain", "mtgvault.adapters"]
+forbidden_modules = ["mtgvault.main"]
 
 [dependency-groups]
 dev = [

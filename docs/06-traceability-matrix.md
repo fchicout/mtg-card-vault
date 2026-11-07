@@ -1,6 +1,6 @@
 # 06 — Traceability Matrix
 
-**Docs set version:** 0.2.3
+**Docs set version:** 0.3.3
 **Document:** 06 Requirements Traceability Matrix
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -153,6 +153,7 @@ Legend — Tests: **U** unit · **I** integration · **C** contract · **E** end
 | ADR-012 | FR-PRC-04, FR-PRC-05 |
 | ADR-013 | FR-API-02 |
 | ADR-014 | NFR-DOC-01 |
+| ADR-015 | FR-OPS-03, NFR-PRT-01, NFR-SEC-05 |
 
 ## E. Maintenance checklist (apply on every change)
 

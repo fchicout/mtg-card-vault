@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.2.3
+**Docs set version:** 0.3.3
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -129,9 +129,12 @@ backend/
 ├── src/mtgvault/
 │   ├── main.py               # composition root: builds app, wires dependencies
 │   ├── config.py             # typed settings (pydantic-settings), fail fast
-│   ├── logging.py            # JSON logging, correlation id, redaction
+│   ├── logging_setup.py      # JSON logging with redaction
+│   ├── correlation.py        # per-request correlation id (X-Request-ID)
 │   ├── api/                  # DRIVING ADAPTER (HTTP)
-│   │   ├── v1/               # routers: me, vault, catalog, scans, health
+│   │   ├── v1.py             # versioned /api/v1 router; feature routers are included here
+│   │   ├── pagination.py     # shared Page[T] / PageParams (default 50, max 200)
+│   │   ├── middleware.py     # correlation id + access log (ASGI)
 │   │   ├── schemas/          # Pydantic request/response DTOs
 │   │   ├── dependencies.py   # auth dependency, current user, service providers
 │   │   └── errors.py         # exception -> problem+json mapping
@@ -394,16 +397,20 @@ flowchart LR
 | authelia | `authelia/authelia` | via proxy | OIDC clients: `mtgvault-spa` (public, PKCE). Its configuration is under `deploy/authelia/`. |
 
 ### 7.2 Configuration (environment, validated at start-up)
-`DATABASE_URL`, `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_ALLOWED_ALGS` (default `RS256`), `CORS_ORIGINS`, `SCRYFALL_USER_AGENT`, `PRICE_REFRESH_CRON`, `PRICE_STALE_AFTER_HOURS` (24), `SCAN_MAX_BYTES` (2 MB), `SCAN_RATE_PER_MINUTE` (30), `LOG_LEVEL`. Only `.env.example` is committed.
+`DATABASE_URL`, `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_ALLOWED_ALGS` (default `RS256`), `BIND_HOST` (default `127.0.0.1`; the image sets `0.0.0.0`), `BIND_PORT` (8000), `CORS_ORIGINS`, `SCRYFALL_USER_AGENT`, `PRICE_REFRESH_CRON`, `PRICE_STALE_AFTER_HOURS` (24), `SCAN_MAX_BYTES` (2 MB), `SCAN_RATE_PER_MINUTE` (30), `LOG_LEVEL`. Only `.env.example` is committed.
+
+### 7.2a Backup and restore (stub)
+Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: back up with `pg_dump --format=custom --file mtgvault.dump "$DATABASE_URL"` (schema, data and the `alembic_version` row) and restore into an empty database with `pg_restore --clean --if-exists --dbname "$DATABASE_URL" mtgvault.dump`; the API applies any newer migrations itself on its next start. Scheduled backups, retention and a restore rehearsal belong to the operator runbook (milestone M6).
 
 ### 7.3 Environments
-`dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `prod` (operator's host). Same images across environments; differences only in configuration.
+`dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `staging` (https://staging.mtg.fchicout.dev, follows `develop`), `prod` (https://mtg.fchicout.dev, follows `main`). Same images across environments; differences only in configuration. Staging and production are served over HTTPS only (HTTP is redirected) and deployed manually as described in `ADR-015`.
 
 ### 7.4 CI/CD pipeline (GitHub Actions)
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | PR to `develop`/`main`; push to `develop` | commit/branch policy; docs-sync; the jobs listed below. |
+| `ci.yml` | PR to `develop`/`main`; push to `develop` or `main` | commit/branch policy; docs-sync; the jobs listed below. |
+| `publish-images.yml` | green `ci.yml` run on a push to `develop` or `main` | build the images and push them to GHCR tagged with the commit SHA; it never deploys (`ADR-015`). |
 | `release.yml` | tag `vX.Y.Z` on `main` | build multi-arch images, scan, push to GHCR with semver tags, create GitHub Release from conventional commits. |
 | `dependabot` | weekly | PRs for Python, npm, Docker, Actions dependencies. |
 
@@ -443,10 +450,10 @@ Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`)
 Input validation by Pydantic; ORM with bound parameters; upload limits and decompression-bomb guard (`FR-SCN-08`); SSRF prevention by calling only configured hosts; security headers (`NFR-SEC-06`); secrets only through environment; non-root containers; dependency, secret and image scanning in CI; SonarQube SAST.
 
 ### 8.3 Error handling
-Typed domain exceptions → problem+json with correlation id (`FR-API-02`). The SPA has one HTTP error interceptor that maps problem documents to Clarity alerts.
+Typed domain exceptions (`domain/errors.py`: `NotFound` 404, `ValidationFailed` 422, `Conflict` 409, `RateLimited` 429 with `Retry-After`, `UpstreamUnavailable` 503) → problem+json with correlation id (`FR-API-02`). Problem `type` is `urn:mtgvault:problem:<slug>`; request-validation errors list the offending fields in `errors`; framework HTTP errors (404, 405, …) use the same document; an unexpected exception becomes a generic `500` whose message and stack trace only go to the log. The SPA has one HTTP error interceptor that maps problem documents to Clarity alerts.
 
 ### 8.4 Logging and observability
-JSON logs; correlation id middleware; redaction of tokens, e-mails and image data (`FR-OPS-02`); health endpoints. Metrics/tracing are deliberately not in v1 (YAGNY).
+JSON logs on stdout; correlation id middleware accepts `X-Request-ID` only when it matches `[A-Za-z0-9._-]{1,128}` (otherwise a new id is generated) and returns it in the response header and in every error document; one access-log line per request carries method, path (never the query string), status and duration; redaction of tokens, e-mails, secret-named fields and image data runs on every record before formatting (`FR-OPS-02`); health endpoints. Metrics/tracing are deliberately not in v1 (YAGNY).
 
 ### 8.5 Persistence and transactions
 One unit of work per request; entry add/merge/edit and account deletion are single transactions; optimistic concurrency not required (last write wins) except the unique constraint handling for merges (retry once on conflict).
@@ -455,7 +462,7 @@ One unit of work per request; entry add/merge/edit and account deletion are sing
 In-memory TTL cache for catalogue searches (5 min). Cards cached in PostgreSQL for owned printings only (`ADR-007`). Process-wide token-bucket limiter around Scryfall (≥ 100 ms spacing). Per-user rate limit on scans (30/min), implemented behind a small interface (in-memory now; replaceable by Redis if the API ever scales out).
 
 ### 8.7 Configuration management
-`pydantic-settings`; fail fast; no defaults for secrets.
+`pydantic-settings`; fail fast; no defaults for secrets. An invalid environment makes the process exit with code 2 and a message naming each offending variable (never its value).
 
 ### 8.8 Testing strategy (`NFR-TST-01`)
 
@@ -515,6 +522,7 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Decision:** PostgreSQL; SQLAlchemy 2.x ORM behind repository ports; Alembic migrations run on start.
 - **Consequences:** Integration tests need real PostgreSQL (testcontainers). Strong integrity guarantees (unique/check constraints).
 - **Alternatives:** SQLite (limited concurrency/search features).
+- **Notes (issue #8):** *Synchronous* SQLAlchemy 2.x with `psycopg` 3, not async: simpler transactions and Alembic, a small user group (`ASM-06`), and FastAPI runs sync endpoints in a thread pool. The `UnitOfWork` port keeps this an adapter detail, so moving to async later does not touch use cases. A unit of work is one session and one transaction; leaving it without `commit()` rolls back. Constraint names follow a fixed naming convention so migrations are deterministic. The container entry point (`python -m mtgvault.serve`) runs `alembic upgrade head` under a PostgreSQL advisory lock and only then starts the HTTP server; if a migration fails the process exits non-zero and never listens (`FR-OPS-03`). Integration tests use one PostgreSQL per test session and a fresh database per test.
 
 ### ADR-006 — Layered architecture with ports and adapters
 - **Status:** Accepted
@@ -578,6 +586,15 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Decision:** Stable IDs, shared docs-set version, traceability matrix, and `scripts/check_docs_sync.py` as a required check; docs updated in the same PR as code.
 - **Consequences:** Slight overhead per change; semantic consistency still needs human review.
 - **Alternatives:** Free-form docs (drift), generated docs only (lose intent).
+
+---
+
+### ADR-015 — Staging and production on the homelab cluster, deployed manually
+- **Status:** Accepted (amended 2026-11-07: automated deployment withdrawn)
+- **Context:** The project needs real environments: staging follows `develop`, production follows `main`, both on the operator's K3s cluster (`CON-10`) and reachable only over HTTPS (`CON-11`). The owner wants every release to be a deliberate, human-controlled act and no cluster credentials or cluster API exposure on GitHub.
+- **Decision:** The environment infrastructure (namespaces, database, TLS, secrets, access control) is managed outside this repository. CI (`publish-images.yml`) only builds images tagged with the immutable commit SHA and pushes them to GHCR; it never deploys. After the work is tested and done, the operator runs the infrastructure playbook locally with that SHA, then verifies the site over HTTPS (health endpoints answer and plain HTTP only redirects to HTTPS). No deployment credentials are stored in GitHub.
+- **Consequences:** A release needs one manual command; there is no continuous deployment and no cluster API exposure. Image names and tags are the contract between this repository and the infrastructure.
+- **Alternatives:** Push from GitHub Actions with a restricted credential (rejected by the owner: exposes the cluster API and holds credentials in GitHub), pull-based deploys from the cluster (Rundeck), or a GitOps controller; revisit if releases become frequent.
 
 ---
 
