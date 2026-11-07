@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.9
+**Docs set version:** 0.3.10
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -30,6 +30,8 @@ The documents are **one logical specification split across six files**. They **m
 5. **Code follows docs.** Implementation work starts from a story (`US-xxx`). Code, tests and commits reference the story/requirement IDs they implement (for example `feat(vault): add entry endpoint [US-005, FR-VLT-01]`). If implementation reveals the docs are wrong, **fix the docs first** (or in the same PR), then the code.
 6. **Mechanical enforcement.** `scripts/check_docs_sync.py` verifies the rules that can be checked automatically (section 5). It must pass locally before committing docs and will run as a required CI check (tracked by `US-031`, `NFR-DOC-01`).
 7. **Definition of Done for any story** includes: docs updated, matrix updated, sync check green.
+
+Repository root files (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, the issue and pull-request templates) are signposts: they link into this set and never restate a requirement, a rule or a decision.
 
 ## 3. ID scheme
 
@@ -79,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.10 | 2026-11-07 | Repository governance (issue #2): MIT licence (OQ-06 resolved), root files are signposts that never restate the set. |
 | 0.3.9 | 2026-11-07 | Authelia spike (issue #4): ADR-003 verified (RS256 JWT access tokens, explicit audience, lifetimes, sign-out without end-session), FR-AUTH-02 and UC-09 reworded, dev identity provider in section 7.3, OQ-05 resolved, RSK-05 reassessed. |
 | 0.3.8 | 2026-11-07 | Release pipeline (issue #11): `release.yml` behaviour, rehearsal mode and the gitflow release procedure in section 7.5. |
 | 0.3.7 | 2026-11-07 | DevSecOps policy (issue #14): thresholds, time-boxed exceptions (`security/exceptions.yaml`), SARIF + CodeQL, nightly rescan, SBOMs, pinned scanners; section 8.2 and the CI table. |
