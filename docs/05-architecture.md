@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.2
+**Docs set version:** 0.3.3
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -399,6 +399,9 @@ flowchart LR
 ### 7.2 Configuration (environment, validated at start-up)
 `DATABASE_URL`, `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_ALLOWED_ALGS` (default `RS256`), `CORS_ORIGINS`, `SCRYFALL_USER_AGENT`, `PRICE_REFRESH_CRON`, `PRICE_STALE_AFTER_HOURS` (24), `SCAN_MAX_BYTES` (2 MB), `SCAN_RATE_PER_MINUTE` (30), `LOG_LEVEL`. Only `.env.example` is committed.
 
+### 7.2a Backup and restore (stub)
+Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: back up with `pg_dump --format=custom --file mtgvault.dump "$DATABASE_URL"` (schema, data and the `alembic_version` row) and restore into an empty database with `pg_restore --clean --if-exists --dbname "$DATABASE_URL" mtgvault.dump`; the API applies any newer migrations itself on its next start. Scheduled backups, retention and a restore rehearsal belong to the operator runbook (milestone M6).
+
 ### 7.3 Environments
 `dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `staging` (https://staging.mtg.fchicout.dev, follows `develop`), `prod` (https://mtg.fchicout.dev, follows `main`). Same images across environments; differences only in configuration. Staging and production are served over HTTPS only (HTTP is redirected) and deployed as described in `ADR-015`.
 
@@ -519,6 +522,7 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Decision:** PostgreSQL; SQLAlchemy 2.x ORM behind repository ports; Alembic migrations run on start.
 - **Consequences:** Integration tests need real PostgreSQL (testcontainers). Strong integrity guarantees (unique/check constraints).
 - **Alternatives:** SQLite (limited concurrency/search features).
+- **Notes (issue #8):** *Synchronous* SQLAlchemy 2.x with `psycopg` 3, not async: simpler transactions and Alembic, a small user group (`ASM-06`), and FastAPI runs sync endpoints in a thread pool. The `UnitOfWork` port keeps this an adapter detail, so moving to async later does not touch use cases. A unit of work is one session and one transaction; leaving it without `commit()` rolls back. Constraint names follow a fixed naming convention so migrations are deterministic. The container entry point (`python -m mtgvault.serve`) runs `alembic upgrade head` under a PostgreSQL advisory lock and only then starts the HTTP server; if a migration fails the process exits non-zero and never listens (`FR-OPS-03`). Integration tests use one PostgreSQL per test session and a fresh database per test.
 
 ### ADR-006 — Layered architecture with ports and adapters
 - **Status:** Accepted
