@@ -59,7 +59,8 @@ def sequence(*commands: tuple[list[str], Path]) -> Callable[[], tuple[bool, str]
 
 
 BACKEND, FRONTEND = ROOT / "backend", ROOT / "frontend"
-API_FILES = [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts"))]
+API_FILES = [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts")),
+             *sorted((FRONTEND / "src/locale").rglob("*.xlf"))]
 
 
 def snapshot() -> dict[Path, bytes]:
@@ -71,7 +72,10 @@ def contract_drift() -> tuple[bool, str]:
     ok, out = run(["uv", "run", "python", "-m", "mtgvault.export_openapi", "openapi.json"], BACKEND)
     if ok:
         ok, out = run(["npm", "run", "api:generate"], FRONTEND)
-    after = {p: p.read_bytes() for p in [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts"))]}
+    if ok:
+        ok, out = run(["npm", "run", "i18n:extract"], FRONTEND)
+    after = {p: p.read_bytes() for p in [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts")),
+                                         *sorted((FRONTEND / "src/locale").rglob("*.xlf"))]}
     changed = sorted(str(p.relative_to(ROOT)) for p in set(before) | set(after) if before.get(p) != after.get(p))
     if not ok:
         return False, out
