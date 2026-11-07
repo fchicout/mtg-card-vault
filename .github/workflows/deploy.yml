@@ -1,0 +1,115 @@
+name: Deploy
+
+# Issue #18. After a green CI run on a push, publish the images to GHCR (tagged with the commit SHA)
+# and roll them out: develop -> staging, main -> production. HTTPS only: the smoke tests use
+# https:// URLs and refuse anything else.
+#
+# The environment itself (namespace, database, TLS, secrets) is managed outside this repository.
+# Per GitHub Environment (staging, production) configure:
+#   secrets   K3S_API_SERVER, K3S_CA (PEM), K3S_DEPLOY_TOKEN  - a ServiceAccount that can only
+#                                                                patch the two Deployments
+#   variables K3S_NAMESPACE, PUBLIC_URL (https://...)
+# Without them the deploy job warns and skips, so the pipeline works before the environment exists.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: publish-images
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build and push images (immutable SHA tags, never latest)
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          for pair in "api:backend" "frontend:frontend"; do
+            name="${pair%%:*}"; context="${pair##*:}"
+            image="ghcr.io/${owner}/mtg-vault-${name}:${SHA}"
+            docker build -t "$image" "$context"
+            docker push "$image"
+          done
+
+  deploy:
+    name: deploy-${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'staging' }}
+    needs: publish
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'staging' }}
+    concurrency:
+      group: deploy-${{ github.event.workflow_run.head_branch }}
+      cancel-in-progress: false
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      BRANCH: ${{ github.event.workflow_run.head_branch }}
+      K3S_API_SERVER: ${{ secrets.K3S_API_SERVER }}
+      K3S_CA: ${{ secrets.K3S_CA }}
+      K3S_DEPLOY_TOKEN: ${{ secrets.K3S_DEPLOY_TOKEN }}
+      NAMESPACE: ${{ vars.K3S_NAMESPACE }}
+      PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Is this environment configured, and is this still the newest commit?
+        id: gate
+        run: |
+          if [ -z "$K3S_API_SERVER" ] || [ -z "$K3S_CA" ] || [ -z "$K3S_DEPLOY_TOKEN" ] || [ -z "$NAMESPACE" ] || [ -z "$PUBLIC_URL" ]; then
+            echo "::warning::Environment not configured (K3S_API_SERVER, K3S_CA, K3S_DEPLOY_TOKEN, K3S_NAMESPACE, PUBLIC_URL): skipping the deployment."
+            echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          case "$PUBLIC_URL" in
+            https://*) ;;
+            *) echo "::error::PUBLIC_URL must start with https:// (HTTPS only)"; exit 1 ;;
+          esac
+          tip="$(gh api "repos/${GITHUB_REPOSITORY}/branches/${BRANCH}" --jq .commit.sha)"
+          if [ "$tip" != "$SHA" ]; then
+            echo "::notice::${SHA} is no longer the tip of ${BRANCH} (${tip}): superseded, not deploying."
+            echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+      - name: Roll out the new images
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          printf '%s\n' "$K3S_CA" > "$RUNNER_TEMP/ca.crt"
+          export KUBECONFIG="$RUNNER_TEMP/kubeconfig"
+          kubectl config set-cluster mtg --server="$K3S_API_SERVER" --certificate-authority="$RUNNER_TEMP/ca.crt" --embed-certs=true >/dev/null
+          kubectl config set-credentials deployer --token="$K3S_DEPLOY_TOKEN" >/dev/null
+          kubectl config set-context mtg --cluster=mtg --user=deployer --namespace="$NAMESPACE" >/dev/null
+          kubectl config use-context mtg >/dev/null
+          kubectl set image deployment/api "api=ghcr.io/${owner}/mtg-vault-api:${SHA}"
+          kubectl set image deployment/frontend "frontend=ghcr.io/${owner}/mtg-vault-frontend:${SHA}"
+          if ! kubectl rollout status deployment/api --timeout=180s || ! kubectl rollout status deployment/frontend --timeout=180s; then
+            echo "::error::Rollout failed: rolling back."
+            kubectl rollout undo deployment/api
+            kubectl rollout undo deployment/frontend
+            exit 1
+          fi
+      - name: Smoke test over HTTPS
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          base="${PUBLIC_URL%/}"
+          for path in healthz readyz; do
+            curl --proto '=https' --tlsv1.2 -fsS --retry 10 --retry-delay 6 --retry-all-errors "${base}/${path}"
+            echo
+          done
+          # Plain HTTP must only redirect to HTTPS.
+          host="${base#https://}"
+          code="$(curl -s -o /dev/null -w '%{http_code}' "http://${host}/")"
+          location="$(curl -s -o /dev/null -w '%{redirect_url}' "http://${host}/")"
+          echo "http://${host}/ -> ${code} ${location}"
+          case "$code" in 301|302|307|308) ;; *) echo "::error::HTTP is not redirected"; exit 1 ;; esac
+          case "$location" in https://*) ;; *) echo "::error::redirect does not go to HTTPS"; exit 1 ;; esac

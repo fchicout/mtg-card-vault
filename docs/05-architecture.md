@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.2.3
+**Docs set version:** 0.3.0
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -397,13 +397,14 @@ flowchart LR
 `DATABASE_URL`, `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_ALLOWED_ALGS` (default `RS256`), `CORS_ORIGINS`, `SCRYFALL_USER_AGENT`, `PRICE_REFRESH_CRON`, `PRICE_STALE_AFTER_HOURS` (24), `SCAN_MAX_BYTES` (2 MB), `SCAN_RATE_PER_MINUTE` (30), `LOG_LEVEL`. Only `.env.example` is committed.
 
 ### 7.3 Environments
-`dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `prod` (operator's host). Same images across environments; differences only in configuration.
+`dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `staging` (https://staging.mtg.fchicout.dev, follows `develop`), `prod` (https://mtg.fchicout.dev, follows `main`). Same images across environments; differences only in configuration. Staging and production are served over HTTPS only (HTTP is redirected) and deployed as described in `ADR-015`.
 
 ### 7.4 CI/CD pipeline (GitHub Actions)
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | PR to `develop`/`main`; push to `develop` | commit/branch policy; docs-sync; the jobs listed below. |
+| `ci.yml` | PR to `develop`/`main`; push to `develop` or `main` | commit/branch policy; docs-sync; the jobs listed below. |
+| `deploy.yml` | green `ci.yml` run on a push to `develop` or `main` | publish images to GHCR tagged with the commit SHA, roll them out to staging (`develop`) or production (`main`), roll back on failure, smoke-test over HTTPS (`ADR-015`). |
 | `release.yml` | tag `vX.Y.Z` on `main` | build multi-arch images, scan, push to GHCR with semver tags, create GitHub Release from conventional commits. |
 | `dependabot` | weekly | PRs for Python, npm, Docker, Actions dependencies. |
 
@@ -578,6 +579,15 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Decision:** Stable IDs, shared docs-set version, traceability matrix, and `scripts/check_docs_sync.py` as a required check; docs updated in the same PR as code.
 - **Consequences:** Slight overhead per change; semantic consistency still needs human review.
 - **Alternatives:** Free-form docs (drift), generated docs only (lose intent).
+
+---
+
+### ADR-015 — Staging and production on the homelab cluster, deployed from GitHub Actions
+- **Status:** Accepted
+- **Context:** The project needs real environments: staging follows `develop`, production follows `main`, both on the operator's K3s cluster (`CON-10`) and reachable only over HTTPS (`CON-11`). GitHub-hosted runners cannot be trusted with cluster administration.
+- **Decision:** The environment infrastructure (namespaces, database, TLS, secrets, access control) is managed outside this repository. This repository's `deploy.yml` builds images tagged with the immutable commit SHA, pushes them to GHCR, and rolls them out with a credential that can only update the two Deployments of one environment. A failed rollout is rolled back automatically and every deployment is verified by HTTPS smoke tests; plain HTTP must only redirect to HTTPS. Each environment is a GitHub Environment holding its own credentials, and production requires a reviewer. A run for a commit that is no longer the branch tip is skipped.
+- **Consequences:** No cluster administration rights in GitHub, but the cluster API must be reachable from the runners; image names and tags are the contract between this repository and the infrastructure.
+- **Alternatives:** Pull-based deploys from the cluster (Rundeck) or a GitOps controller; both avoid exposing the cluster API but add moving parts. Revisit if the exposure becomes a concern.
 
 ---
 
