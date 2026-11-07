@@ -11,7 +11,7 @@
     </unit>
     <unit id="theme.light">
       <notes>
-        <note category="location">src/app/app.html:21,22</note>
+        <note category="location">src/app/app.html:22,23</note>
       </notes>
       <segment>
         <source>Light theme</source>
@@ -19,7 +19,7 @@
     </unit>
     <unit id="theme.dark">
       <notes>
-        <note category="location">src/app/app.html:23,24</note>
+        <note category="location">src/app/app.html:24,25</note>
       </notes>
       <segment>
         <source>Dark theme</source>
@@ -27,7 +27,7 @@
     </unit>
     <unit id="nav.label">
       <notes>
-        <note category="location">src/app/app.html:34,36</note>
+        <note category="location">src/app/app.html:35,37</note>
       </notes>
       <segment>
         <source>Main navigation</source>
@@ -35,7 +35,7 @@
     </unit>
     <unit id="nav.vault">
       <notes>
-        <note category="location">src/app/app.html:38,39</note>
+        <note category="location">src/app/app.html:39,40</note>
       </notes>
       <segment>
         <source>Vault</source>
@@ -43,7 +43,7 @@
     </unit>
     <unit id="nav.catalogue">
       <notes>
-        <note category="location">src/app/app.html:42,44</note>
+        <note category="location">src/app/app.html:43,45</note>
       </notes>
       <segment>
         <source>Catalogue</source>
@@ -51,7 +51,7 @@
     </unit>
     <unit id="nav.scan">
       <notes>
-        <note category="location">src/app/app.html:46,47</note>
+        <note category="location">src/app/app.html:47,48</note>
       </notes>
       <segment>
         <source>Scan</source>
@@ -59,7 +59,7 @@
     </unit>
     <unit id="nav.account">
       <notes>
-        <note category="location">src/app/app.html:50,51</note>
+        <note category="location">src/app/app.html:51,52</note>
       </notes>
       <segment>
         <source>Account</source>
@@ -67,7 +67,7 @@
     </unit>
     <unit id="footer.scryfall">
       <notes>
-        <note category="location">src/app/app.html:62,63</note>
+        <note category="location">src/app/app.html:63,64</note>
       </notes>
       <segment>
         <source>Card data and images are provided by</source>
@@ -75,7 +75,7 @@
     </unit>
     <unit id="footer.scryfallNote">
       <notes>
-        <note category="location">src/app/app.html:65,68</note>
+        <note category="location">src/app/app.html:66,69</note>
       </notes>
       <segment>
         <source>which is not affiliated with this project.</source>
@@ -83,7 +83,7 @@
     </unit>
     <unit id="footer.fancontent">
       <notes>
-        <note category="location">src/app/app.html:69,73</note>
+        <note category="location">src/app/app.html:70,74</note>
       </notes>
       <segment>
         <source> MTG Card Vault is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. It is not approved or endorsed by Wizards of the Coast. Magic: The Gathering is a trademark of Wizards of the Coast LLC. </source>
