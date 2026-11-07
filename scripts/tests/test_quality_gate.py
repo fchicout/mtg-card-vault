@@ -179,6 +179,16 @@ class SonarClientTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             gate.fetch_issue_counts("https://s", "k", "t", lambda url, token: (403, {"errors": []}))
 
+    def test_the_servers_own_failing_conditions_are_listed_for_information(self) -> None:
+        body = {"projectStatus": {"status": "ERROR", "conditions": [
+            {"status": "OK", "metricKey": "new_violations", "comparator": "GT", "errorThreshold": "0", "actualValue": "0"},
+            {"status": "ERROR", "metricKey": "new_coverage", "comparator": "LT", "errorThreshold": "80", "actualValue": "12.5"},
+        ]}}
+        status, failing = gate.fetch_server_gate("https://s", "k", "t", lambda u, t: (200, body))
+        self.assertEqual(status, "ERROR")
+        self.assertEqual(failing, ["new_coverage is 12.5 (needs LT 80)"])
+        self.assertEqual(gate.fetch_server_gate("https://s", "k", "t", lambda u, t: (403, {})), (None, []))
+
     def test_server_gate_status_is_informational(self) -> None:
         body = {"projectStatus": {"status": "ERROR"}}
         self.assertEqual(gate.fetch_server_gate_status("https://s", "k", "t", lambda u, t: (200, body)), "ERROR")
