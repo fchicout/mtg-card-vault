@@ -97,7 +97,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/sbom"
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/sbom:/out" \
             anchore/syft:v1.57.0 "mtgvault-${{ matrix.name }}:release" -o "cyclonedx-json=/out/sbom-${{ matrix.name }}-${VERSION}.cdx.json"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom-${{ matrix.name }}
           path: ${{ runner.temp }}/sbom/*.cdx.json
@@ -129,7 +129,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # git-cliff reads the whole history and the tags
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
       - uses: actions/download-artifact@v8
         with:
           pattern: sbom-*
@@ -143,7 +143,7 @@ jobs:
             uvx git-cliff --unreleased --tag "$TAG" --strip header -o notes.md
           fi
           echo "----- notes -----"; cat notes.md
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-notes
           path: notes.md
