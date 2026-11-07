@@ -7,6 +7,7 @@ name = "mtgvault-backend"
 version = "0.1.0"
 description = "MTG Card Vault REST API"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.18",

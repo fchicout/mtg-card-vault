@@ -1,0 +1,16 @@
+name: Spike
+description: A time-boxed investigation whose result is a decision
+labels: ["type:spike"]
+body:
+  - type: textarea
+    id: question
+    attributes: { label: Question to answer, description: What decision does this unblock? Link the OQ-/RSK- id. }
+    validations: { required: true }
+  - type: textarea
+    id: scope
+    attributes: { label: Scope and time box }
+    validations: { required: true }
+  - type: textarea
+    id: outcome
+    attributes: { label: Expected outcome, description: "Usually an ADR update and a resolved open question." }
+    validations: { required: true }

@@ -1,0 +1,19 @@
+name: Bug
+description: Something does not behave as documented
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: "Include the version or commit and, if relevant, the correlation id (X-Request-ID)." }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected behaviour, description: "Cite the requirement or story if there is one." }
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to reproduce }
+    validations: { required: true }
+  - type: markdown
+    attributes:
+      value: "Security problems do not belong here: use the private vulnerability report described in SECURITY.md."
