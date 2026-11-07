@@ -1,27 +1,74 @@
-<div class="main-container">
-  <header class="header header-6">
+<clr-main-container>
+  <clr-header>
     <div class="branding">
-      <span class="title">MTG Card Vault</span>
+      <a routerLink="/" class="nav-link">
+        <span class="title" i18n="@@app.title">MTG Card Vault</span>
+      </a>
     </div>
-  </header>
+    <div class="header-actions">
+      <a
+        href="#"
+        role="button"
+        class="nav-link nav-text"
+        data-testid="theme-toggle"
+        (click)="$event.preventDefault(); theme.toggle()"
+      >
+        <cds-icon
+          [attr.shape]="theme.theme() === 'dark' ? 'sun' : 'moon'"
+          aria-hidden="true"
+        ></cds-icon>
+        @if (theme.theme() === 'dark') {
+          <ng-container i18n="@@theme.light">Light theme</ng-container>
+        } @else {
+          <ng-container i18n="@@theme.dark">Dark theme</ng-container>
+        }
+      </a>
+    </div>
+  </clr-header>
+
   <div class="content-container">
+    <clr-vertical-nav
+      [clrVerticalNavCollapsible]="true"
+      role="navigation"
+      i18n-aria-label="@@nav.label"
+      aria-label="Main navigation"
+    >
+      <a clrVerticalNavLink routerLink="/vault" routerLinkActive="active">
+        <cds-icon clrVerticalNavIcon shape="library"></cds-icon>
+        <ng-container i18n="@@nav.vault">Vault</ng-container>
+      </a>
+      <a clrVerticalNavLink routerLink="/catalogue" routerLinkActive="active">
+        <cds-icon clrVerticalNavIcon shape="search"></cds-icon>
+        <ng-container i18n="@@nav.catalogue">Catalogue</ng-container>
+      </a>
+      <a clrVerticalNavLink routerLink="/scan" routerLinkActive="active">
+        <cds-icon clrVerticalNavIcon shape="camera"></cds-icon>
+        <ng-container i18n="@@nav.scan">Scan</ng-container>
+      </a>
+      <a clrVerticalNavLink routerLink="/account" routerLinkActive="active">
+        <cds-icon clrVerticalNavIcon shape="user"></cds-icon>
+        <ng-container i18n="@@nav.account">Account</ng-container>
+      </a>
+    </clr-vertical-nav>
+
     <main class="content-area" id="main">
-      <h1>Walking skeleton</h1>
-      @if (loading()) {
-        <span class="spinner spinner-md" role="status">Loading…</span>
-      } @else if (failed()) {
-        <clr-alert clrAlertType="danger" [clrAlertClosable]="false">
-          <clr-alert-item>
-            <span class="alert-text" data-testid="error">The API could not be reached.</span>
-          </clr-alert-item>
-        </clr-alert>
-      } @else {
-        <div class="card">
-          <div class="card-block">
-            <p class="card-text" data-testid="greeting">{{ greeting() }}</p>
-          </div>
-        </div>
-      }
+      <app-notifications />
+      <router-outlet />
     </main>
   </div>
-</div>
+
+  <footer class="app-footer" data-testid="footer">
+    <p class="p5">
+      <ng-container i18n="@@footer.scryfall">Card data and images are provided by</ng-container>
+      <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer">Scryfall</a>,
+      <ng-container i18n="@@footer.scryfallNote"
+        >which is not affiliated with this project.</ng-container
+      >
+    </p>
+    <p class="p5" i18n="@@footer.fancontent">
+      MTG Card Vault is unofficial Fan Content permitted under the Wizards of the Coast Fan Content
+      Policy. It is not approved or endorsed by Wizards of the Coast. Magic: The Gathering is a
+      trademark of Wizards of the Coast LLC.
+    </p>
+  </footer>
+</clr-main-container>
