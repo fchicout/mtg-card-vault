@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.13
+**Docs set version:** 0.3.14
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.14 | 2026-11-07 | SonarQube topology final (issue #5): OQ-08 resolved, ADR-011 topology and open hotspot follow-up, RSK-04 reassessed. |
 | 0.3.13 | 2026-11-07 | Compose stack (issue #10): ADR-016 (Caddy edge, headers in the front-end server), OQ-03 resolved, infrastructure table, operator quickstart in section 7.6; the repository bundles no identity provider any more: sign-in uses the homelab Authelia (section 7.3). |
 | 0.3.12 | 2026-11-07 | E2E harness (issue #12): browser matrix, `ci` compose profile with the development Authelia, fake camera, Scryfall record/replay, shared axe helper; the dev Authelia is defined once in deploy/compose.yaml. |
 | 0.3.11 | 2026-11-07 | Application shell (issue #9): layout, lazy routes, error alerts, state patterns, i18n and accessibility checks described in section 8.9. |
