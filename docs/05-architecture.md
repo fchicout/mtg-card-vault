@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.12
+**Docs set version:** 0.3.13
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -117,7 +117,7 @@ Channel table: browser↔proxy HTTPS/443 · proxy↔api HTTP on internal network
 | `worker` | Scheduled jobs (price refresh); same codebase and image as `api`, different entry command. | Python, APScheduler |
 | `db` | Persistent data. | PostgreSQL |
 | `authelia` | Identity provider (OIDC). | Authelia |
-| `proxy` | TLS termination, routing, security headers. | Traefik or Caddy (OQ-03) |
+| `proxy` | TLS termination, HTTP to HTTPS redirect, HSTS. | Caddy (ADR-016) |
 
 ### 5.2 Level 2 — back end (`backend/`)
 
@@ -389,11 +389,11 @@ flowchart LR
 
 | Service | Image | Exposed | Notes |
 |---|---|---|---|
-| proxy | Traefik/Caddy | 80→443, 443 | Redirect HTTP→HTTPS, HSTS, security headers. |
-| frontend | nginx-unprivileged serving built SPA | internal | CSP and `Permissions-Policy: camera=(self)`. |
+| proxy | Caddy (pinned by digest) | 80 and 443 (8080 and 8443 in development) | The only published service. Certificate from Caddy's local CA for `localhost`, from Let's Encrypt for a real domain; HTTP redirects to HTTPS keeping path and port; HSTS. |
+| frontend | nginx-unprivileged serving built SPA | internal | Read-only; CSP with a per-response nonce, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy: camera=(self)`; proxies API paths to the api. |
 | api | project image (non-root, slim) | internal | `/healthz`, `/readyz`; runs Alembic migrations before start. |
-| worker | same image, command `worker` | none | Scheduler for price refresh. |
-| db | `postgres` (current major) | none | Named volume; backups documented. |
+| worker | same image, command `python -m mtgvault.worker` | none | Profile `worker`; idle until the price refresh job exists (BL-44). |
+| db | `postgres` 17 (pinned by digest) | none | On an internal network with no route out; named volume; backup stub in section 7.2a. |
 | authelia | `authelia/authelia` | via proxy | OIDC clients: `mtgvault-spa` (public, PKCE). Its configuration is under `deploy/authelia/`. |
 
 ### 7.2 Configuration (environment, validated at start-up)
@@ -438,6 +438,13 @@ Jobs of `ci.yml` (job ids are the required status checks):
 
 Branch protection on `main` and `develop`: PR required, required checks = all `ci.yml` jobs, linear-friendly merge (squash for features keeps atomic history; merge commits for releases/hotfixes per gitflow). The Sonar jobs must reach the self-hosted instance (self-hosted runner or tunnel if needed; `ASM-05`, `RSK-04`, `OQ-08`). SonarQube is never the judge: the same `scripts/quality_gate.py` runs on developer machines through `scripts/run_local_gates.py` and in `ci.yml`.
 
+### 7.6 Operator quickstart (compose)
+1. `cp deploy/.env.example deploy/.env` and set `POSTGRES_PASSWORD` (`openssl rand -hex 32`). For production also set `APP_HOST` to your domain, `HTTP_PORT=80`, `HTTPS_PORT=443` and, once HTTPS works, `HSTS_MAX_AGE=31536000`; ports 80 and 443 must reach the host for the certificate.
+2. `docker compose -f deploy/compose.yaml up -d --build` starts database, API (which migrates the database first), front end and the proxy; `docker compose ps` shows every service healthy. Add `--profile worker` for the scheduled-jobs worker, `--profile dev` for the local Authelia (section 7.3).
+3. Open `https://<APP_HOST>[:port]/`. Development uses `https://localhost:8443`; trust the proxy's local CA once with `docker compose cp proxy:/data/caddy/pki/authorities/local/root.crt .` and import that file into your browser or system store. Plain HTTP only redirects.
+4. Upgrade: pull or build the new version and run `up -d` again; migrations run on start. Back up as in section 7.2a. Only the proxy publishes ports; the database is unreachable from outside the compose network.
+5. Deployment to the homelab cluster is a different path (`ADR-015`); the images are the same.
+
 ### 7.5 Versioning and branching
 Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`) → back-merge to `develop`; `hotfix/*` from `main`. Conventional Commits drive the version bump (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; pre-1.0 rules apply). Commit scopes: `auth`, `vault`, `catalog`, `scan`, `pricing`, `api`, `ui`, `deploy`, `ci`, `docs`.
 
@@ -461,7 +468,7 @@ Enforced conventions (`scripts/check_commit_policy.py`):
 ### 8.2 Security hardening
 Input validation by Pydantic; ORM with bound parameters; upload limits and decompression-bomb guard (`FR-SCN-08`); SSRF prevention by calling only configured hosts; security headers (`NFR-SEC-06`); secrets only through environment; non-root containers; dependency, secret and image scanning in CI (policy below); SonarQube SAST.
 
-**Content-Security-Policy recipe (verified on the production build with Clarity 18.5.0, `NFR-SEC-06`):** `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-<per response>' 'sha256-<Clarity style>'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`. How it is met: the production build does not inline critical CSS (`optimization.styles.inlineCritical: false`), which removes every inline script and style from `index.html`; `<app-root ngCspNonce="__CSP_NONCE__">` lets Angular tag the styles it injects, and the reverse proxy substitutes one random nonce per response in both the page and the header; Clarity's web components inject one static shadow-DOM style (`:host{all:initial;…}`) that is allowed by its hash, which the spike script prints and which must be re-derived on every Clarity upgrade. No `unsafe-inline` and no `unsafe-eval`.
+**Content-Security-Policy recipe (verified on the production build with Clarity 18.5.0, `NFR-SEC-06`):** `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-<per response>' 'sha256-<Clarity style>'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`. How it is met: the production build does not inline critical CSS (`optimization.styles.inlineCritical: false`), which removes every inline script and style from `index.html`; `<app-root ngCspNonce="__CSP_NONCE__">` lets Angular tag the styles it injects, and the front-end server substitutes one random nonce per response (nginx `sub_filter` with `$request_id`) in both the page and the header, so the policy holds behind any proxy; Clarity's web components inject one static shadow-DOM style (`:host{all:initial;…}`) that is allowed by its hash, which the spike script prints and which must be re-derived on every Clarity upgrade. No `unsafe-inline` and no `unsafe-eval`.
 
 **DevSecOps policy (issue #14):** thresholds - secrets: any finding fails (full history, scanner version pinned); Python dependencies: any known vulnerability fails; npm: High/Critical fail (production dependencies: Moderate and above); images: unfixed-ignored High/Critical fail. Scanner versions are pinned so a new scanner release never changes the verdict by itself; the vulnerability databases are always current, which is why the nightly workflow exists. **Exceptions:** `security/exceptions.yaml` is the only way to accept a finding. Each entry has `id`, `tool` (`trivy`, `pip-audit`, `npm-audit`), `justification`, `owner` and `expires` (at most 90 days ahead); `scripts/security_exceptions.py check` fails CI as soon as an entry expires, and the same script feeds the active ids to pip-audit, Trivy and npm audit. An empty list is the goal. **Code scanning:** Trivy results (SARIF) and CodeQL appear in the repository's Security tab. **SBOM:** Syft writes CycloneDX documents for both images on every CI run; releases attach them (issue #11).
 
@@ -615,6 +622,15 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Decision:** The environment infrastructure (namespaces, database, TLS, secrets, access control) is managed outside this repository. CI (`publish-images.yml`) only builds images tagged with the immutable commit SHA and pushes them to GHCR; it never deploys. After the work is tested and done, the operator runs the infrastructure playbook locally with that SHA, then verifies the site over HTTPS (health endpoints answer and plain HTTP only redirects to HTTPS). No deployment credentials are stored in GitHub.
 - **Consequences:** A release needs one manual command; there is no continuous deployment and no cluster API exposure. Image names and tags are the contract between this repository and the infrastructure.
 - **Alternatives:** Push from GitHub Actions with a restricted credential (rejected by the owner: exposes the cluster API and holds credentials in GitHub), pull-based deploys from the cluster (Rundeck), or a GitOps controller; revisit if releases become frequent.
+
+---
+
+### ADR-016 — Caddy as the TLS edge; security headers in the front-end server
+- **Status:** Accepted (resolves `OQ-03`)
+- **Context:** The stack needs HTTPS everywhere (`CON-11`: browsers expose the camera only on secure origins), a certificate story for development and for production, and the same security headers whatever sits in front of the application (the homelab deployment uses Traefik, the compose stack needs its own proxy).
+- **Decision:** **Caddy** is the only published service of the compose stack: automatic certificates (its own local CA for `localhost`, Let's Encrypt for a real `APP_HOST`), an explicit HTTP to HTTPS redirect that keeps path and port, and HSTS (short by default, one year once HTTPS is proven). Everything else - the CSP with its per-response nonce, `nosniff`, `Referrer-Policy`, `X-Frame-Options` and `Permissions-Policy: camera=(self)` - is set by the front-end server, so a different proxy changes nothing. The database sits on an internal network, containers are read-only with all capabilities dropped except those their entrypoints need, and base images are pinned by digest.
+- **Consequences:** One small, readable proxy file; certificates need no operator tooling; a developer trusts Caddy's local root once. Header and CSP regressions fail the E2E `security` spec.
+- **Alternatives:** Traefik (powerful, but label-driven configuration and a separate ACME setup for a single-site stack); headers at the proxy only (would be lost behind another proxy).
 
 ---
 
