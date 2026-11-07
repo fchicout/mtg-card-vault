@@ -365,6 +365,32 @@ jobs:
           name: sbom
           path: ${{ runner.temp }}/sbom/*.cdx.json
 
+  # ------------------------------------------------------------------ identity
+  authelia-roundtrip:
+    name: authelia-roundtrip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Start the development Authelia (HTTPS)
+        working-directory: deploy/authelia
+        run: |
+          ./dev-secrets.sh
+          docker compose up -d
+          for i in $(seq 1 30); do
+            curl -fsS --cacert secrets/tls.crt --resolve auth.localtest.me:9091:127.0.0.1 \
+              https://auth.localtest.me:9091/.well-known/openid-configuration >/dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          docker compose logs authelia
+          exit 1
+      - name: Authorization code + PKCE round trip yields a verifiable RS256 JWT (ADR-003)
+        working-directory: deploy/authelia
+        run: python3 -I roundtrip.py
+      - name: Authelia log on failure
+        if: failure()
+        working-directory: deploy/authelia
+        run: docker compose logs authelia | tail -50
+
   # ------------------------------------------------------------------ sonarqube
   # SonarQube is an analysis and issue source only: the verdict is produced by
   # scripts/quality_gate.py (open bugs, vulnerabilities, Blocker/Critical issues), never by
