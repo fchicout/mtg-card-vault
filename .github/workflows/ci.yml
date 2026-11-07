@@ -115,7 +115,7 @@ jobs:
       - run: uv sync --frozen
       - name: Unit, contract and integration tests (PostgreSQL via testcontainers) with coverage
         run: uv run pytest --cov --cov-report=xml --cov-report=term-missing
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: backend-coverage
           path: backend/coverage.xml
@@ -141,7 +141,7 @@ jobs:
       - name: Unit tests with coverage
         run: npm run test:coverage
       - run: npm run build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: frontend-coverage
           path: frontend/coverage/frontend/lcov.info
@@ -263,7 +263,7 @@ jobs:
       - name: Stack logs on failure
         if: failure()
         run: docker compose -f deploy/compose.yaml logs --no-color --tail 200
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-artifacts
@@ -377,7 +377,7 @@ jobs:
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/sbom:/out" \
               anchore/syft:v1.57.0 "mtgvault-$pair:ci" -o "cyclonedx-json=/out/sbom-$pair.cdx.json"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: ${{ runner.temp }}/sbom/*.cdx.json
