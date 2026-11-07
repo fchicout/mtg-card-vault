@@ -1,6 +1,6 @@
 # 04 — Use Cases
 
-**Docs set version:** 0.3.10
+**Docs set version:** 0.3.11
 **Document:** 04 Use Cases (Cockburn "fully dressed" template)
 **Status:** Draft
 **Last updated:** 2026-10-31
