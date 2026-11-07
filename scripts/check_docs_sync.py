@@ -4,12 +4,18 @@
 Rules are described in ``docs/README.md`` (section 2 and 5). Exit code 0 means
 the set is in sync, 1 means at least one violation (all are printed).
 
-Usage:  python3 scripts/check_docs_sync.py [docs_dir]
+Usage:  python3 scripts/check_docs_sync.py [docs_dir] [--commits RANGE] [--code DIR ...] [--strict-refs]
+
+``--commits RANGE`` (a git revision range such as ``origin/develop..HEAD``) and ``--code DIR``
+(scanned for ``Implements:`` markers) look for IDs that the documents do not define. Unknown
+references are reported as warnings; ``--strict-refs`` turns them into failures.
 """
 
 from __future__ import annotations
 
+import argparse
 import re
+import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -71,6 +77,7 @@ def invert(mapping: dict[str, set[str]]) -> dict[str, set[str]]:
 class Checker:
     def __init__(self, docs_dir: Path) -> None:
         self.errors: list[str] = []
+        self.known: set[str] = set()
         self.texts: dict[str, str] = {}
         for key, name in DOC_FILES.items():
             path = docs_dir / name
@@ -253,9 +260,9 @@ class Checker:
     def run(self) -> int:
         if not self.errors:
             self.check_versions()
-            known = self.check_definitions()
-            self.check_traceability(known)
-            self.check_objectives_and_adrs(known)
+            self.known = self.check_definitions()
+            self.check_traceability(self.known)
+            self.check_objectives_and_adrs(self.known)
         for error in self.errors:
             print(f"ERROR: {error}")
         if self.errors:
@@ -265,10 +272,78 @@ class Checker:
         return 0
 
 
+MARKER_RE = re.compile(r"Implements:(.*)")
+CODE_SUFFIXES = {".py", ".ts", ".html", ".yml", ".yaml"}
+SKIP_DIRS = {"node_modules", ".venv", "dist", ".git", "__pycache__", "coverage"}
+
+
+def unknown_references(known: set[str], sources: dict[str, str]) -> list[str]:
+    """One message per (source, ID) where the source mentions an ID that no document defines."""
+    messages = []
+    for name, text in sources.items():
+        for identifier in sorted(ids_in(text, ID_RE) - known):
+            messages.append(f"{name}: references unknown ID {identifier}")
+    return messages
+
+
+def commit_messages(revision_range: str, cwd: Path) -> dict[str, str]:
+    """``{short sha + subject: full message}`` for a git revision range."""
+    out = subprocess.run(  # noqa: S603  # fixed git invocation with a caller-supplied range
+        ["git", "log", "--format=%h %s%x00%B%x01", revision_range],  # noqa: S607
+        cwd=cwd, capture_output=True, text=True, check=True,  # stderr is shown by the caller
+    ).stdout
+    messages = {}
+    for entry in filter(None, (e.strip() for e in out.split("\x01"))):
+        head, _, body = entry.partition("\x00")
+        messages[f"commit {head}"] = body
+    return messages
+
+
+def code_markers(directories: list[Path]) -> dict[str, str]:
+    """The text after every ``Implements:`` marker, keyed by ``file:line``."""
+    found: dict[str, str] = {}
+    for directory in directories:
+        for path in sorted(directory.rglob("*")):
+            if not path.is_file() or path.suffix not in CODE_SUFFIXES:
+                continue
+            if SKIP_DIRS & set(path.parts):
+                continue
+            for number, line in enumerate(path.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
+                match = MARKER_RE.search(line)
+                if match:
+                    found[f"{path}:{number}"] = match.group(1)
+    return found
+
+
 def main(argv: list[str]) -> int:
-    default = Path(__file__).resolve().parent.parent / "docs"
-    docs_dir = Path(argv[1]) if len(argv) > 1 else default
-    return Checker(docs_dir).run()
+    root = Path(__file__).resolve().parent.parent
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("docs_dir", nargs="?", type=Path, default=root / "docs")
+    parser.add_argument("--commits", metavar="RANGE", help="git revision range whose messages are checked")
+    parser.add_argument("--code", metavar="DIR", type=Path, action="append", default=[],
+                        help="directory scanned for 'Implements:' markers (repeatable)")
+    parser.add_argument("--strict-refs", action="store_true",
+                        help="fail (not just warn) on unknown IDs in commits or code")
+    args = parser.parse_args(argv[1:])
+
+    checker = Checker(args.docs_dir)
+    status = checker.run()
+    if status != 0 or not (args.commits or args.code):
+        return status
+
+    sources: dict[str, str] = {}
+    if args.commits:
+        try:
+            sources.update(commit_messages(args.commits, root))
+        except subprocess.CalledProcessError as error:
+            print(f"ERROR: cannot read commits for '{args.commits}': {(error.stderr or '').strip()}")
+            return 2
+    sources.update(code_markers(args.code))
+    messages = unknown_references(checker.known, sources)
+    for message in messages:
+        print(f"{'ERROR' if args.strict_refs else 'WARNING'}: {message}")
+    print(f"Checked {len(sources)} commit message(s) / marker(s): {len(messages)} unknown reference(s).")
+    return 1 if (messages and args.strict_refs) else 0
 
 
 if __name__ == "__main__":
