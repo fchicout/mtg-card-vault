@@ -403,14 +403,14 @@ flowchart LR
 Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: back up with `pg_dump --format=custom --file mtgvault.dump "$DATABASE_URL"` (schema, data and the `alembic_version` row) and restore into an empty database with `pg_restore --clean --if-exists --dbname "$DATABASE_URL" mtgvault.dump`; the API applies any newer migrations itself on its next start. Scheduled backups, retention and a restore rehearsal belong to the operator runbook (milestone M6).
 
 ### 7.3 Environments
-`dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `staging` (https://staging.mtg.fchicout.dev, follows `develop`), `prod` (https://mtg.fchicout.dev, follows `main`). Same images across environments; differences only in configuration. Staging and production are served over HTTPS only (HTTP is redirected) and deployed as described in `ADR-015`.
+`dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `staging` (https://staging.mtg.fchicout.dev, follows `develop`), `prod` (https://mtg.fchicout.dev, follows `main`). Same images across environments; differences only in configuration. Staging and production are served over HTTPS only (HTTP is redirected) and deployed manually as described in `ADR-015`.
 
 ### 7.4 CI/CD pipeline (GitHub Actions)
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
 | `ci.yml` | PR to `develop`/`main`; push to `develop` or `main` | commit/branch policy; docs-sync; the jobs listed below. |
-| `deploy.yml` | green `ci.yml` run on a push to `develop` or `main` | publish images to GHCR tagged with the commit SHA, roll them out to staging (`develop`) or production (`main`), roll back on failure, smoke-test over HTTPS (`ADR-015`). |
+| `publish-images.yml` | green `ci.yml` run on a push to `develop` or `main` | build the images and push them to GHCR tagged with the commit SHA; it never deploys (`ADR-015`). |
 | `release.yml` | tag `vX.Y.Z` on `main` | build multi-arch images, scan, push to GHCR with semver tags, create GitHub Release from conventional commits. |
 | `dependabot` | weekly | PRs for Python, npm, Docker, Actions dependencies. |
 
@@ -589,12 +589,12 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 
 ---
 
-### ADR-015 — Staging and production on the homelab cluster, deployed from GitHub Actions
-- **Status:** Accepted
-- **Context:** The project needs real environments: staging follows `develop`, production follows `main`, both on the operator's K3s cluster (`CON-10`) and reachable only over HTTPS (`CON-11`). GitHub-hosted runners cannot be trusted with cluster administration.
-- **Decision:** The environment infrastructure (namespaces, database, TLS, secrets, access control) is managed outside this repository. This repository's `deploy.yml` builds images tagged with the immutable commit SHA, pushes them to GHCR, and rolls them out with a credential that can only update the two Deployments of one environment. A failed rollout is rolled back automatically and every deployment is verified by HTTPS smoke tests; plain HTTP must only redirect to HTTPS. Each environment is a GitHub Environment holding its own credentials, and production requires a reviewer. A run for a commit that is no longer the branch tip is skipped.
-- **Consequences:** No cluster administration rights in GitHub, but the cluster API must be reachable from the runners; image names and tags are the contract between this repository and the infrastructure.
-- **Alternatives:** Pull-based deploys from the cluster (Rundeck) or a GitOps controller; both avoid exposing the cluster API but add moving parts. Revisit if the exposure becomes a concern.
+### ADR-015 — Staging and production on the homelab cluster, deployed manually
+- **Status:** Accepted (amended 2026-11-07: automated deployment withdrawn)
+- **Context:** The project needs real environments: staging follows `develop`, production follows `main`, both on the operator's K3s cluster (`CON-10`) and reachable only over HTTPS (`CON-11`). The owner wants every release to be a deliberate, human-controlled act and no cluster credentials or cluster API exposure on GitHub.
+- **Decision:** The environment infrastructure (namespaces, database, TLS, secrets, access control) is managed outside this repository. CI (`publish-images.yml`) only builds images tagged with the immutable commit SHA and pushes them to GHCR; it never deploys. After the work is tested and done, the operator runs the infrastructure playbook locally with that SHA, then verifies the site over HTTPS (health endpoints answer and plain HTTP only redirects to HTTPS). No deployment credentials are stored in GitHub.
+- **Consequences:** A release needs one manual command; there is no continuous deployment and no cluster API exposure. Image names and tags are the contract between this repository and the infrastructure.
+- **Alternatives:** Push from GitHub Actions with a restricted credential (rejected by the owner: exposes the cluster API and holds credentials in GitHub), pull-based deploys from the cluster (Rundeck), or a GitOps controller; revisit if releases become frequent.
 
 ---
 
