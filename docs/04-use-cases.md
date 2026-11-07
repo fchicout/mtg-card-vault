@@ -1,6 +1,6 @@
 # 04 — Use Cases
 
-**Docs set version:** 0.3.8
+**Docs set version:** 0.3.9
 **Document:** 04 Use Cases (Cockburn "fully dressed" template)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -238,8 +238,8 @@ flowchart LR
 - **Trigger:** The Collector chooses "Sign out".
 - **Main success scenario:**
   1. The SPA discards tokens from memory.
-  2. The SPA redirects to Authelia's end-session endpoint.
-  3. Authelia ends its session and redirects to the post-logout page.
+  2. The SPA revokes the refresh token at Authelia and redirects the browser to Authelia's logout page, giving the signed-out page of the application as the return address.
+  3. Authelia ends its single-sign-on session and redirects to that page.
   4. The SPA shows the signed-out page.
 - **Extensions:**
   - 2a. Authelia is unreachable → the local session is still cleared; the SPA informs the Collector that the identity-provider session may remain.

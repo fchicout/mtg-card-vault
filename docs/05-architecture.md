@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.8
+**Docs set version:** 0.3.9
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -52,7 +52,7 @@ See `01` §3 (`STK-01` … `STK-06`). Architecture-relevant expectations: STK-01
 | Partner | Inputs to the system | Outputs from the system |
 |---|---|---|
 | Collector | Credentials (to Authelia), camera frames, search text, vault edits | Vault views, candidates, prices, totals |
-| Authelia | ID/access/refresh tokens, JWKS, discovery document | Authorization requests, end-session |
+| Authelia | ID/access/refresh tokens, JWKS, discovery document | Authorization requests, token revocation, portal logout |
 | Scryfall | Card data, printings, prices, images (CDN) | Search / lookup / collection requests |
 | Operator | Configuration (`.env`), upgrades | Logs, health endpoints |
 
@@ -403,6 +403,8 @@ flowchart LR
 Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: back up with `pg_dump --format=custom --file mtgvault.dump "$DATABASE_URL"` (schema, data and the `alembic_version` row) and restore into an empty database with `pg_restore --clean --if-exists --dbname "$DATABASE_URL" mtgvault.dump`; the API applies any newer migrations itself on its next start. Scheduled backups, retention and a restore rehearsal belong to the operator runbook (milestone M6).
 
 ### 7.3 Environments
+**Development identity provider (issue #4):** `deploy/authelia/` holds a local Authelia 4.39 (HTTPS only, `https://auth.localtest.me:9091`, where `*.localtest.me` resolves to localhost). `./dev-secrets.sh` generates throwaway secrets and a self-signed certificate into the git-ignored `secrets/`; `docker compose up -d` starts it; `python3 roundtrip.py` runs the authorization-code + PKCE round trip and checks the token (claims, RS256 signature against the JWKS, refresh rotation, revocation, PKCE enforcement, two-user isolation, portal logout). Client `mtgvault-spa` (public, PKCE `S256`, redirect `https://app.localtest.me:4200/callback`, audience `mtgvault-api`, implicit consent). Test users `alice` and `bob`, both with the password `dev-only-password` (it protects nothing: the provider only runs on localhost). No real credential is committed.
+
 `dev` (compose with hot reload and a dev Authelia user), `ci` (ephemeral compose for E2E), `staging` (https://staging.mtg.fchicout.dev, follows `develop`), `prod` (https://mtg.fchicout.dev, follows `main`). Same images across environments; differences only in configuration. Staging and production are served over HTTPS only (HTTP is redirected) and deployed manually as described in `ADR-015`.
 
 ### 7.4 CI/CD pipeline (GitHub Actions)
@@ -451,8 +453,8 @@ Enforced conventions (`scripts/check_commit_policy.py`):
 ## 8. Cross-cutting concepts
 
 ### 8.1 Authentication and authorization
-- SPA = public OIDC client, Authorization Code + PKCE (S256), tokens in memory, refresh token rotation (`FR-AUTH-01`, `FR-AUTH-03`).
-- API = resource server. `TokenVerifier` port, implemented by `adapters/auth`: downloads discovery + JWKS from the issuer, caches keys, refreshes on unknown `kid` (rate-limited), enforces algorithm allow-list, `iss`, `aud`, `exp`, `nbf` (`FR-AUTH-05`). Fallback adapter: token introspection if Authelia cannot issue JWT access tokens (OQ-05, RSK-05) — same port, no service changes.
+- SPA = public OIDC client, Authorization Code + PKCE (S256), tokens in memory, refresh token rotation (`FR-AUTH-01`, `FR-AUTH-03`); it requests the API audience explicitly and signs out by revoking the refresh token and visiting Authelia's logout page (`ADR-003`, `FR-AUTH-02`).
+- API = resource server. `TokenVerifier` port, implemented by `adapters/auth`: downloads discovery + JWKS from the issuer, caches keys, refreshes on unknown `kid` (rate-limited), enforces algorithm allow-list, `iss`, `aud`, `exp`, `nbf` (`FR-AUTH-05`). Authelia does issue JWT access tokens (`OQ-05`, `ADR-003`); token introspection stays a possible adapter behind the same port.
 - Authorization = ownership. The current user id comes only from the verified `sub` (`FR-VLT-07`); repositories require `user_id` in every query method (no unscoped access API exists).
 - "Only the front end may call the API": enforced by (a) the token audience bound to the SPA's client, (b) CORS allow-list, (c) no cookie auth (so no CSRF surface). A token is the security boundary; network origin cannot be proven for non-browser clients (`NFR-SEC-01` limitation).
 
@@ -517,11 +519,11 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Alternatives:** Django+DRF (heavier, ORM-centric), Flask (assemble everything yourself).
 
 ### ADR-003 — Authelia OIDC, PKCE, locally validated JWT
-- **Status:** Accepted (pending spike OQ-05)
+- **Status:** Accepted (verified by the spike of issue #4 on Authelia 4.39.28, resolves `OQ-05`)
 - **Context:** CON-04 and the requirement that every call be authenticated and only the front end may call the API. A browser SPA cannot keep a client secret.
-- **Decision:** Authelia is the OpenID Connect provider. SPA = public client with Authorization Code + PKCE and refresh-token rotation. API validates JWT access tokens locally (JWKS, `iss`, `aud`, `exp`, `nbf`, algorithm allow-list). The Authelia client is configured for signed JWT access tokens with this API's audience.
-- **Consequences:** No self-minted tokens, no shared secret, stateless API. Token revocation relies on short lifetimes. "Only the front end" is enforced through audience + CORS, not network proof (documented limitation).
-- **Alternatives:** Forward-auth + backend-minted JWT (more custom security code); opaque tokens with introspection (extra call per request; kept as fallback adapter).
+- **Decision:** Authelia is the OpenID Connect provider. The SPA is a public client with Authorization Code + PKCE (`S256`, enforced) and refresh-token rotation. Authelia is configured with `access_token_signed_response_alg: RS256`, which makes access tokens **JWTs** (`typ: at+jwt`, RFC 9068, `kid` published in the JWKS) carrying `iss`, `aud`, `sub` (a stable UUID per user), `client_id`, `scp`, `iat`, `nbf`, `exp` and `jti`. The API validates them locally (JWKS, `iss`, `aud`, `exp`, `nbf`, RS256 allow-list). **Audience:** the client's `audience` setting is only the list of audiences it may *request*; the SPA must send `audience=<API audience>` on every authorization request (for example through the OIDC library's extra query parameters), otherwise the token has no API audience. Dev audience: `mtgvault-api`. **Lifetimes:** access token 15 minutes, refresh token 8 hours, rotated on every use; ID token 15 minutes. **Sign-out:** Authelia advertises no OIDC `end_session_endpoint`, so the SPA discards its tokens, revokes the refresh token at the revocation endpoint and sends the browser to `<authelia>/logout?rd=<application URL>` (the target must be inside the cookie domain), which ends the SSO session. **Failure handling:** a refresh that is rejected, revoked or reused answers HTTP 400 `invalid_grant` or, in some cases, HTTP 500 (upstream issue authelia/authelia#13390); the SPA treats any failed refresh as "sign in again". Re-using an authorization code revokes every token issued from it.
+- **Consequences:** No self-minted tokens, no shared secret, stateless API. Token revocation relies on the 15-minute lifetime (a revoked refresh token stops renewal, an access token stays valid until it expires). "Only the front end" is enforced through audience + CORS, not network proof (documented limitation). Verified end to end by `deploy/authelia/roundtrip.py` (30 checks, run in CI).
+- **Alternatives:** Forward-auth + backend-minted JWT (more custom security code); opaque tokens with introspection (extra call per request; the `TokenVerifier` port keeps this possible without changing services).
 
 ### ADR-004 — OCR plus Scryfall fuzzy match, always user-confirmed
 - **Status:** Accepted (engine choice pending OQ-02)

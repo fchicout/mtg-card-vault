@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.8
+**Docs set version:** 0.3.9
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -79,6 +79,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.9 | 2026-11-07 | Authelia spike (issue #4): ADR-003 verified (RS256 JWT access tokens, explicit audience, lifetimes, sign-out without end-session), FR-AUTH-02 and UC-09 reworded, dev identity provider in section 7.3, OQ-05 resolved, RSK-05 reassessed. |
 | 0.3.8 | 2026-11-07 | Release pipeline (issue #11): `release.yml` behaviour, rehearsal mode and the gitflow release procedure in section 7.5. |
 | 0.3.7 | 2026-11-07 | DevSecOps policy (issue #14): thresholds, time-boxed exceptions (`security/exceptions.yaml`), SARIF + CodeQL, nightly rescan, SBOMs, pinned scanners; section 8.2 and the CI table. |
 | 0.3.6 | 2026-11-07 | Commit/branch/tag policy and release tooling decided (issue #6): ADR-010 (`git-cliff` + manual tags), OQ-04 resolved, conventions in section 7.5, `commit-policy` job. |
