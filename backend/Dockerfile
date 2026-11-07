@@ -12,8 +12,12 @@ RUN uv sync --frozen --no-dev --no-editable
 
 # Runtime stage: no build tools, non-root user, nothing but the virtualenv.
 FROM python:3.14-slim
-# The runtime never installs packages: drop pip (and its vendored msgpack/urllib3) from the image.
-RUN python -m pip uninstall -y pip \
+# Pick up OS security fixes published after the base image was built (NFR-SEC-05), then drop the
+# apt lists. The runtime never installs packages: drop pip (and its vendored msgpack/urllib3) too.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip uninstall -y pip \
     && useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin app
 COPY --from=builder --chown=10001:10001 /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
