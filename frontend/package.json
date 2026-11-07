@@ -26,8 +26,8 @@
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@cds/core": "^6.17.0",
-    "@clr/angular": "^18.4.0",
-    "@clr/ui": "^18.4.0",
+    "@clr/angular": "^18.5.0",
+    "@clr/ui": "^18.5.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
