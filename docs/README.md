@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.5
+**Docs set version:** 0.3.7
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -79,6 +79,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.7 | 2026-11-07 | DevSecOps policy (issue #14): thresholds, time-boxed exceptions (`security/exceptions.yaml`), SARIF + CodeQL, nightly rescan, SBOMs, pinned scanners; section 8.2 and the CI table. |
 | 0.3.5 | 2026-11-07 | Docs-sync gate hardened (issue #13): unit-tested script, reference checks for commits and code markers, pre-commit hook, `make docs-check`. |
 | 0.3.4 | 2026-11-07 | ADR-009 pin decided (Angular 22.2 + Clarity 18.5, npm 11, Vitest, upgrade policy), CSP recipe in section 8.2, OQ-01 resolved, RSK-03 reassessed (issue #3). |
 | 0.3.3 | 2026-11-07 | Database foundation (issue #8): ADR-005 notes (sync SQLAlchemy, unit of work, migrate-then-serve), backup/restore stub (§7.2a). |

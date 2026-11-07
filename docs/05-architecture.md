@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.5
+**Docs set version:** 0.3.7
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -410,6 +410,8 @@ Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: ba
 | Workflow | Trigger | Jobs |
 |---|---|---|
 | `ci.yml` | PR to `develop`/`main`; push to `develop` or `main` | commit/branch policy; docs-sync; the jobs listed below. |
+| `codeql.yml` | PR and push to `develop`/`main`, weekly | CodeQL SAST for Python and TypeScript, results in the Security tab, alongside SonarQube (`NFR-SEC-04`). |
+| `security-nightly.yml` | every night | rescans `develop` and `main` (when it exists): full-history secret scan, dependency audits, images built from the branch; new CVEs appear without code changes. |
 | `publish-images.yml` | green `ci.yml` run on a push to `develop` or `main` | build the images and push them to GHCR tagged with the commit SHA; it never deploys (`ADR-015`). |
 | `release.yml` | tag `vX.Y.Z` on `main` | build multi-arch images, scan, push to GHCR with semver tags, create GitHub Release from conventional commits. |
 | `dependabot` | weekly | PRs for Python, npm, Docker, Actions dependencies. |
@@ -426,9 +428,9 @@ Jobs of `ci.yml` (job ids are the required status checks):
 | `quality-gate` | coverage of new code ≥ 80 %, duplicated lines ≤ 3 % (`NFR-MNT-01`) | `scripts/quality_gate.py` |
 | `contract-drift` | committed `openapi.json` and generated Angular client equal what the code generates | regenerate + `git diff` |
 | `e2e` | the compose stack becomes healthy and the UI works in Chromium | Playwright |
-| `secret-scan` | no secrets in the full git history (`NFR-SEC-03`) | gitleaks |
-| `dependency-audit` | no known High/Critical vulnerabilities (`NFR-SEC-04`) | pip-audit, npm audit |
-| `container-scan` | images run as non-root and have no unfixed High/Critical findings (`NFR-SEC-05`) | Trivy |
+| `secret-scan` | no secrets in the full git history (`NFR-SEC-03`) | gitleaks (pinned version) |
+| `dependency-audit` | security exceptions are valid and unexpired; no known vulnerability in Python dependencies and none High/Critical (production: Moderate) in npm dependencies, unless time-boxed in `security/exceptions.yaml` (`NFR-SEC-04`) | pip-audit, npm audit via `scripts/security_exceptions.py` |
+| `container-scan` | images run as non-root and have no unfixed High/Critical findings unless excepted (`NFR-SEC-05`); SARIF goes to GitHub code scanning; CycloneDX SBOMs are produced as an artifact | Trivy (pinned), Syft (pinned) |
 | `sonar-backend`, `sonar-frontend` | analysis published to `mtg-vault-backend` / `mtg-vault-frontend`; no open bugs, vulnerabilities or Blocker/Critical issues | `scripts/quality_gate.py sonar` (warns and passes until `SONAR_HOST_URL` and the project token - `SONAR_TOKEN` for the backend, `SONAR_FRONTEND_TOKEN` for the frontend - are configured) |
 
 Branch protection on `main` and `develop`: PR required, required checks = all `ci.yml` jobs, linear-friendly merge (squash for features keeps atomic history; merge commits for releases/hotfixes per gitflow). The Sonar jobs must reach the self-hosted instance (self-hosted runner or tunnel if needed; `ASM-05`, `RSK-04`, `OQ-08`). SonarQube is never the judge: the same `scripts/quality_gate.py` runs on developer machines through `scripts/run_local_gates.py` and in `ci.yml`.
@@ -447,9 +449,11 @@ Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`)
 - "Only the front end may call the API": enforced by (a) the token audience bound to the SPA's client, (b) CORS allow-list, (c) no cookie auth (so no CSRF surface). A token is the security boundary; network origin cannot be proven for non-browser clients (`NFR-SEC-01` limitation).
 
 ### 8.2 Security hardening
-Input validation by Pydantic; ORM with bound parameters; upload limits and decompression-bomb guard (`FR-SCN-08`); SSRF prevention by calling only configured hosts; security headers (`NFR-SEC-06`); secrets only through environment; non-root containers; dependency, secret and image scanning in CI; SonarQube SAST.
+Input validation by Pydantic; ORM with bound parameters; upload limits and decompression-bomb guard (`FR-SCN-08`); SSRF prevention by calling only configured hosts; security headers (`NFR-SEC-06`); secrets only through environment; non-root containers; dependency, secret and image scanning in CI (policy below); SonarQube SAST.
 
 **Content-Security-Policy recipe (verified on the production build with Clarity 18.5.0, `NFR-SEC-06`):** `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-<per response>' 'sha256-<Clarity style>'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`. How it is met: the production build does not inline critical CSS (`optimization.styles.inlineCritical: false`), which removes every inline script and style from `index.html`; `<app-root ngCspNonce="__CSP_NONCE__">` lets Angular tag the styles it injects, and the reverse proxy substitutes one random nonce per response in both the page and the header; Clarity's web components inject one static shadow-DOM style (`:host{all:initial;…}`) that is allowed by its hash, which the spike script prints and which must be re-derived on every Clarity upgrade. No `unsafe-inline` and no `unsafe-eval`.
+
+**DevSecOps policy (issue #14):** thresholds - secrets: any finding fails (full history, scanner version pinned); Python dependencies: any known vulnerability fails; npm: High/Critical fail (production dependencies: Moderate and above); images: unfixed-ignored High/Critical fail. Scanner versions are pinned so a new scanner release never changes the verdict by itself; the vulnerability databases are always current, which is why the nightly workflow exists. **Exceptions:** `security/exceptions.yaml` is the only way to accept a finding. Each entry has `id`, `tool` (`trivy`, `pip-audit`, `npm-audit`), `justification`, `owner` and `expires` (at most 90 days ahead); `scripts/security_exceptions.py check` fails CI as soon as an entry expires, and the same script feeds the active ids to pip-audit, Trivy and npm audit. An empty list is the goal. **Code scanning:** Trivy results (SARIF) and CodeQL appear in the repository's Security tab. **SBOM:** Syft writes CycloneDX documents for both images on every CI run; releases attach them (issue #11).
 
 ### 8.3 Error handling
 Typed domain exceptions (`domain/errors.py`: `NotFound` 404, `ValidationFailed` 422, `Conflict` 409, `RateLimited` 429 with `Retry-After`, `UpstreamUnavailable` 503) → problem+json with correlation id (`FR-API-02`). Problem `type` is `urn:mtgvault:problem:<slug>`; request-validation errors list the offending fields in `errors`; framework HTTP errors (404, 405, …) use the same document; an unexpected exception becomes a generic `500` whose message and stack trace only go to the log. The SPA has one HTTP error interceptor that maps problem documents to Clarity alerts.
