@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.2
+**Docs set version:** 0.3.3
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -77,6 +77,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.3 | 2026-11-07 | Database foundation (issue #8): ADR-005 notes (sync SQLAlchemy, unit of work, migrate-then-serve), backup/restore stub (§7.2a). |
 | 0.3.2 | 2026-11-07 | Backend foundations (issue #7): module layout, error mapping, correlation id, logging and configuration behaviour documented in docs/05 §5, §8.3, §8.4, §8.7. |
 | 0.3.1 | 2026-11-07 | ADR-015 amended: no automated deployment; CI only publishes images (`publish-images.yml`), the operator deploys manually with the playbook. |
 | 0.3.0 | 2026-11-07 | ADR-015: staging (`develop`) and production (`main`) environments over HTTPS, deployed from GitHub Actions; `deploy.yml` added to the CI/CD table (issue #18). |

@@ -7,6 +7,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
+COPY alembic.ini ./
+COPY migrations ./migrations
 # Non-editable: the package is copied into the venv, so the runtime stage needs no source tree.
 RUN uv sync --frozen --no-dev --no-editable
 
@@ -19,10 +21,16 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && python -m pip uninstall -y pip \
     && useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin app
+WORKDIR /app
 COPY --from=builder --chown=10001:10001 /app/.venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+COPY --from=builder --chown=10001:10001 /app/alembic.ini /app/alembic.ini
+COPY --from=builder --chown=10001:10001 /app/migrations /app/migrations
+# BIND_HOST: the image must listen on its network interface (the proxy connects to it); outside the
+# image the default is loopback only.
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 BIND_HOST=0.0.0.0
 USER 10001
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \
   CMD ["python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"]
-CMD ["uvicorn", "mtgvault.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+# Migrates the database, then serves; if a migration fails the process exits and never listens.
+CMD ["python", "-m", "mtgvault.serve"]
