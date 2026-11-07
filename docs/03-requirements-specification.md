@@ -1,6 +1,6 @@
 # 03 — Software Requirements Specification (SRS)
 
-**Docs set version:** 0.3.8
+**Docs set version:** 0.3.9
 **Document:** 03 Requirements Specification (structured after ISO/IEC/IEEE 29148 / IEEE 830)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -81,7 +81,7 @@ Collector (primary), Operator, Maintainer, Scheduler: see `02` §1.
 | ID | Requirement | Priority | Stories | Verification |
 |---|---|---|---|---|
 | FR-AUTH-01 | The front end shall authenticate users with the OIDC Authorization Code flow with PKCE (S256) against Authelia, requesting scopes `openid profile email offline_access` as needed, and shall keep tokens in memory only (never `localStorage`/`sessionStorage`). | Must | US-001 | E, U |
-| FR-AUTH-02 | The front end shall sign the user out by discarding all tokens and calling Authelia's end-session endpoint. | Must | US-002 | E |
+| FR-AUTH-02 | The front end shall sign the user out by discarding all tokens, revoking the refresh token and sending the browser to Authelia's logout page, which ends the single-sign-on session (Authelia offers no OIDC end-session endpoint, see ADR-003). | Must | US-002 | E |
 | FR-AUTH-03 | The front end shall renew the access token before it expires using refresh-token rotation, retry the interrupted request once, and send the user to sign-in when renewal fails. | Should | US-003 | U, E |
 | FR-AUTH-04 | The API shall create a local user record keyed by the token's `sub` claim on the first authenticated request, idempotently and safely under concurrent requests (unique constraint plus upsert). | Must | US-004 | I |
 | FR-AUTH-05 | The API shall validate the bearer JWT on every endpoint except health checks: signature against Authelia's JWKS (cached with key-rotation handling), algorithm from an allow-list (RS256; never `none`), `iss`, `aud` (the API's client/audience id), `exp` and `nbf` (≤ 60 s leeway). | Must | US-026 | U, I, C |
@@ -236,7 +236,7 @@ Angular SPA with Clarity. Main screens: sign-in required; Vault (datagrid with f
 | Interface | Direction | Protocol | Notes |
 |---|---|---|---|
 | Front end ↔ API | SPA → API | HTTPS REST, JSON, Bearer JWT | Endpoint catalogue in `05` §5.5. |
-| API/SPA ↔ Authelia | Both | OIDC (discovery, authorize, token, JWKS, end-session) | Public OIDC client with PKCE for the SPA; the API is a resource server (audience). |
+| API/SPA ↔ Authelia | Both | OIDC (discovery, authorize, token, JWKS, revocation, portal logout) | Public OIDC client with PKCE for the SPA; the API is a resource server (audience). |
 | API/Worker ↔ Scryfall | Outbound | HTTPS REST/JSON | Rules in Appendix B. |
 | API/Worker ↔ PostgreSQL | Outbound | PostgreSQL wire protocol | Via SQLAlchemy; migrations by Alembic. |
 

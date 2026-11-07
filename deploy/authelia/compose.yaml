@@ -1,0 +1,34 @@
+# Development identity provider (issue #4). Start: ./dev-secrets.sh && docker compose up -d
+# Then https://auth.localtest.me:9091 (*.localtest.me resolves to localhost). Local only.
+name: mtgvault-authelia
+
+services:
+  authelia:
+    image: authelia/authelia:4.39.28
+    environment:
+      X_AUTHELIA_CONFIG_FILTERS: template
+      AUTHELIA_SESSION_SECRET_FILE: /secrets/session_secret
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /secrets/storage_key
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /secrets/reset_jwt_secret
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /secrets/oidc_hmac
+    volumes:
+      - ./configuration.yml:/config/configuration.yml:ro
+      - ./users_database.yml:/config/users_database.yml:ro
+      - ./secrets:/secrets:ro
+      # A named volume (not a bind mount) so Authelia's own user can write its database whatever
+      # the host user is, in rootless Podman and in rootful Docker alike.
+      - authelia-data:/data
+    ports:
+      - "127.0.0.1:9091:9091"
+    # The image entrypoint drops from root to its own user: it needs exactly these three.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  authelia-data:

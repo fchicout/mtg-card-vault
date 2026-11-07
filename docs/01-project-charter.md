@@ -1,6 +1,6 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.3.8
+**Docs set version:** 0.3.9
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -170,7 +170,7 @@ Probability (P) and impact (I): L/M/H.
 | RSK-02 | Scryfall rate limits or policy changes block the app. | M | H | Central rate-limited client (FR-DAT-01); batch endpoint `/cards/collection` for refreshes; local cache of owned cards (FR-DAT-02); graceful degradation (FR-DAT-03). | STK-01 |
 | RSK-03 | Latest Angular is not yet supported by the Clarity release. | L | M | Verify support matrix before bootstrapping (`OQ-01`); pin the newest Angular version Clarity supports and record it as an ADR. | STK-01 |
 | RSK-04 | GitHub-hosted CI runners cannot reach a homelab SonarQube. | H | M | Self-hosted runner, secure tunnel, or fall back to SonarCloud (`ASM-05`). | STK-03 |
-| RSK-05 | Authelia does not issue JWT-format access tokens with the needed `aud`. | M | H | Early spike (`OQ-05`); alternative is validating via token introspection (adapter behind the same port). | STK-01 |
+| RSK-05 | Authelia does not issue JWT-format access tokens with the needed `aud`. | L | H | Early spike (`OQ-05`); alternative is validating via token introspection (adapter behind the same port). | STK-01 |
 | RSK-06 | Documentation drifts from the code. | H | M | Synchronization mandate, `check_docs_sync.py` as a CI gate, docs in Definition of Done (US-031). | STK-01 |
 | RSK-07 | Scope creep (price history, trading, decks…). | M | M | Explicit non-goals (5.2); YAGNY; MoSCoW. | STK-01 |
 | RSK-08 | Camera behaviour differs across browsers/devices. | M | M | Supported-browser policy (NFR-CMP-01); device selection UI; manual fallback. | STK-01 |
@@ -212,7 +212,7 @@ Resolved questions become requirements, ADRs or assumptions, and the row is mark
 | OQ-02 | Which OCR engine (Tesseract via `pytesseract`/`tesserocr`, EasyOCR, PaddleOCR) gives the best accuracy/footprint on the 100-card reference set? | M4 | Open |
 | OQ-03 | Which reverse proxy (Traefik or Caddy) fronts the stack and terminates TLS? | M0 | Open |
 | OQ-04 | Which release automation fits gitflow (release-please, semantic-release, or `git-cliff` + manual tags)? | M0 | Resolved 2026-11-07: `git-cliff` with manual tags (ADR-010). |
-| OQ-05 | Can the Authelia OIDC client be configured to issue RS256-signed JWT access tokens with the API as audience? Else use introspection. | M1 | Open |
+| OQ-05 | Can the Authelia OIDC client be configured to issue RS256-signed JWT access tokens with the API as audience? Else use introspection. | M1 | Resolved 2026-11-07: yes, with the SPA requesting the audience explicitly (ADR-003). |
 | OQ-06 | Which open-source licence (MIT vs Apache-2.0) for the public repository? | M0 | Open |
 | OQ-07 | Should prices be shown in USD only, or USD + EUR? (Docs currently assume both are shown.) | M5 | Open |
 | OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is project-owned)? Status: both projects exist; the GitHub secrets `SONAR_HOST_URL`, `SONAR_TOKEN` (backend) and `SONAR_FRONTEND_TOKEN` (frontend) are set; both `sonar-*` jobs pass in CI (verified 2026-11-07, PR analysis enabled through `SONAR_PR_ANALYSIS=true`); the CI tokens get HTTP 403 on the hotspots API, so that condition stays SKIPPED. | M0 | Open |
