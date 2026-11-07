@@ -39,6 +39,23 @@ jobs:
           python3 -I scripts/check_docs_sync.py \
             --commits "origin/${{ github.base_ref }}..HEAD" --code backend/src --code frontend/src
 
+  commit-policy:
+    name: commit-policy
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      BASE_REF: ${{ github.base_ref }}
+      HEAD_REF: ${{ github.head_ref }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # commit messages and tags are read from git
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Commit messages, branch name and release versions follow the policy (ADR-010)
+        run: python3 -I scripts/check_commit_policy.py --range "origin/${BASE_REF}..HEAD" --branch "${HEAD_REF}"
+
   gate-tests:
     name: gate-tests
     runs-on: ubuntu-latest

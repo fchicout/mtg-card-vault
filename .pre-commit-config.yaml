@@ -8,3 +8,8 @@ repos:
         language: system
         pass_filenames: false
         files: ^(docs/|scripts/check_docs_sync\.py)
+      - id: commit-message
+        name: commit message follows Conventional Commits (ADR-010)
+        entry: python3 scripts/check_commit_policy.py --message-file
+        language: system
+        stages: [commit-msg]
