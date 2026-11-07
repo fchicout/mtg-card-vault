@@ -1,9 +1,9 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.2.1
+**Docs set version:** 0.2.2
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
-**Last updated:** 2026-10-31
+**Last updated:** 2026-11-07
 
 Technology versions are intentionally written as "latest stable supported by …"; exact pins live in `pyproject.toml` / `package.json` and are recorded in the changelog when they change.
 
@@ -422,7 +422,7 @@ Jobs of `ci.yml` (job ids are the required status checks):
 | `secret-scan` | no secrets in the full git history (`NFR-SEC-03`) | gitleaks |
 | `dependency-audit` | no known High/Critical vulnerabilities (`NFR-SEC-04`) | pip-audit, npm audit |
 | `container-scan` | images run as non-root and have no unfixed High/Critical findings (`NFR-SEC-05`) | Trivy |
-| `sonar-backend`, `sonar-frontend` | analysis published to `mtg-vault-backend` / `mtg-vault-frontend`; no open bugs, vulnerabilities or Blocker/Critical issues | `scripts/quality_gate.py sonar` (warns and passes until `SONAR_TOKEN` / `SONAR_HOST_URL` are configured) |
+| `sonar-backend`, `sonar-frontend` | analysis published to `mtg-vault-backend` / `mtg-vault-frontend`; no open bugs, vulnerabilities or Blocker/Critical issues | `scripts/quality_gate.py sonar` (warns and passes until `SONAR_HOST_URL` and the project token - `SONAR_TOKEN` for the backend, `SONAR_FRONTEND_TOKEN` for the frontend - are configured) |
 
 Branch protection on `main` and `develop`: PR required, required checks = all `ci.yml` jobs, linear-friendly merge (squash for features keeps atomic history; merge commits for releases/hotfixes per gitflow). The Sonar jobs must reach the self-hosted instance (self-hosted runner or tunnel if needed; `ASM-05`, `RSK-04`, `OQ-08`). SonarQube is never the judge: the same `scripts/quality_gate.py` runs on developer machines through `scripts/run_local_gates.py` and in `ci.yml`.
 

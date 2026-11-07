@@ -294,8 +294,9 @@ jobs:
   # scripts/quality_gate.py (open bugs, vulnerabilities, Blocker/Critical issues), never by
   # SonarQube's own quality gate (mandate, ADR-011). Its server-side gate status is printed for
   # information only. Two projects: mtg-vault-backend, mtg-vault-frontend.
-  # Needs the secrets SONAR_TOKEN and SONAR_HOST_URL (a repository variable also works for the
-  # host); without them the jobs warn and pass, so forks and unconfigured clones are not blocked.
+  # Needs the secrets SONAR_HOST_URL (a repository variable also works) and one scan token per
+  # project: SONAR_TOKEN for mtg-vault-backend, SONAR_FRONTEND_TOKEN for mtg-vault-frontend;
+  # without them the jobs warn and pass, so forks and unconfigured clones are not blocked.
   # The Community edition may lack pull-request analysis (ADR-011): on pull requests the scan
   # runs only when the repository variable SONAR_PR_ANALYSIS is "true"; it always runs on pushes
   # and manual dispatches.
@@ -343,7 +344,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || vars.SONAR_HOST_URL }}
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # project-scoped token of mtg-vault-frontend; the scan action and quality_gate.py read SONAR_TOKEN
+      SONAR_TOKEN: ${{ secrets.SONAR_FRONTEND_TOKEN }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -356,7 +358,7 @@ jobs:
         id: sonar
         run: |
           if [ -z "$SONAR_TOKEN" ] || [ -z "$SONAR_HOST_URL" ]; then
-            echo "::warning::SONAR_TOKEN / SONAR_HOST_URL are not configured: skipping the SonarQube analysis."
+            echo "::warning::SONAR_FRONTEND_TOKEN / SONAR_HOST_URL are not configured: skipping the SonarQube analysis."
             echo "configured=false" >> "$GITHUB_OUTPUT"
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"

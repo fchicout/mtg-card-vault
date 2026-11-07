@@ -1,9 +1,9 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.2.1
+**Docs set version:** 0.2.2
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
-**Last updated:** 2026-10-31
+**Last updated:** 2026-11-07
 **Owner:** fchicout (Sponsor, Product Owner, Lead Developer)
 **Repository:** https://github.com/fchicout/mtg-card-vault
 
@@ -215,7 +215,7 @@ Resolved questions become requirements, ADRs or assumptions, and the row is mark
 | OQ-05 | Can the Authelia OIDC client be configured to issue RS256-signed JWT access tokens with the API as audience? Else use introspection. | M1 | Open |
 | OQ-06 | Which open-source licence (MIT vs Apache-2.0) for the public repository? | M0 | Open |
 | OQ-07 | Should prices be shown in USD only, or USD + EUR? (Docs currently assume both are shown.) | M5 | Open |
-| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is project-owned)? Status: project `mtg-vault-backend` exists and the GitHub secrets `SONAR_TOKEN` and `SONAR_HOST_URL` are set; project `mtg-vault-frontend` still has to be created. | M0 | Open |
+| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is project-owned)? Status: both projects exist; the GitHub secrets `SONAR_HOST_URL`, `SONAR_TOKEN` (backend) and `SONAR_FRONTEND_TOKEN` (frontend) are set; CI verification of the frontend job is pending. | M0 | Open |
 
 ## 13. Approval
 
