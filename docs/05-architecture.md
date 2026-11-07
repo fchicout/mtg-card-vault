@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.3
+**Docs set version:** 0.3.4
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -449,6 +449,8 @@ Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`)
 ### 8.2 Security hardening
 Input validation by Pydantic; ORM with bound parameters; upload limits and decompression-bomb guard (`FR-SCN-08`); SSRF prevention by calling only configured hosts; security headers (`NFR-SEC-06`); secrets only through environment; non-root containers; dependency, secret and image scanning in CI; SonarQube SAST.
 
+**Content-Security-Policy recipe (verified on the production build with Clarity 18.5.0, `NFR-SEC-06`):** `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-<per response>' 'sha256-<Clarity style>'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`. How it is met: the production build does not inline critical CSS (`optimization.styles.inlineCritical: false`), which removes every inline script and style from `index.html`; `<app-root ngCspNonce="__CSP_NONCE__">` lets Angular tag the styles it injects, and the reverse proxy substitutes one random nonce per response in both the page and the header; Clarity's web components inject one static shadow-DOM style (`:host{all:initial;…}`) that is allowed by its hash, which the spike script prints and which must be re-derived on every Clarity upgrade. No `unsafe-inline` and no `unsafe-eval`.
+
 ### 8.3 Error handling
 Typed domain exceptions (`domain/errors.py`: `NotFound` 404, `ValidationFailed` 422, `Conflict` 409, `RateLimited` 429 with `Retry-After`, `UpstreamUnavailable` 503) → problem+json with correlation id (`FR-API-02`). Problem `type` is `urn:mtgvault:problem:<slug>`; request-validation errors list the offending fields in `errors`; framework HTTP errors (404, 405, …) use the same document; an unexpected exception becomes a generic `500` whose message and stack trace only go to the log. The SPA has one HTTP error interceptor that maps problem documents to Clarity alerts.
 
@@ -546,11 +548,13 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Alternatives:** Store images for condition proof (rejected for v1).
 
 ### ADR-009 — Angular + Clarity, API client generated from OpenAPI
-- **Status:** Accepted (version pin pending OQ-01)
-- **Context:** CON-02; avoid hand-written HTTP glue (DRY).
-- **Decision:** Angular (newest version supported by Clarity), Clarity components only, `openapi-generator`-style client generated in CI; drift fails the build.
-- **Consequences:** Contract changes surface immediately as compile errors in the SPA.
-- **Alternatives:** Hand-written services (drift risk).
+- **Status:** Accepted (version pin decided 2026-11-07, resolves `OQ-01`)
+- **Context:** CON-02; avoid hand-written HTTP glue (DRY). Clarity declares the Angular majors it supports in its `peerDependencies`.
+- **Decision:** Angular **22.2.x** with Clarity **18.5.x** (`@clr/angular`, `@clr/ui`; `@cds/core` 6.17). Clarity 18.5.0 declares support for Angular `^21.1 || 22`, and Angular 22.2.5 is the newest release, so the project runs the newest supported pairing. Clarity components only; the API client is generated from `openapi.json` in CI and drift fails the build. Package manager: **npm 11.19.1**, pinned by `packageManager`, with the lockfile committed (a different npm major rewrites the lockfile). Unit-test runner: **Vitest** through `ng test`. No server-side rendering: the SPA is static files behind the reverse proxy, which keeps the CSP simple. Evidence: branch `spike/clarity-sample` (sample shell, datagrid, modal, validated form, alert, icons, theme toggle) driven in Chromium with zero console messages, zero CSP violations and a clean axe run in both themes.
+- **Upgrade policy:** (1) Patch and minor updates arrive as weekly Dependabot PRs and merge when CI is green. (2) An Angular **major** is adopted only after `npm view @clr/angular peerDependencies` lists it; never ahead of Clarity. (3) Every Clarity or Angular upgrade must pass the E2E suite with axe and the CSP check below, and re-derive the Clarity style hash. (4) The pin and its date are updated in this ADR and in the changelog.
+- **Findings that shape the UI code:** control errors need `ClrForm.markAsTouched()` on submit (status events alone do not trigger Clarity's messages); numbers use `clr-number-input-container`; header actions are anchors (`a.nav-link`), because a native `button` gets a light background that fails contrast; `clr-vertical-nav` needs `role="navigation"` and a label to satisfy the landmark rule; `ClrFormsModule` (not `ClrForm`) is the import.
+- **Consequences:** Contract changes surface immediately as compile errors in the SPA; Clarity's release cadence limits how fast Angular majors can be adopted (`RSK-03`).
+- **Alternatives:** Hand-written services (drift risk); staying on an older Angular for a longer time (rejected: no security patches).
 
 ### ADR-010 — Gitflow, semantic versioning, Conventional Commits
 - **Status:** Accepted
