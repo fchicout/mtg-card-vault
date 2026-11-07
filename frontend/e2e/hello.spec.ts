@@ -7,7 +7,7 @@ test.describe('walking skeleton', () => {
     await page.goto('/');
 
     await expect(page).toHaveTitle('MTG Card Vault');
-    await expect(page.locator('header .title')).toHaveText('MTG Card Vault');
+    await expect(page.locator('.header .title')).toHaveText('MTG Card Vault');
     await expect(page.getByTestId('greeting')).toHaveText('Hello, MTG Vault!');
   });
 
@@ -16,7 +16,7 @@ test.describe('walking skeleton', () => {
 
     await page.goto('/');
 
-    await expect(page.getByTestId('error')).toHaveText('The API could not be reached.');
+    await expect(page.getByTestId('error')).toHaveText('The greeting could not be loaded.');
     await expect(page.getByTestId('greeting')).toHaveCount(0);
   });
 
