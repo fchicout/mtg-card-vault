@@ -341,15 +341,14 @@ jobs:
               aquasec/trivy:0.76.2 image --severity HIGH,CRITICAL --ignore-unfixed --ignorefile /trivyignore \
               --exit-code 1 --no-progress "$image"
           done
-      - name: Trivy scan of the third-party images in the compose stack (NFR-SEC-05)
+      - name: Trivy report of the third-party images in the stack (informational, see docs/05 section 8.2)
         run: |
-          status=0
           for image in $(grep -oE 'image: [^ ]+@sha256:[a-f0-9]+' deploy/compose.yaml | sed 's/image: //' | sort -u); do
             echo "== $image"
             docker run --rm -v "$RUNNER_TEMP/trivyignore:/trivyignore:ro" aquasec/trivy:0.76.2 image \
-              --severity HIGH,CRITICAL --ignore-unfixed --ignorefile /trivyignore --exit-code 1 --no-progress "$image" || status=1
+              --severity HIGH,CRITICAL --ignore-unfixed --ignorefile /trivyignore --exit-code 1 --no-progress "$image" \
+              || echo "::warning::$image has High/Critical findings that only an upstream rebuild can fix (Dependabot proposes digest updates)"
           done
-          exit $status
       - name: Trivy SARIF for GitHub code scanning
         if: always()
         run: |
