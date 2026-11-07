@@ -61,6 +61,15 @@ describe('App shell', () => {
     expect(element.querySelector('main app-notifications')).toBeTruthy();
   });
 
+  it('the theme switch also works with the Space key, like a real button', () => {
+    const toggle = element.querySelector<HTMLAnchorElement>('[data-testid="theme-toggle"]')!;
+    const before = document.body.getAttribute('cds-theme');
+    toggle.dispatchEvent(
+      new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }),
+    );
+    expect(document.body.getAttribute('cds-theme')).not.toBe(before);
+  });
+
   it('switches between the light and the dark Clarity theme', () => {
     const toggle = element.querySelector<HTMLAnchorElement>('[data-testid="theme-toggle"]')!;
     const before = document.body.getAttribute('cds-theme');

@@ -12,6 +12,7 @@
         class="nav-link nav-text"
         data-testid="theme-toggle"
         (click)="$event.preventDefault(); theme.toggle()"
+        (keydown.space)="$event.preventDefault(); theme.toggle()"
       >
         <cds-icon
           [attr.shape]="theme.theme() === 'dark' ? 'sun' : 'moon'"

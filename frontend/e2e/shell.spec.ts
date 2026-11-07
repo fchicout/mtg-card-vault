@@ -104,6 +104,19 @@ test.describe('navigation', () => {
     await expect(page).toHaveURL(/\/scan$/);
   });
 
+  test('the theme switch works with Enter and with Space', async ({ page }) => {
+    await page.goto('/');
+    const toggle = page.getByTestId('theme-toggle');
+    const read = () => page.locator('body').getAttribute('cds-theme');
+    const start = await read();
+    await toggle.focus();
+    await page.keyboard.press('Space');
+    const afterSpace = await read();
+    expect(afterSpace).not.toBe(start);
+    await page.keyboard.press('Enter');
+    expect(await read()).toBe(start);
+  });
+
   test('the theme can be switched and is remembered', async ({ page }) => {
     await page.goto('/');
     const before = await page.locator('body').getAttribute('cds-theme');
