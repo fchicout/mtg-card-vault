@@ -3,7 +3,7 @@
 # Re-running keeps existing files; delete the directory to start over.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
-mkdir -p secrets data
+mkdir -p secrets
 umask 077
 rand() { openssl rand -hex 32; }
 for name in session_secret storage_key reset_jwt_secret oidc_hmac; do
