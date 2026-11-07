@@ -40,3 +40,27 @@ def test_invalid_configuration_stops_before_any_migration(monkeypatch: pytest.Mo
     with mock.patch.object(serve, "upgrade_to_head") as migrate, pytest.raises(SystemExit):
         serve.main()
     migrate.assert_not_called()
+
+
+def test_the_server_listens_on_loopback_unless_configured(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("BIND_HOST", raising=False)
+    with (
+        mock.patch.object(serve, "upgrade_to_head"),
+        mock.patch.object(serve.uvicorn, "run") as run,
+        mock.patch.object(serve, "configure_logging"),
+    ):
+        serve.main()
+    assert run.call_args.kwargs["host"] == "127.0.0.1"
+    assert run.call_args.kwargs["port"] == 8000
+
+
+def test_the_bind_address_is_configurable(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("BIND_HOST", "10.1.2.3")
+    monkeypatch.setenv("BIND_PORT", "9000")
+    with (
+        mock.patch.object(serve, "upgrade_to_head"),
+        mock.patch.object(serve.uvicorn, "run") as run,
+        mock.patch.object(serve, "configure_logging"),
+    ):
+        serve.main()
+    assert (run.call_args.kwargs["host"], run.call_args.kwargs["port"]) == ("10.1.2.3", 9000)

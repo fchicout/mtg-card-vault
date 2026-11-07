@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     # No default on purpose: credentials must be supplied by the environment.
     database_url: str = Field(min_length=1)
     log_level: LogLevel = "INFO"
+    # Loopback unless told otherwise; the container image sets BIND_HOST explicitly (it must be
+    # reachable from the proxy), so a bare `python -m mtgvault.serve` never listens on the network.
+    bind_host: str = "127.0.0.1"
+    bind_port: int = Field(default=8000, ge=1, le=65535)
 
 
 def load_settings() -> Settings:

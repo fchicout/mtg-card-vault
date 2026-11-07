@@ -29,8 +29,8 @@ def main() -> int:
     uvicorn.run(
         "mtgvault.main:create_app",
         factory=True,
-        host="0.0.0.0",  # noqa: S104  # inside the container; the proxy is the only way in
-        port=8000,
+        host=settings.bind_host,
+        port=settings.bind_port,
         log_config=None,  # keep our JSON handler
     )
     return 0
