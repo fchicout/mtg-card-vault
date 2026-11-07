@@ -211,6 +211,22 @@ def fetch_issue_counts(host: str, key: str, token: str, get: HttpGet) -> IssueCo
                        blocker_or_critical=severities.get("BLOCKER", 0) + severities.get("CRITICAL", 0))
 
 
+def fetch_blocking_issues(host: str, key: str, token: str, get: HttpGet, limit: int = 20) -> list[str]:
+    """One line per open bug, vulnerability or Blocker/Critical issue, so a failure is actionable."""
+    lines: list[str] = []
+    for params in ({"types": "BUG,VULNERABILITY"}, {"severities": "BLOCKER,CRITICAL"}):
+        query = urllib.parse.urlencode({"componentKeys": key, "resolved": "false", "ps": str(limit), **params})
+        status, body = get(f"{host}/api/issues/search?{query}", token)
+        if status != 200:
+            continue
+        for issue in body.get("issues", []):
+            line = (f"{issue.get('severity', '?')} {issue.get('type', '?')} {issue.get('rule', '?')} "
+                    f"{issue.get('component', '?')}:{issue.get('line', '?')} {issue.get('message', '')}")
+            if line not in lines:
+                lines.append(line)
+    return lines
+
+
 def fetch_optional_number(url: str, token: str, get: HttpGet, extract: Callable[[dict], float | None]) -> float | None:
     """A number SonarQube only reveals to tokens with extra permissions: None when not readable."""
     status, body = get(url, token)
@@ -334,6 +350,9 @@ def cmd_sonar(args: argparse.Namespace) -> int:
         lambda body: next((float(m["value"]) for m in body["component"]["measures"]), None))
     conditions = sonar_conditions(counts, hotspots, maintainability)
     print(render(f"Quality gate - SonarQube issues for {args.project} (judged by this script)", conditions))
+    if verdict(conditions):
+        for issue_line in fetch_blocking_issues(host, args.project, token, sonar_get):
+            print(f"ISSUE    {issue_line}")
     server = fetch_server_gate_status(host, args.project, token, sonar_get)
     print("INFO     SonarQube's own gate: "
           + (f"{server} (informational only, never used for the verdict)" if server
