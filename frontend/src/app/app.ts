@@ -1,37 +1,23 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { ClrAlertModule } from '@clr/angular';
-import { ClarityIcons, exclamationCircleIcon } from '@cds/core/icon';
+import { CUSTOM_ELEMENTS_SCHEMA, Component, signal } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ClrNavigationModule } from '@clr/angular';
+import { ClarityIcons, libraryIcon, moonIcon, plusIcon, sunIcon } from '@cds/core/icon';
 import '@cds/core/icon/register.js';
 
-import { Api, getHello } from './api';
+ClarityIcons.addIcons(libraryIcon, moonIcon, plusIcon, sunIcon);
 
-ClarityIcons.addIcons(exclamationCircleIcon);
-
-/**
- * Walking-skeleton page (issue #1): proves the browser -> generated client -> API path.
- * Replaced by the real application shell in issue #9.
- */
 @Component({
-  imports: [ClrAlertModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ClrNavigationModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
-export class App implements OnInit {
-  private readonly api = inject(Api);
+export class App {
+  protected readonly dark = signal(false);
 
-  protected readonly loading = signal(true);
-  protected readonly greeting = signal<string | null>(null);
-  protected readonly failed = signal(false);
-
-  async ngOnInit(): Promise<void> {
-    try {
-      const response = await this.api.invoke(getHello);
-      this.greeting.set(response.message);
-    } catch {
-      this.failed.set(true);
-    } finally {
-      this.loading.set(false);
-    }
+  protected toggleTheme(): void {
+    this.dark.update((value) => !value);
+    document.body.setAttribute('cds-theme', this.dark() ? 'dark' : 'light');
   }
 }

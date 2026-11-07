@@ -1,0 +1,77 @@
+<h1>Vault (sample)</h1>
+
+@if (added(); as name) {
+  <clr-alert clrAlertType="success" (clrAlertClosedChange)="added.set(null)">
+    <clr-alert-item>
+      <span class="alert-text" data-testid="added-alert">{{ name }} was added.</span>
+    </clr-alert-item>
+  </clr-alert>
+}
+
+<button type="button" class="btn btn-primary" data-testid="open-add" (click)="open.set(true)">
+  <cds-icon shape="plus" aria-hidden="true"></cds-icon> Add card
+</button>
+
+<clr-datagrid data-testid="grid">
+  <clr-dg-column [clrDgField]="'name'">Name</clr-dg-column>
+  <clr-dg-column [clrDgField]="'set'">Set</clr-dg-column>
+  <clr-dg-column [clrDgField]="'quantity'">Qty</clr-dg-column>
+  <clr-dg-column [clrDgField]="'condition'">Condition</clr-dg-column>
+  <clr-dg-column [clrDgField]="'finish'">Finish</clr-dg-column>
+
+  <clr-dg-row *clrDgItems="let row of rows()" [clrDgItem]="row">
+    <clr-dg-cell>{{ row.name }}</clr-dg-cell>
+    <clr-dg-cell>{{ row.set }}</clr-dg-cell>
+    <clr-dg-cell>{{ row.quantity }}</clr-dg-cell>
+    <clr-dg-cell>{{ row.condition }}</clr-dg-cell>
+    <clr-dg-cell>{{ row.finish }}</clr-dg-cell>
+  </clr-dg-row>
+
+  <clr-dg-footer>
+    <clr-dg-pagination #pagination [clrDgPageSize]="10">
+      <clr-dg-page-size [clrPageSizeOptions]="[10, 20, 50]">Cards per page</clr-dg-page-size>
+      {{ pagination.firstItem + 1 }} - {{ pagination.lastItem + 1 }} of {{ pagination.totalItems }}
+    </clr-dg-pagination>
+  </clr-dg-footer>
+</clr-datagrid>
+
+<clr-modal [clrModalOpen]="open()" (clrModalOpenChange)="open.set($event)" [clrModalSize]="'md'">
+  <h3 class="modal-title">Add a card</h3>
+  <div class="modal-body">
+    <form clrForm [formGroup]="form" id="add-card" (ngSubmit)="submit()">
+      <clr-input-container>
+        <label for="name">Name</label>
+        <input clrInput id="name" formControlName="name" data-testid="name" />
+        <clr-control-error>The name is required (max 80 characters).</clr-control-error>
+      </clr-input-container>
+      <clr-number-input-container>
+        <label for="quantity">Quantity</label>
+        <input clrNumberInput id="quantity" type="number" min="1" max="9999" formControlName="quantity" />
+        <clr-control-error>Between 1 and 9999.</clr-control-error>
+      </clr-number-input-container>
+      <clr-select-container>
+        <label for="condition">Condition</label>
+        <select clrSelect id="condition" formControlName="condition">
+          @for (c of conditions; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </clr-select-container>
+      <clr-radio-container clrInline>
+        <label>Finish</label>
+        <clr-radio-wrapper>
+          <input type="radio" clrRadio value="nonfoil" formControlName="finish" id="nonfoil" />
+          <label for="nonfoil">Nonfoil</label>
+        </clr-radio-wrapper>
+        <clr-radio-wrapper>
+          <input type="radio" clrRadio value="foil" formControlName="finish" id="foil" />
+          <label for="foil">Foil</label>
+        </clr-radio-wrapper>
+      </clr-radio-container>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline" (click)="open.set(false)">Cancel</button>
+    <button type="submit" form="add-card" class="btn btn-primary" data-testid="save">Save</button>
+  </div>
+</clr-modal>

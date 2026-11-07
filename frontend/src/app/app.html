@@ -3,25 +3,22 @@
     <div class="branding">
       <span class="title">MTG Card Vault</span>
     </div>
+    <div class="header-actions">
+      <a href="#" role="button" class="nav-link nav-text" data-testid="theme" (click)="$event.preventDefault(); toggleTheme()">
+        <cds-icon [attr.shape]="dark() ? 'sun' : 'moon'" aria-hidden="true"></cds-icon>
+        {{ dark() ? 'Light' : 'Dark' }} theme
+      </a>
+    </div>
   </header>
   <div class="content-container">
+    <clr-vertical-nav [clrVerticalNavCollapsible]="false" role="navigation" aria-label="Main navigation">
+      <a clrVerticalNavLink routerLink="/vault" routerLinkActive="active">
+        <cds-icon clrVerticalNavIcon shape="library"></cds-icon>
+        Vault
+      </a>
+    </clr-vertical-nav>
     <main class="content-area" id="main">
-      <h1>Walking skeleton</h1>
-      @if (loading()) {
-        <span class="spinner spinner-md" role="status">Loading…</span>
-      } @else if (failed()) {
-        <clr-alert clrAlertType="danger" [clrAlertClosable]="false">
-          <clr-alert-item>
-            <span class="alert-text" data-testid="error">The API could not be reached.</span>
-          </clr-alert-item>
-        </clr-alert>
-      } @else {
-        <div class="card">
-          <div class="card-block">
-            <p class="card-text" data-testid="greeting">{{ greeting() }}</p>
-          </div>
-        </div>
-      }
+      <router-outlet />
     </main>
   </div>
 </div>
