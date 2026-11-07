@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.7
+**Docs set version:** 0.3.8
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -79,6 +79,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.8 | 2026-11-07 | Release pipeline (issue #11): `release.yml` behaviour, rehearsal mode and the gitflow release procedure in section 7.5. |
 | 0.3.7 | 2026-11-07 | DevSecOps policy (issue #14): thresholds, time-boxed exceptions (`security/exceptions.yaml`), SARIF + CodeQL, nightly rescan, SBOMs, pinned scanners; section 8.2 and the CI table. |
 | 0.3.6 | 2026-11-07 | Commit/branch/tag policy and release tooling decided (issue #6): ADR-010 (`git-cliff` + manual tags), OQ-04 resolved, conventions in section 7.5, `commit-policy` job. |
 | 0.3.5 | 2026-11-07 | Docs-sync gate hardened (issue #13): unit-tested script, reference checks for commits and code markers, pre-commit hook, `make docs-check`. |
