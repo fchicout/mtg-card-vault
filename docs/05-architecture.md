@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.4
+**Docs set version:** 0.3.5
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -418,8 +418,8 @@ Jobs of `ci.yml` (job ids are the required status checks):
 
 | Job id | What it proves | Verdict from |
 |---|---|---|
-| `docs-sync` | the documentation set is synchronized (`NFR-DOC-01`) | `scripts/check_docs_sync.py` |
-| `gate-tests` | the quality-gate tooling itself works | `python -m unittest` |
+| `docs-sync` | the documentation set is synchronized (`NFR-DOC-01`); runs on every pull request, also when only code changes; commits and `Implements:` markers reference defined IDs (warnings) | `scripts/check_docs_sync.py` |
+| `gate-tests` | the quality-gate and docs-sync tooling itself works; the docs-sync script keeps at least 90 % coverage | `python -m unittest`, coverage |
 | `backend-quality` | ruff, ruff format, mypy `--strict`, import-linter contracts | the tools |
 | `backend-tests` | unit, contract and integration tests (real PostgreSQL via testcontainers); `coverage.xml` | pytest |
 | `frontend-quality` | ESLint, Prettier, Vitest with LCOV coverage, production build | the tools |

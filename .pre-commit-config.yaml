@@ -1,0 +1,10 @@
+# Install once with `pre-commit install`. Keeps the documentation set synchronized (NFR-DOC-01).
+repos:
+  - repo: local
+    hooks:
+      - id: docs-sync
+        name: documentation set is synchronized
+        entry: python3 scripts/check_docs_sync.py
+        language: system
+        pass_filenames: false
+        files: ^(docs/|scripts/check_docs_sync\.py)
