@@ -1,10 +1,24 @@
-# Minimal skeleton stack (issue #1). The production-grade stack (TLS proxy, Authelia, worker)
-# is built in issue #10. Run from this directory: `cp .env.example .env && docker compose up -d --build`.
+# MTG Card Vault stack (issues #1, #10, #12, ADR-016).
+#
+#   cp .env.example .env            # set POSTGRES_PASSWORD (and APP_HOST for a real domain)
+#   docker compose up -d --build    # database, API, front end and the HTTPS edge proxy
+#
+# Profiles:  (none) the application; `worker` adds the scheduled-jobs worker (idle until BL-44).
+# Sign-in uses the homelab Authelia (https://auth.fchicout.dev), not a bundled identity provider.
+# Only the proxy publishes ports.
 name: mtgvault
+
+x-hardening: &hardening
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
 
 services:
   db:
-    image: postgres:17-alpine
+    <<: *hardening
+    image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-mtgvault}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
@@ -16,11 +30,20 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    restart: unless-stopped
+    # The image entrypoint starts as root, fixes ownership of the data directory and drops to postgres.
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    networks: [backend]
 
   api:
+    <<: *hardening
     build:
       context: ../backend
+    image: mtgvault-api:local
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mtgvault}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mtgvault}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -30,57 +53,81 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    networks: [backend, edge]
+
+  # Scheduled jobs (ADR-012). Idle until issue BL-44; start it with `--profile worker`.
+  worker:
+    <<: *hardening
+    profiles: ["worker"]
+    build:
+      context: ../backend
+    image: mtgvault-api:local
+    command: ["python", "-m", "mtgvault.worker"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mtgvault}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mtgvault}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      disable: true # no HTTP port; supervision is the restart policy
+    networks: [backend, edge]
 
   frontend:
+    <<: *hardening
     build:
       context: ../frontend
-    ports:
-      - "${HTTP_PORT:-8080}:8080"
+    image: mtgvault-frontend:local
     depends_on:
       api:
         condition: service_healthy
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks: [edge]
 
-  # Development identity provider for local development and the end-to-end tests (issues #4, #12).
-  # Only with `--profile ci`; generate its throwaway secrets first with authelia/dev-secrets.sh.
-  # Served over HTTPS at https://auth.localtest.me:9091 (*.localtest.me resolves to localhost).
-  authelia:
-    profiles: ["ci"]
-    image: authelia/authelia:4.39.28
+  # The only published service: TLS termination, HTTP -> HTTPS redirect and HSTS (ADR-016).
+  proxy:
+    <<: *hardening
+    image: caddy:2-alpine@sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9
     environment:
-      X_AUTHELIA_CONFIG_FILTERS: template
-      AUTHELIA_SESSION_SECRET_FILE: /secrets/session_secret
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /secrets/storage_key
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /secrets/reset_jwt_secret
-      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /secrets/oidc_hmac
-    volumes:
-      - ./authelia/configuration.yml:/config/configuration.yml:ro
-      - ./authelia/users_database.yml:/config/users_database.yml:ro
-      - ./authelia/secrets:/secrets:ro
-      # A named volume (not a bind mount) so Authelia's own user can write its database whatever
-      # the host user is, in rootless Podman and in rootful Docker alike.
-      - authelia-data:/data
+      APP_HOST: ${APP_HOST:-localhost}
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      HTTPS_PORT: ${HTTPS_PORT:-8443}
+      HSTS_MAX_AGE: ${HSTS_MAX_AGE:-300}
     ports:
-      - "127.0.0.1:9091:9091"
-    # The image entrypoint drops from root to its own user: it needs exactly these three.
-    cap_drop:
-      - ALL
+      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+      - "${HTTPS_PORT:-8443}:${HTTPS_PORT:-8443}"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
     cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-    security_opt:
-      - no-new-privileges:true
+      - NET_BIND_SERVICE # ports below 1024 on a production host (80 and 443)
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider --no-check-certificate https://localhost:$${HTTPS_PORT}/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 6
+    networks: [edge]
+
+networks:
+  # The database is reachable only from the services that need it, and has no route out.
+  backend:
+    internal: true
+  edge: {}
 
 volumes:
   db-data:
-  authelia-data:
+  caddy-data:
+  caddy-config:

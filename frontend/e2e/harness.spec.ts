@@ -41,7 +41,8 @@ test.describe('axe helper', () => {
 test.describe('Scryfall record/replay', () => {
   test('replays a recorded response, and the real service is never contacted', async ({ page }) => {
     const scryfall = await mockScryfall(page);
-    await page.goto('/');
+    // A neutral page: the app's own CSP (connect-src 'self') rightly forbids calling Scryfall from the SPA.
+    await page.goto('about:blank');
     const card = await page.evaluate(async () => {
       const response = await fetch('https://api.scryfall.com/cards/named?fuzzy=lightning+bolt');
       return (await response.json()) as { name: string; object: string };
@@ -53,7 +54,7 @@ test.describe('Scryfall record/replay', () => {
 
   test('a request without a fixture is blocked and reported', async ({ page }) => {
     const scryfall = await mockScryfall(page);
-    await page.goto('/');
+    await page.goto('about:blank');
     const outcome = await page.evaluate(() =>
       fetch('https://api.scryfall.com/cards/named?fuzzy=not-recorded').then(
         () => 'reached',

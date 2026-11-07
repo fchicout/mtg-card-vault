@@ -3,14 +3,13 @@ import { defineConfig, devices } from '@playwright/test';
 import { CAMERA_FILE } from './e2e/support/fake-camera';
 
 /**
- * End-to-end tests run against an already running stack (deploy/compose.yaml locally, an ephemeral
+ * End-to-end tests run against an already running stack (deploy/compose.yaml locally, reached over HTTPS through the proxy, an ephemeral
  * compose stack with the `ci` profile in CI). Override the target with E2E_BASE_URL.
  *
  *  - Browsers: Chromium, Firefox and WebKit; narrow with E2E_BROWSERS=chromium,firefox.
  *  - Chromium also gets a fake camera: the generated fixture video (e2e/support/fake-camera.ts)
  *    replaces the webcam, and the permission prompt is answered automatically.
- *  - The development Authelia uses a self-signed certificate on *.localtest.me, hence
- *    ignoreHTTPSErrors; Chromium additionally pins that domain to 127.0.0.1.
+ *  - The local proxy uses a certificate from its own CA, hence ignoreHTTPSErrors.
  *  - A failure keeps its trace, video and screenshot (uploaded as CI artifacts); one retry at most.
  */
 const wanted = (process.env['E2E_BROWSERS'] ?? 'chromium,firefox,webkit')
@@ -27,21 +26,11 @@ const projects = [
           '--use-fake-device-for-media-stream',
           '--use-fake-ui-for-media-stream',
           `--use-file-for-fake-video-capture=${CAMERA_FILE}`,
-          '--host-resolver-rules=MAP *.localtest.me 127.0.0.1',
         ],
       },
     },
   },
-  {
-    name: 'firefox',
-    use: {
-      ...devices['Desktop Firefox'],
-      // The dev Authelia domains resolve to this machine, whatever the local resolver answers.
-      launchOptions: {
-        firefoxUserPrefs: { 'network.dns.localDomains': 'auth.localtest.me,app.localtest.me' },
-      },
-    },
-  },
+  { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
   { name: 'webkit', use: { ...devices['Desktop Safari'] } },
 ].filter((project) => wanted.includes(project.name));
 
@@ -53,7 +42,7 @@ export default defineConfig({
   retries: process.env['CI'] ? 1 : 0,
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: process.env['E2E_BASE_URL'] ?? 'http://127.0.0.1:8080',
+    baseURL: process.env['E2E_BASE_URL'] ?? 'https://localhost:8443',
     ignoreHTTPSErrors: true,
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
