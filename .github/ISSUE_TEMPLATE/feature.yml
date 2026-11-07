@@ -1,0 +1,25 @@
+name: Feature
+description: A user-visible capability, traced to the documentation set
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: context
+    attributes: { label: Context, description: Why is this needed? }
+    validations: { required: true }
+  - type: input
+    id: traceability
+    attributes:
+      label: Stories and requirements
+      description: IDs from docs/02 and docs/03 (for example US-005, FR-VLT-01). If none fit, fix the docs first.
+    validations: { required: true }
+  - type: textarea
+    id: scope
+    attributes: { label: Scope, description: "A checklist of what will be done." }
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes: { label: Acceptance criteria, description: "Observable, testable statements." }
+    validations: { required: true }
+  - type: textarea
+    id: docs
+    attributes: { label: Documentation impact, description: Which documents, IDs and the matrix change. }
