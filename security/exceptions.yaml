@@ -1,0 +1,16 @@
+# Time-boxed security exceptions (issue #14, NFR-SEC-04, NFR-SEC-05). Empty is the goal.
+#
+# A finding that cannot be fixed yet may be accepted for a limited time. Every entry needs:
+#   id:            the advisory/CVE id exactly as the scanner reports it (CVE-..., GHSA-..., PYSEC-...)
+#   tool:          trivy | pip-audit | npm-audit
+#   justification: why it is acceptable now and what removes it (a fix version, a replacement...)
+#   owner:         who answers for it
+#   expires:       YYYY-MM-DD, at most 90 days from today; CI fails once the date has passed
+#
+# Example (keep commented out):
+#   - id: CVE-2099-0001
+#     tool: trivy
+#     justification: "No fixed package yet; the vulnerable code path is not reachable (no TLS server)."
+#     owner: fchicout
+#     expires: 2026-12-31
+exceptions: []
