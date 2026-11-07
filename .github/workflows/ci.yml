@@ -26,11 +26,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # the commit messages of the pull request are scanned for IDs
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
       - name: Documentation set is synchronized (NFR-DOC-01)
         run: python3 -I scripts/check_docs_sync.py
+      - name: IDs referenced by commits and code markers exist (warnings only)
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 -I scripts/check_docs_sync.py \
+            --commits "origin/${{ github.base_ref }}..HEAD" --code backend/src --code frontend/src
 
   gate-tests:
     name: gate-tests
@@ -40,8 +47,13 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
-      - name: Unit tests of the quality-gate tooling
+      - name: Unit tests of the quality-gate and docs-sync tooling
         run: python3 -I -m unittest discover -s scripts/tests -v
+      - name: The docs-sync script is covered at least 90 % (NFR-DOC-01)
+        run: |
+          python3 -m pip install --quiet coverage
+          python3 -m coverage run --branch --include=scripts/check_docs_sync.py -m unittest discover -s scripts/tests -p test_check_docs_sync.py
+          python3 -m coverage report --include=scripts/check_docs_sync.py --fail-under=90
 
   # ------------------------------------------------------------------ backend
   backend-quality:
