@@ -8,6 +8,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
   </head>
   <body cds-theme="light">
-    <app-root></app-root>
+    <!-- The server replaces __CSP_NONCE__ with a fresh nonce per response (frontend/nginx.conf, ADR-009). -->
+    <app-root ngCspNonce="__CSP_NONCE__"></app-root>
   </body>
 </html>
