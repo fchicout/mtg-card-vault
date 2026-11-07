@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.1
+**Docs set version:** 0.3.2
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -129,9 +129,12 @@ backend/
 ├── src/mtgvault/
 │   ├── main.py               # composition root: builds app, wires dependencies
 │   ├── config.py             # typed settings (pydantic-settings), fail fast
-│   ├── logging.py            # JSON logging, correlation id, redaction
+│   ├── logging_setup.py      # JSON logging with redaction
+│   ├── correlation.py        # per-request correlation id (X-Request-ID)
 │   ├── api/                  # DRIVING ADAPTER (HTTP)
-│   │   ├── v1/               # routers: me, vault, catalog, scans, health
+│   │   ├── v1.py             # versioned /api/v1 router; feature routers are included here
+│   │   ├── pagination.py     # shared Page[T] / PageParams (default 50, max 200)
+│   │   ├── middleware.py     # correlation id + access log (ASGI)
 │   │   ├── schemas/          # Pydantic request/response DTOs
 │   │   ├── dependencies.py   # auth dependency, current user, service providers
 │   │   └── errors.py         # exception -> problem+json mapping
@@ -444,10 +447,10 @@ Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`)
 Input validation by Pydantic; ORM with bound parameters; upload limits and decompression-bomb guard (`FR-SCN-08`); SSRF prevention by calling only configured hosts; security headers (`NFR-SEC-06`); secrets only through environment; non-root containers; dependency, secret and image scanning in CI; SonarQube SAST.
 
 ### 8.3 Error handling
-Typed domain exceptions → problem+json with correlation id (`FR-API-02`). The SPA has one HTTP error interceptor that maps problem documents to Clarity alerts.
+Typed domain exceptions (`domain/errors.py`: `NotFound` 404, `ValidationFailed` 422, `Conflict` 409, `RateLimited` 429 with `Retry-After`, `UpstreamUnavailable` 503) → problem+json with correlation id (`FR-API-02`). Problem `type` is `urn:mtgvault:problem:<slug>`; request-validation errors list the offending fields in `errors`; framework HTTP errors (404, 405, …) use the same document; an unexpected exception becomes a generic `500` whose message and stack trace only go to the log. The SPA has one HTTP error interceptor that maps problem documents to Clarity alerts.
 
 ### 8.4 Logging and observability
-JSON logs; correlation id middleware; redaction of tokens, e-mails and image data (`FR-OPS-02`); health endpoints. Metrics/tracing are deliberately not in v1 (YAGNY).
+JSON logs on stdout; correlation id middleware accepts `X-Request-ID` only when it matches `[A-Za-z0-9._-]{1,128}` (otherwise a new id is generated) and returns it in the response header and in every error document; one access-log line per request carries method, path (never the query string), status and duration; redaction of tokens, e-mails, secret-named fields and image data runs on every record before formatting (`FR-OPS-02`); health endpoints. Metrics/tracing are deliberately not in v1 (YAGNY).
 
 ### 8.5 Persistence and transactions
 One unit of work per request; entry add/merge/edit and account deletion are single transactions; optimistic concurrency not required (last write wins) except the unique constraint handling for merges (retry once on conflict).
@@ -456,7 +459,7 @@ One unit of work per request; entry add/merge/edit and account deletion are sing
 In-memory TTL cache for catalogue searches (5 min). Cards cached in PostgreSQL for owned printings only (`ADR-007`). Process-wide token-bucket limiter around Scryfall (≥ 100 ms spacing). Per-user rate limit on scans (30/min), implemented behind a small interface (in-memory now; replaceable by Redis if the API ever scales out).
 
 ### 8.7 Configuration management
-`pydantic-settings`; fail fast; no defaults for secrets.
+`pydantic-settings`; fail fast; no defaults for secrets. An invalid environment makes the process exit with code 2 and a message naming each offending variable (never its value).
 
 ### 8.8 Testing strategy (`NFR-TST-01`)
 

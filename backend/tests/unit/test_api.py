@@ -52,8 +52,9 @@ def test_unknown_route_is_404() -> None:
 
 def test_missing_database_url_fails_fast(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("DATABASE_URL", raising=False)
-    with pytest.raises(ValueError, match="database_url"):
+    with pytest.raises(SystemExit) as exit_info:
         create_app()
+    assert exit_info.value.code == 2
 
 
 def test_database_url_comes_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
