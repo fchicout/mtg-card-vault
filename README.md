@@ -19,7 +19,8 @@ A first working stack arrives with issue #10; until then:
 ```bash
 make gates                      # every quality gate that runs without containers
 make docs-check                 # the documentation set is synchronized
-cd deploy/authelia && ./dev-secrets.sh && docker compose up -d && python3 roundtrip.py   # dev identity provider
+deploy/authelia/dev-secrets.sh && cp -n deploy/.env.example deploy/.env   # then set POSTGRES_PASSWORD in deploy/.env
+docker compose -f deploy/compose.yaml --profile ci up -d authelia && python3 deploy/authelia/roundtrip.py   # dev identity provider
 ```
 
 ## Licence

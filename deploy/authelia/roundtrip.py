@@ -5,7 +5,8 @@ Proves, with no dependency but the standard library, that the SPA client receive
 RS256 JWT access token for the API audience, and probes refresh-token rotation, revocation, PKCE
 enforcement and what "sign out" can mean on this identity provider.
 
-  ./dev-secrets.sh && docker compose up -d && python3 roundtrip.py
+  deploy/authelia/dev-secrets.sh && docker compose -f deploy/compose.yaml --profile ci up -d authelia
+  python3 deploy/authelia/roundtrip.py
 Exit code 0 = every check passed, 1 = at least one failed. Prints the decoded claims as evidence.
 """
 
