@@ -59,8 +59,7 @@ def sequence(*commands: tuple[list[str], Path]) -> Callable[[], tuple[bool, str]
 
 
 BACKEND, FRONTEND = ROOT / "backend", ROOT / "frontend"
-API_FILES = [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts")),
-             *sorted((FRONTEND / "src/locale").rglob("*.xlf"))]
+API_FILES = [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts"))]
 
 
 def snapshot() -> dict[Path, bytes]:
@@ -72,15 +71,18 @@ def contract_drift() -> tuple[bool, str]:
     ok, out = run(["uv", "run", "python", "-m", "mtgvault.export_openapi", "openapi.json"], BACKEND)
     if ok:
         ok, out = run(["npm", "run", "api:generate"], FRONTEND)
-    if ok:
-        ok, out = run(["npm", "run", "i18n:extract"], FRONTEND)
-    after = {p: p.read_bytes() for p in [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts")),
-                                         *sorted((FRONTEND / "src/locale").rglob("*.xlf"))]}
+    after = {p: p.read_bytes() for p in [BACKEND / "openapi.json", *sorted((FRONTEND / "src/app/api").rglob("*.ts"))]}
     changed = sorted(str(p.relative_to(ROOT)) for p in set(before) | set(after) if before.get(p) != after.get(p))
     if not ok:
         return False, out
-    return (not changed), ("contract and generated client are current" if not changed
-                           else "stale, regenerate and commit: " + ", ".join(changed))
+    if changed:
+        return False, "stale, regenerate and commit: " + ", ".join(changed)
+    with tempfile.TemporaryDirectory() as fresh:
+        ok, out = run(["npm", "run", "i18n:extract", "--", "--output-path", fresh], FRONTEND)
+        if not ok:
+            return False, out
+        return run([PY, "-I", "scripts/check_i18n_sync.py", "frontend/src/locale/messages.xlf",
+                    f"{fresh}/messages.xlf"])
 
 
 def secret_scan() -> tuple[bool, str]:

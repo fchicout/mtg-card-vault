@@ -218,11 +218,13 @@ jobs:
           npm ci --prefix frontend
           npm run api:generate --prefix frontend
       - name: Extract the English source strings (Angular i18n, NFR-USA-04)
-        run: npm run i18n:extract --prefix frontend
-      - name: Fail when committed contract, client or i18n messages differ from what the code generates (FR-API-01)
+        run: npm run i18n:extract --prefix frontend -- --output-path "$RUNNER_TEMP/i18n"
+      - name: Fail when committed contract or client differ from what the code generates (FR-API-01)
         run: |
-          git diff --exit-code -- backend/openapi.json frontend/src/app/api frontend/src/locale \
-            || { echo "::error::OpenAPI document, generated client or i18n messages are stale. Run 'uv run python -m mtgvault.export_openapi openapi.json' in backend/, then 'npm run api:generate' and 'npm run i18n:extract' in frontend/, and commit."; exit 1; }
+          git diff --exit-code -- backend/openapi.json frontend/src/app/api \
+            || { echo "::error::OpenAPI document or generated client is stale. Run 'uv run python -m mtgvault.export_openapi openapi.json' in backend/ and 'npm run api:generate' in frontend/, then commit."; exit 1; }
+      - name: Fail when the committed i18n messages differ from the extracted ones (NFR-USA-04)
+        run: python3 -I scripts/check_i18n_sync.py frontend/src/locale/messages.xlf "$RUNNER_TEMP/i18n/messages.xlf"
 
   # ------------------------------------------------------------------ end to end
   e2e:
