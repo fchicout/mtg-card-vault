@@ -13,29 +13,4 @@
 #     justification: "No fixed package yet; the vulnerable code path is not reachable (no TLS server)."
 #     owner: fchicout
 #     expires: 2026-12-31
-exceptions:
-  - id: CVE-2026-78661
-    tool: trivy
-    justification: "Go toolchain finding in the newest Authelia release (4.39.28); the image is only the local dev identity provider (profile dev/ci), bound to 127.0.0.1. Re-check when Authelia publishes a rebuilt image."
-    owner: fchicout
-    expires: 2027-01-06
-  - id: CVE-2026-78669
-    tool: trivy
-    justification: "Go toolchain finding in the newest Authelia release (4.39.28); the image is only the local dev identity provider (profile dev/ci), bound to 127.0.0.1. Re-check when Authelia publishes a rebuilt image."
-    owner: fchicout
-    expires: 2027-01-06
-  - id: CVE-2026-111943
-    tool: trivy
-    justification: "Go toolchain finding in the newest Authelia release (4.39.28); the image is only the local dev identity provider (profile dev/ci), bound to 127.0.0.1. Re-check when Authelia publishes a rebuilt image."
-    owner: fchicout
-    expires: 2027-01-06
-  - id: CVE-2026-78667
-    tool: trivy
-    justification: "Go toolchain finding in the newest Authelia release (4.39.28); the image is only the local dev identity provider (profile dev/ci), bound to 127.0.0.1. Re-check when Authelia publishes a rebuilt image."
-    owner: fchicout
-    expires: 2027-01-06
-  - id: CVE-2026-97031
-    tool: trivy
-    justification: "Go toolchain finding in the newest Authelia release (4.39.28); the image is only the local dev identity provider (profile dev/ci), bound to 127.0.0.1. Re-check when Authelia publishes a rebuilt image."
-    owner: fchicout
-    expires: 2027-01-06
+exceptions: []

@@ -31,6 +31,3 @@ frontend/test-results/
 .vscode/
 .claude/worktrees/
 
-# Development Authelia: generated secrets and state
-deploy/authelia/secrets/
-deploy/authelia/data/

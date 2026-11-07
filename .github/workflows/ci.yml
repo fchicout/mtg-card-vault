@@ -247,17 +247,8 @@ jobs:
             echo "HTTP_PORT=8080"
             echo "HTTPS_PORT=8443"
           } > deploy/.env
-      - name: Generate the throwaway secrets of the development Authelia
-        run: deploy/authelia/dev-secrets.sh
-      - name: Start the stack (with the development Authelia) and wait until it is up
-        run: |
-          docker compose -f deploy/compose.yaml --profile ci up -d --build --wait --wait-timeout 240
-          for i in $(seq 1 30); do
-            curl -fsS --cacert deploy/authelia/secrets/tls.crt --resolve auth.localtest.me:9091:127.0.0.1 \
-              https://auth.localtest.me:9091/.well-known/openid-configuration >/dev/null 2>&1 && exit 0
-            sleep 2
-          done
-          echo "::error::the development Authelia did not become ready"; exit 1
+      - name: Start the stack and wait until every service is healthy
+        run: docker compose -f deploy/compose.yaml up -d --build --wait --wait-timeout 240
       - name: Install Playwright with Chromium, Firefox and WebKit
         working-directory: frontend
         run: |
@@ -268,11 +259,10 @@ jobs:
         env:
           E2E_BASE_URL: https://localhost:8443
           E2E_HTTP_URL: http://localhost:8080
-          E2E_AUTHELIA_URL: https://auth.localtest.me:9091
         run: npm run e2e
       - name: Stack logs on failure
         if: failure()
-        run: docker compose -f deploy/compose.yaml --profile ci logs --no-color --tail 200
+        run: docker compose -f deploy/compose.yaml logs --no-color --tail 200
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -283,7 +273,7 @@ jobs:
           if-no-files-found: ignore
       - name: Tear down
         if: always()
-        run: docker compose -f deploy/compose.yaml --profile ci down -v
+        run: docker compose -f deploy/compose.yaml down -v
 
   # ------------------------------------------------------------------ security
   secret-scan:
@@ -392,31 +382,6 @@ jobs:
         with:
           name: sbom
           path: ${{ runner.temp }}/sbom/*.cdx.json
-
-  # ------------------------------------------------------------------ identity
-  authelia-roundtrip:
-    name: authelia-roundtrip
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - name: Start the development Authelia (HTTPS)
-        run: |
-          deploy/authelia/dev-secrets.sh
-          echo "POSTGRES_PASSWORD=unused-by-this-job" > deploy/.env
-          docker compose -f deploy/compose.yaml --profile ci up -d authelia
-          for i in $(seq 1 30); do
-            curl -fsS --cacert deploy/authelia/secrets/tls.crt --resolve auth.localtest.me:9091:127.0.0.1 \
-              https://auth.localtest.me:9091/.well-known/openid-configuration >/dev/null 2>&1 && exit 0
-            sleep 2
-          done
-          docker compose -f deploy/compose.yaml --profile ci logs authelia
-          exit 1
-      - name: Authorization code + PKCE round trip yields a verifiable RS256 JWT (ADR-003)
-        working-directory: deploy/authelia
-        run: python3 -I roundtrip.py
-      - name: Authelia log on failure
-        if: failure()
-        run: docker compose -f deploy/compose.yaml --profile ci logs authelia | tail -50
 
   # ------------------------------------------------------------------ sonarqube
   # SonarQube is an analysis and issue source only: the verdict is produced by
