@@ -103,9 +103,8 @@ class NewCodeCoverageTest(unittest.TestCase):
 class SonarConditionsTest(unittest.TestCase):
     CLEAN = gate.IssueCounts(bugs=0, vulnerabilities=0, blocker_or_critical=0)
 
-    def statuses(self, counts: gate.IssueCounts, hotspots: float | None = 0.0,
-                 maintainability: float | None = 1.0) -> dict[str, str]:
-        return {c.name: c.status for c in gate.sonar_conditions(counts, hotspots, maintainability)}
+    def statuses(self, counts: gate.IssueCounts, maintainability: float | None = 1.0) -> dict[str, str]:
+        return {c.name: c.status for c in gate.sonar_conditions(counts, maintainability)}
 
     def test_clean_project_passes_everything(self) -> None:
         self.assertEqual(set(self.statuses(self.CLEAN).values()), {gate.PASS})
@@ -113,23 +112,25 @@ class SonarConditionsTest(unittest.TestCase):
     def test_each_condition_can_fail_independently(self) -> None:
         cases = {
             "Open bugs (reliability rating A)": self.statuses(gate.IssueCounts(1, 0, 0)),
-            "Open vulnerabilities (security rating A)": self.statuses(gate.IssueCounts(0, 2, 0)),
+            "Open security issues (vulnerabilities, former hotspots)": self.statuses(gate.IssueCounts(0, 2, 0)),
             "Open Blocker/Critical issues": self.statuses(gate.IssueCounts(0, 0, 1)),
-            "Security hotspots to review": self.statuses(self.CLEAN, hotspots=3.0),
             "Maintainability rating": self.statuses(self.CLEAN, maintainability=2.0),
         }
         for name, statuses in cases.items():
             with self.subTest(name):
                 self.assertEqual(statuses[name], gate.FAIL)
 
-    def test_unreadable_extras_are_skipped_not_passed(self) -> None:
-        statuses = self.statuses(self.CLEAN, hotspots=None, maintainability=None)
-        self.assertEqual(statuses["Security hotspots to review"], gate.SKIPPED)
-        self.assertEqual(statuses["Maintainability rating"], gate.SKIPPED)
+    def test_there_is_no_hotspot_condition_any_more(self) -> None:
+        # Security Hotspots are deprecated in SonarQube and become security issues (26.7 / 26.11).
+        names = {c.name for c in gate.sonar_conditions(self.CLEAN, 1.0)}
+        self.assertFalse(any("hotspot" in name.lower() and "former" not in name.lower() for name in names))
+
+    def test_an_unreadable_rating_is_skipped_not_passed(self) -> None:
+        self.assertEqual(self.statuses(self.CLEAN, maintainability=None)["Maintainability rating"], gate.SKIPPED)
 
     def test_verdict_ignores_skipped_but_not_failures(self) -> None:
-        self.assertEqual(gate.verdict(gate.sonar_conditions(self.CLEAN, None, None)), 0)
-        self.assertEqual(gate.verdict(gate.sonar_conditions(gate.IssueCounts(0, 0, 4), None, None)), 1)
+        self.assertEqual(gate.verdict(gate.sonar_conditions(self.CLEAN, None)), 0)
+        self.assertEqual(gate.verdict(gate.sonar_conditions(gate.IssueCounts(0, 0, 4), None)), 1)
 
 
 class SonarClientTest(unittest.TestCase):
@@ -142,6 +143,37 @@ class SonarClientTest(unittest.TestCase):
     def test_issue_counts_come_from_the_facets(self) -> None:
         counts = gate.fetch_issue_counts("https://s", "k", "t", lambda url, token: (200, self.BODY))
         self.assertEqual(counts, gate.IssueCounts(bugs=2, vulnerabilities=0, blocker_or_critical=3))
+
+    def test_a_security_impact_issue_counts_even_when_its_legacy_type_is_not_vulnerability(self) -> None:
+        # A former hotspot: legacy type CODE_SMELL, software quality SECURITY (MQR mode).
+        body = {"facets": [
+            {"property": "types", "values": [{"val": "CODE_SMELL", "count": 3}]},
+            {"property": "impactSoftwareQualities", "values": [{"val": "SECURITY", "count": 2},
+                                                               {"val": "MAINTAINABILITY", "count": 1}]},
+        ]}
+        counts = gate.fetch_issue_counts("https://s", "k", "t", lambda url, token: (200, body))
+        self.assertEqual(counts.vulnerabilities, 2)
+
+    def test_the_larger_of_type_and_security_impact_wins(self) -> None:
+        body = {"facets": [
+            {"property": "types", "values": [{"val": "VULNERABILITY", "count": 5}]},
+            {"property": "impactSoftwareQualities", "values": [{"val": "SECURITY", "count": 2}]},
+        ]}
+        counts = gate.fetch_issue_counts("https://s", "k", "t", lambda url, token: (200, body))
+        self.assertEqual(counts.vulnerabilities, 5)
+
+    def test_a_server_without_the_quality_facet_falls_back_to_the_type_facet(self) -> None:
+        asked: list[str] = []
+
+        def get(url: str, token: str) -> tuple[int, dict]:
+            asked.append(url)
+            if "impactSoftwareQualities" in url:
+                return 400, {"errors": [{"msg": "Value of parameter 'facets' is invalid"}]}
+            return 200, {"facets": [{"property": "types", "values": [{"val": "VULNERABILITY", "count": 1}]}]}
+
+        counts = gate.fetch_issue_counts("https://s", "k", "t", get)
+        self.assertEqual(counts.vulnerabilities, 1)
+        self.assertEqual(len(asked), 2)
 
     def test_issue_search_failure_is_raised(self) -> None:
         with self.assertRaises(RuntimeError):
