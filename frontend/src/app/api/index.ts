@@ -7,8 +7,10 @@ export { RequestBuilder } from './request-builder';
 export type { StrictHttpResponse } from './strict-http-response';
 export { Api } from './api';
 
+export type { FieldProblem } from './models/field-problem';
 export type { HealthStatus } from './models/health-status';
 export type { HelloResponse } from './models/hello-response';
+export type { Problem } from './models/problem';
 
 export type { GetLiveness$Params as GetLiveness$Params } from './fn/health/get-liveness';
 export { getLiveness as getLiveness } from './fn/health/get-liveness';
