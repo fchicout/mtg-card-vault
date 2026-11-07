@@ -1,6 +1,6 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.3.14
+**Docs set version:** 0.3.15
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -85,7 +85,7 @@ Objectives are SMART where possible. They are traced to requirements in `06-trac
 
 - All **Must** and **Should** stories in `02-user-stories.md` are implemented and their acceptance criteria pass as automated tests.
 - All **Must** requirements in `03-requirements-specification.md` are verified by the method stated per requirement.
-- The project quality gates pass on `main` (`scripts/run_local_gates.py` locally, `ci.yml` in GitHub); no open Blocker/Critical issues; all security hotspots reviewed.
+- The project quality gates pass on `main` (`scripts/run_local_gates.py` locally, `ci.yml` in GitHub); no open Blocker/Critical issues; no open security issue (SonarQube's former security hotspots are ordinary security issues in current versions).
 - CI security scans (dependency audit, secret scan, container scan) report no unaddressed High/Critical findings.
 - `scripts/check_docs_sync.py` exits 0.
 - A fresh clone can be deployed with documented commands and a first user can sign in, scan a card and see the vault value.
@@ -215,7 +215,7 @@ Resolved questions become requirements, ADRs or assumptions, and the row is mark
 | OQ-05 | Can the Authelia OIDC client be configured to issue RS256-signed JWT access tokens with the API as audience? Else use introspection. | M1 | Resolved 2026-11-07: yes, with the SPA requesting the audience explicitly (ADR-003). |
 | OQ-06 | Which open-source licence (MIT vs Apache-2.0) for the public repository? | M0 | Resolved 2026-11-07: MIT (file `LICENSE`, referenced in the README and the package metadata). |
 | OQ-07 | Should prices be shown in USD only, or USD + EUR? (Docs currently assume both are shown.) | M5 | Open |
-| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is project-owned)? | M0 | Resolved 2026-11-07: the self-hosted SonarQube (`https://sonar.fchicout.dev`, Community Build 26.10) is publicly reachable, so GitHub-hosted runners scan it directly with one scan token per project; the Community Build has no branch or pull-request analysis (ADR-011). Open follow-up in issue #5: the hotspot condition of the gate still reports SKIPPED because the scan tokens get HTTP 403 from the hotspots API. |
+| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is project-owned)? | M0 | Resolved 2026-11-07: the self-hosted SonarQube (`https://sonar.fchicout.dev`, Community Build 26.10) is publicly reachable, so GitHub-hosted runners scan it directly with one scan token per project; the Community Build has no branch or pull-request analysis (ADR-011). The gate no longer has a hotspot condition: SonarQube deprecated Security Hotspots in 26.7 and turns them into security issues in 26.11 (ADR-011). |
 
 ## 13. Approval
 
