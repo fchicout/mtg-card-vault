@@ -16,11 +16,24 @@ updates:
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # The TypeScript version is dictated by Angular (ADR-009 upgrade policy), never ahead of it.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - package-ecosystem: docker
-    directories: [/backend, /frontend, /deploy/authelia]
+    directories: [/backend, /frontend]
     schedule: { interval: weekly }
     commit-message: { prefix: build, include: scope }
+    ignore:
+      # Node is adopted on LTS releases only (even majors); Current lines such as 25 never reach LTS.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
     commit-message: { prefix: ci, include: scope }
+  # Images in the compose stack (proxy, database), pinned by digest.
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule: { interval: weekly }
+    commit-message: { prefix: build, include: scope }
