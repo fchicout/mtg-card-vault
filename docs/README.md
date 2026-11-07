@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.4
+**Docs set version:** 0.3.5
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -71,12 +71,15 @@ Run: `python3 scripts/check_docs_sync.py` (exit code 0 = in sync).
 - Every requirement (`FR-*`/`NFR-*`) traces to ≥ 1 story; every story to ≥ 1 requirement; every use case to ≥ 1 requirement; every business objective to ≥ 1 requirement.
 - The links in the SRS (03), the story document (02), the use-case document (04) and the matrix (06) agree **exactly** (same sets in every direction).
 
+Optional reference checks (warnings, or failures with `--strict-refs`): `--commits RANGE` scans commit messages and `--code DIR` scans `Implements:` markers in code for IDs that no document defines. CI runs both on pull requests. `make docs-check` runs the sync check; `pre-commit install` adds it as a hook that runs when documentation or the script changes. The script itself has unit tests (`scripts/tests/test_check_docs_sync.py`, at least 90 % coverage enforced in CI).
+
 What it cannot check (reviewers must): that the *meaning* of linked artifacts is consistent, that ADRs match the real code, and that diagrams are current.
 
 ## 6. Changelog
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.5 | 2026-11-07 | Docs-sync gate hardened (issue #13): unit-tested script, reference checks for commits and code markers, pre-commit hook, `make docs-check`. |
 | 0.3.4 | 2026-11-07 | ADR-009 pin decided (Angular 22.2 + Clarity 18.5, npm 11, Vitest, upgrade policy), CSP recipe in section 8.2, OQ-01 resolved, RSK-03 reassessed (issue #3). |
 | 0.3.3 | 2026-11-07 | Database foundation (issue #8): ADR-005 notes (sync SQLAlchemy, unit of work, migrate-then-serve), backup/restore stub (§7.2a). |
 | 0.3.2 | 2026-11-07 | Backend foundations (issue #7): module layout, error mapping, correlation id, logging and configuration behaviour documented in docs/05 §5, §8.3, §8.4, §8.7. |
