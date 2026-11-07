@@ -130,7 +130,7 @@ jobs:
         with:
           fetch-depth: 0 # git-cliff reads the whole history and the tags
       - uses: astral-sh/setup-uv@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: sbom-*
           path: sbom
