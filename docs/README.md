@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.2.3
+**Docs set version:** 0.3.0
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -77,6 +77,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.0 | 2026-11-07 | ADR-015: staging (`develop`) and production (`main`) environments over HTTPS, deployed from GitHub Actions; `deploy.yml` added to the CI/CD table (issue #18). |
 | 0.2.3 | 2026-11-07 | OQ-08 status: both Sonar jobs verified in CI; hotspots API returns 403 so that condition stays SKIPPED. |
 | 0.2.2 | 2026-11-07 | Frontend Sonar project exists; the `sonar-frontend` job uses its own token `SONAR_FRONTEND_TOKEN` (OQ-08, ADR-011 CI table). |
 | 0.2.1 | 2026-10-31 | SonarQube status recorded (backend project and CI secrets exist; frontend project pending) in OQ-08. |
