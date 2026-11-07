@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="en">
+  <file id="ngi18n" original="ng.template">
+    <unit id="app.title">
+      <notes>
+        <note category="location">src/app/app.html:5,7</note>
+      </notes>
+      <segment>
+        <source>MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="theme.light">
+      <notes>
+        <note category="location">src/app/app.html:22,23</note>
+      </notes>
+      <segment>
+        <source>Light theme</source>
+      </segment>
+    </unit>
+    <unit id="theme.dark">
+      <notes>
+        <note category="location">src/app/app.html:24,25</note>
+      </notes>
+      <segment>
+        <source>Dark theme</source>
+      </segment>
+    </unit>
+    <unit id="nav.label">
+      <notes>
+        <note category="location">src/app/app.html:35,37</note>
+      </notes>
+      <segment>
+        <source>Main navigation</source>
+      </segment>
+    </unit>
+    <unit id="nav.vault">
+      <notes>
+        <note category="location">src/app/app.html:39,40</note>
+      </notes>
+      <segment>
+        <source>Vault</source>
+      </segment>
+    </unit>
+    <unit id="nav.catalogue">
+      <notes>
+        <note category="location">src/app/app.html:43,45</note>
+      </notes>
+      <segment>
+        <source>Catalogue</source>
+      </segment>
+    </unit>
+    <unit id="nav.scan">
+      <notes>
+        <note category="location">src/app/app.html:47,48</note>
+      </notes>
+      <segment>
+        <source>Scan</source>
+      </segment>
+    </unit>
+    <unit id="nav.account">
+      <notes>
+        <note category="location">src/app/app.html:51,52</note>
+      </notes>
+      <segment>
+        <source>Account</source>
+      </segment>
+    </unit>
+    <unit id="footer.scryfall">
+      <notes>
+        <note category="location">src/app/app.html:63,64</note>
+      </notes>
+      <segment>
+        <source>Card data and images are provided by</source>
+      </segment>
+    </unit>
+    <unit id="footer.scryfallNote">
+      <notes>
+        <note category="location">src/app/app.html:66,69</note>
+      </notes>
+      <segment>
+        <source>which is not affiliated with this project.</source>
+      </segment>
+    </unit>
+    <unit id="footer.fancontent">
+      <notes>
+        <note category="location">src/app/app.html:70,74</note>
+      </notes>
+      <segment>
+        <source> MTG Card Vault is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. It is not approved or endorsed by Wizards of the Coast. Magic: The Gathering is a trademark of Wizards of the Coast LLC. </source>
+      </segment>
+    </unit>
+    <unit id="route.home">
+      <notes>
+        <note category="location">src/app/app.routes.ts:8</note>
+      </notes>
+      <segment>
+        <source>MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.vault">
+      <notes>
+        <note category="location">src/app/app.routes.ts:13</note>
+      </notes>
+      <segment>
+        <source>Vault - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.catalogue">
+      <notes>
+        <note category="location">src/app/app.routes.ts:18</note>
+      </notes>
+      <segment>
+        <source>Catalogue - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.scan">
+      <notes>
+        <note category="location">src/app/app.routes.ts:23</note>
+      </notes>
+      <segment>
+        <source>Scan - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.account">
+      <notes>
+        <note category="location">src/app/app.routes.ts:28</note>
+      </notes>
+      <segment>
+        <source>Account - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.signin">
+      <notes>
+        <note category="location">src/app/app.routes.ts:33</note>
+      </notes>
+      <segment>
+        <source>Sign in required - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.notfound">
+      <notes>
+        <note category="location">src/app/app.routes.ts:38</note>
+      </notes>
+      <segment>
+        <source>Page not found - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="error.unreachable">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:25</note>
+      </notes>
+      <segment>
+        <source>The server cannot be reached. Check your connection and try again.</source>
+      </segment>
+    </unit>
+    <unit id="error.unauthorized">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:27</note>
+      </notes>
+      <segment>
+        <source>Your session has ended. Sign in again to continue.</source>
+      </segment>
+    </unit>
+    <unit id="error.forbidden">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:29</note>
+      </notes>
+      <segment>
+        <source>You do not have access to this.</source>
+      </segment>
+    </unit>
+    <unit id="error.notFound">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:31</note>
+      </notes>
+      <segment>
+        <source>We could not find what you asked for.</source>
+      </segment>
+    </unit>
+    <unit id="error.conflict">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:33</note>
+      </notes>
+      <segment>
+        <source>This conflicts with the current state. Reload and try again.</source>
+      </segment>
+    </unit>
+    <unit id="error.invalid">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:35</note>
+      </notes>
+      <segment>
+        <source>Some of the information is not valid.</source>
+      </segment>
+    </unit>
+    <unit id="error.rateLimited">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:38</note>
+      </notes>
+      <segment>
+        <source>Too many requests. Wait a moment and try again.</source>
+      </segment>
+    </unit>
+    <unit id="error.rateLimitedSeconds">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:39</note>
+      </notes>
+      <segment>
+        <source>Too many requests. Try again in <ph id="0" equiv="seconds" disp="retryAfterSeconds"/> seconds.</source>
+      </segment>
+    </unit>
+    <unit id="error.unavailable">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:41</note>
+      </notes>
+      <segment>
+        <source>A service this page depends on is not available. Try again in a moment.</source>
+      </segment>
+    </unit>
+    <unit id="error.server">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:43</note>
+      </notes>
+      <segment>
+        <source>Something went wrong on our side. Try again; if it keeps happening, give the support details to the operator.</source>
+      </segment>
+    </unit>
+    <unit id="error.generic">
+      <notes>
+        <note category="location">src/app/core/http/problem.ts:45</note>
+      </notes>
+      <segment>
+        <source>The request could not be completed.</source>
+      </segment>
+    </unit>
+    <unit id="alert.details">
+      <notes>
+        <note category="location">src/app/core/notifications/notifications.ts:37,38</note>
+      </notes>
+      <segment>
+        <source>Support details</source>
+      </segment>
+    </unit>
+    <unit id="alert.status">
+      <notes>
+        <note category="location">src/app/core/notifications/notifications.ts:39</note>
+      </notes>
+      <segment>
+        <source>Status</source>
+      </segment>
+    </unit>
+    <unit id="alert.correlation">
+      <notes>
+        <note category="location">src/app/core/notifications/notifications.ts:44,45</note>
+      </notes>
+      <segment>
+        <source>Correlation id</source>
+      </segment>
+    </unit>
+    <unit id="page.account.title">
+      <notes>
+        <note category="location">src/app/pages/account.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>Account</source>
+      </segment>
+    </unit>
+    <unit id="page.account.text">
+      <notes>
+        <note category="location">src/app/pages/account.ts:14,16</note>
+      </notes>
+      <segment>
+        <source>Sign-in and account settings arrive with the identity feature.</source>
+      </segment>
+    </unit>
+    <unit id="page.account.empty">
+      <notes>
+        <note category="location">src/app/pages/account.ts:20</note>
+      </notes>
+      <segment>
+        <source>Your account</source>
+      </segment>
+    </unit>
+    <unit id="page.catalogue.title">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>Catalogue</source>
+      </segment>
+    </unit>
+    <unit id="page.catalogue.text">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:14,16</note>
+      </notes>
+      <segment>
+        <source>Searching Scryfall cards arrives with the catalogue feature.</source>
+      </segment>
+    </unit>
+    <unit id="page.catalogue.empty">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:20</note>
+      </notes>
+      <segment>
+        <source>Nothing to search yet</source>
+      </segment>
+    </unit>
+    <unit id="page.home.title">
+      <notes>
+        <note category="location">src/app/pages/home.ts:17,19</note>
+      </notes>
+      <segment>
+        <source>Welcome to MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="page.home.unreachable">
+      <notes>
+        <note category="location">src/app/pages/home.ts:34</note>
+      </notes>
+      <segment>
+        <source>The greeting could not be loaded.</source>
+      </segment>
+    </unit>
+    <unit id="page.notfound.title">
+      <notes>
+        <note category="location">src/app/pages/not-found.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>Page not found</source>
+      </segment>
+    </unit>
+    <unit id="page.notfound.text">
+      <notes>
+        <note category="location">src/app/pages/not-found.ts:13,14</note>
+      </notes>
+      <segment>
+        <source>The address does not match any page.</source>
+      </segment>
+    </unit>
+    <unit id="page.notfound.home">
+      <notes>
+        <note category="location">src/app/pages/not-found.ts:15,17</note>
+      </notes>
+      <segment>
+        <source>Back to the start page</source>
+      </segment>
+    </unit>
+    <unit id="page.notfound.empty">
+      <notes>
+        <note category="location">src/app/pages/not-found.ts:21</note>
+      </notes>
+      <segment>
+        <source>We could not find that page</source>
+      </segment>
+    </unit>
+    <unit id="page.scan.title">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>Scan</source>
+      </segment>
+    </unit>
+    <unit id="page.scan.text">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:14,16</note>
+      </notes>
+      <segment>
+        <source>Adding cards with your camera arrives with the scanning feature.</source>
+      </segment>
+    </unit>
+    <unit id="page.scan.empty">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:20</note>
+      </notes>
+      <segment>
+        <source>The scanner is not available yet</source>
+      </segment>
+    </unit>
+    <unit id="page.signin.title">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>Sign in required</source>
+      </segment>
+    </unit>
+    <unit id="page.signin.text">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:13,14</note>
+      </notes>
+      <segment>
+        <source>You need to sign in to see this page.</source>
+      </segment>
+    </unit>
+    <unit id="page.signin.empty">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:18</note>
+      </notes>
+      <segment>
+        <source>Please sign in</source>
+      </segment>
+    </unit>
+    <unit id="page.vault.title">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>Vault</source>
+      </segment>
+    </unit>
+    <unit id="page.vault.text">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:14,16</note>
+      </notes>
+      <segment>
+        <source>Cards you add will appear here. This page is ready for the vault feature.</source>
+      </segment>
+    </unit>
+    <unit id="page.vault.empty">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:20</note>
+      </notes>
+      <segment>
+        <source>Your vault is empty</source>
+      </segment>
+    </unit>
+    <unit id="state.retry">
+      <notes>
+        <note category="location">src/app/shared/states/error-state.ts:15,16</note>
+      </notes>
+      <segment>
+        <source>Try again</source>
+      </segment>
+    </unit>
+    <unit id="state.loading">
+      <notes>
+        <note category="location">src/app/shared/states/loading-state.ts:12</note>
+      </notes>
+      <segment>
+        <source>Loading…</source>
+      </segment>
+    </unit>
+  </file>
+</xliff>

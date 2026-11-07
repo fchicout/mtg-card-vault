@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.10
+**Docs set version:** 0.3.11
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.11 | 2026-11-07 | Application shell (issue #9): layout, lazy routes, error alerts, state patterns, i18n and accessibility checks described in section 8.9. |
 | 0.3.10 | 2026-11-07 | Repository governance (issue #2): MIT licence (OQ-06 resolved), root files are signposts that never restate the set. |
 | 0.3.9 | 2026-11-07 | Authelia spike (issue #4): ADR-003 verified (RS256 JWT access tokens, explicit audience, lifetimes, sign-out without end-session), FR-AUTH-02 and UC-09 reworded, dev identity provider in section 7.3, OQ-05 resolved, RSK-05 reassessed. |
 | 0.3.8 | 2026-11-07 | Release pipeline (issue #11): `release.yml` behaviour, rehearsal mode and the gitflow release procedure in section 7.5. |

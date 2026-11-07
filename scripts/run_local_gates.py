@@ -75,8 +75,14 @@ def contract_drift() -> tuple[bool, str]:
     changed = sorted(str(p.relative_to(ROOT)) for p in set(before) | set(after) if before.get(p) != after.get(p))
     if not ok:
         return False, out
-    return (not changed), ("contract and generated client are current" if not changed
-                           else "stale, regenerate and commit: " + ", ".join(changed))
+    if changed:
+        return False, "stale, regenerate and commit: " + ", ".join(changed)
+    with tempfile.TemporaryDirectory() as fresh:
+        ok, out = run(["npm", "run", "i18n:extract", "--", "--output-path", fresh], FRONTEND)
+        if not ok:
+            return False, out
+        return run([PY, "-I", "scripts/check_i18n_sync.py", "frontend/src/locale/messages.xlf",
+                    f"{fresh}/messages.xlf"])
 
 
 def secret_scan() -> tuple[bool, str]:
