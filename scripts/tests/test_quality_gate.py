@@ -157,6 +157,16 @@ class SonarClientTest(unittest.TestCase):
         self.assertEqual(
             gate.fetch_optional_number("u", "t", lambda url, token: (200, {"v": 5}), lambda b: float(b["v"])), 5.0)
 
+    def test_optional_number_reports_why_it_is_not_readable(self) -> None:
+        err = io.StringIO()
+        body = {"errors": [{"msg": "Insufficient privileges"}]}
+        with redirect_stderr(err):
+            result = gate.fetch_optional_number(
+                "https://s/api/hotspots/search?project=k", "t", lambda url, token: (403, body), lambda b: 1.0)
+        self.assertIsNone(result)
+        self.assertIn("/api/hotspots/search answered HTTP 403: Insufficient privileges", err.getvalue())
+        self.assertNotIn("project=k", err.getvalue())
+
     def test_wait_for_analysis_polls_until_success(self) -> None:
         states = iter(["PENDING", "IN_PROGRESS", "SUCCESS"])
         with tempfile.TemporaryDirectory() as tmp:

@@ -214,7 +214,13 @@ def fetch_issue_counts(host: str, key: str, token: str, get: HttpGet) -> IssueCo
 def fetch_optional_number(url: str, token: str, get: HttpGet, extract: Callable[[dict], float | None]) -> float | None:
     """A number SonarQube only reveals to tokens with extra permissions: None when not readable."""
     status, body = get(url, token)
-    return extract(body) if status == 200 else None
+    if status != 200:
+        # Say why (403 = permission, 400 = bad request, ...) so a SKIPPED condition can be diagnosed.
+        reason = "; ".join(str(e.get("msg", "")) for e in body.get("errors", []) if isinstance(e, dict))
+        endpoint = urllib.parse.urlsplit(url).path
+        print(f"note: {endpoint} answered HTTP {status}{': ' + reason if reason else ''}", file=sys.stderr)
+        return None
+    return extract(body)
 
 
 def fetch_server_gate_status(host: str, key: str, token: str, get: HttpGet) -> str | None:
