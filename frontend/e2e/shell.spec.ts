@@ -1,5 +1,6 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+
+import { expectNoSeriousViolations } from './support/axe';
 
 /**
  * Application shell (issue #9, NFR-USA-01..03, NFR-LEG-01, FR-API-02). The API is mocked at the
@@ -26,15 +27,6 @@ async function useTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
   await page.addInitScript((value) => localStorage.setItem('mtgvault.theme', value), theme);
 }
 
-async function seriousViolations(page: Page): Promise<string[]> {
-  const result = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze();
-  return result.violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => `${v.impact} ${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
-}
-
 for (const theme of THEMES) {
   test.describe(`${theme} theme`, () => {
     for (const route of ROUTES) {
@@ -50,7 +42,7 @@ for (const theme of THEMES) {
         await expect(footer).toContainText('unofficial Fan Content');
         await expect(footer).toContainText('not approved or endorsed by Wizards of the Coast');
 
-        expect(await seriousViolations(page)).toEqual([]);
+        await expectNoSeriousViolations(page);
       });
     }
   });
@@ -91,7 +83,7 @@ test.describe('navigation', () => {
         .getByRole('navigation', { name: 'Main navigation' })
         .getByRole('link', { name: 'Catalogue' }),
     ).toBeVisible();
-    expect(await seriousViolations(page)).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 
   test('can be operated with the keyboard alone', async ({ page }) => {
@@ -154,7 +146,7 @@ test.describe('API errors (FR-API-02)', () => {
     await page.getByTestId('alert-details').locator('summary').click();
     await expect(page.getByTestId('correlation-id')).toHaveText('e2e-corr-503');
     await expect(page.getByTestId('error')).toBeVisible();
-    expect(await seriousViolations(page)).toEqual([]);
+    await expectNoSeriousViolations(page);
   });
 
   test('an unreachable API is explained, and retry loads the greeting', async ({ page }) => {
