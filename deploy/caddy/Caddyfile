@@ -1,0 +1,28 @@
+# Edge proxy (OQ-03 -> Caddy, ADR-016): the only service that publishes ports.
+#
+# - A host named `localhost` gets a certificate from Caddy's own local CA (trust it once, see the
+#   operator quickstart in docs/05 section 7.6); any other APP_HOST is served with a certificate from
+#   Let's Encrypt, obtained and renewed automatically (ports 80 and 443 must reach this host).
+# - Plain HTTP only redirects to HTTPS. HSTS is sent here, where TLS ends.
+# - The application's own security headers and CSP come from the front-end server.
+{
+	http_port {$HTTP_PORT:8080}
+	https_port {$HTTPS_PORT:8443}
+	# The automatic redirect drops a non-standard HTTPS port, so it is written out below.
+	auto_https disable_redirects
+}
+
+http://{$APP_HOST:localhost}:{$HTTP_PORT:8080} {
+	redir https://{host}:{$HTTPS_PORT:8443}{uri} permanent
+}
+
+{$APP_HOST:localhost} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age={$HSTS_MAX_AGE:300}"
+		-Server
+	}
+
+	reverse_proxy frontend:8080
+}
