@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.5
+**Docs set version:** 0.3.6
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -419,6 +419,7 @@ Jobs of `ci.yml` (job ids are the required status checks):
 | Job id | What it proves | Verdict from |
 |---|---|---|
 | `docs-sync` | the documentation set is synchronized (`NFR-DOC-01`); runs on every pull request, also when only code changes; commits and `Implements:` markers reference defined IDs (warnings) | `scripts/check_docs_sync.py` |
+| `commit-policy` | commit messages, branch name and release versions follow ADR-010 (pull requests only) | `scripts/check_commit_policy.py` |
 | `gate-tests` | the quality-gate and docs-sync tooling itself works; the docs-sync script keeps at least 90 % coverage | `python -m unittest`, coverage |
 | `backend-quality` | ruff, ruff format, mypy `--strict`, import-linter contracts | the tools |
 | `backend-tests` | unit, contract and integration tests (real PostgreSQL via testcontainers); `coverage.xml` | pytest |
@@ -435,6 +436,12 @@ Branch protection on `main` and `develop`: PR required, required checks = all `c
 
 ### 7.5 Versioning and branching
 Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`) → back-merge to `develop`; `hotfix/*` from `main`. Conventional Commits drive the version bump (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; pre-1.0 rules apply). Commit scopes: `auth`, `vault`, `catalog`, `scan`, `pricing`, `api`, `ui`, `deploy`, `ci`, `docs`.
+
+Enforced conventions (`scripts/check_commit_policy.py`):
+- **Commit header:** `type(scope)!: subject [IDs]`, at most 100 characters before the ID list, no trailing period. Types: `feat fix docs refactor test chore ci build perf revert spike security`. Scopes: `auth vault catalog scan pricing api ui deploy ci docs skeleton repo core db gates sonar e2e arch dev github frontend backend docs-sync release security deps deps-dev`. `feat` and `fix` should cite a story or requirement ID (a warning today, an error with `--require-ids error` once the history is clean). Merge, revert and fixup commits are exempt.
+- **Pull-request branches:** `feature/<name>`, `release/X.Y.Z`, `hotfix/X.Y.Z`, `develop`, `main`, `dependabot/*`; the version of a release or hotfix branch is valid SemVer and newer than the latest `vX.Y.Z` tag.
+- **Tags:** `vMAJOR.MINOR.PATCH`, optionally with a SemVer pre-release such as `v1.0.0-rc.1`.
+- **Release dry run:** `make next-version` and `make changelog-preview` (`git-cliff`, config in `cliff.toml`); the changelog is written on the release branch.
 
 ---
 
@@ -557,11 +564,11 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 - **Alternatives:** Hand-written services (drift risk); staying on an older Angular for a longer time (rejected: no security patches).
 
 ### ADR-010 — Gitflow, semantic versioning, Conventional Commits
-- **Status:** Accepted
-- **Context:** CON-05.
-- **Decision:** Gitflow branches; SemVer tags `vX.Y.Z`; Conventional Commits with story IDs; atomic commits; CI checks messages and branch names; release automation per OQ-04.
-- **Consequences:** Predictable history and automated changelog; requires discipline and protected branches.
-- **Alternatives:** Trunk-based development (user mandated gitflow).
+- **Status:** Accepted (release tooling decided 2026-11-07, resolves `OQ-04`)
+- **Context:** CON-05. Releases are a deliberate human act (nothing is deployed automatically) and gitflow uses short-lived `release/*` branches.
+- **Decision:** Gitflow branches; SemVer tags `vX.Y.Z`; Conventional Commits with story IDs; atomic commits. `scripts/check_commit_policy.py` enforces message format, project scopes, ID references (warning for now), branch names and tag/branch SemVer in CI (`commit-policy` job) and locally (commit-msg hook). **Release tooling: `git-cliff` with manual tags.** `git-cliff` reads the Conventional Commits and proposes the next version (`feat` → minor, `fix` → patch; before 1.0 a breaking change bumps the minor version) and writes the changelog; the maintainer creates the release branch, runs the dry run, merges to `main` and tags. Dry run on the current history: next version `v0.1.0`.
+- **Consequences:** Predictable history and generated notes without a bot opening PRs or tagging by itself; requires discipline and protected branches. The checker is dependency-free Python with unit tests.
+- **Alternatives:** `release-please` (automated release PRs on one branch, a poor fit for gitflow's `release/*` and `develop`), `semantic-release` (publishes automatically from a branch, against the manual-release rule), trunk-based development (user mandated gitflow), Node `commitlint` (adds an npm toolchain to a Python-centred tooling set).
 
 ### ADR-011 — Project-owned quality gates; SonarQube as analysis source only
 - **Status:** Accepted (connectivity and project provisioning pending OQ-08)
