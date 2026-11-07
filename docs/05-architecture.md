@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.7
+**Docs set version:** 0.3.8
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -413,7 +413,7 @@ Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: ba
 | `codeql.yml` | PR and push to `develop`/`main`, weekly | CodeQL SAST for Python and TypeScript, results in the Security tab, alongside SonarQube (`NFR-SEC-04`). |
 | `security-nightly.yml` | every night | rescans `develop` and `main` (when it exists): full-history secret scan, dependency audits, images built from the branch; new CVEs appear without code changes. |
 | `publish-images.yml` | green `ci.yml` run on a push to `develop` or `main` | build the images and push them to GHCR tagged with the commit SHA; it never deploys (`ADR-015`). |
-| `release.yml` | tag `vX.Y.Z` on `main` | build multi-arch images, scan, push to GHCR with semver tags, create GitHub Release from conventional commits. |
+| `release.yml` | tag `vX.Y.Z` (final releases only on `main`; pre-releases such as `v1.0.0-rc.1` anywhere) or a manual rehearsal | validates the tag, builds both images, scans them with Trivy (exceptions honoured), pushes multi-arch images (amd64, arm64 best effort) to GHCR as `X.Y.Z`, `X.Y` and `latest` (pre-releases: only `X.Y.Z`), writes the notes with `git-cliff`, creates the GitHub Release with the CycloneDX SBOMs attached. It never deploys. |
 | `dependabot` | weekly | PRs for Python, npm, Docker, Actions dependencies. |
 
 Jobs of `ci.yml` (job ids are the required status checks):
@@ -444,6 +444,7 @@ Enforced conventions (`scripts/check_commit_policy.py`):
 - **Pull-request branches:** `feature/<name>`, `release/X.Y.Z`, `hotfix/X.Y.Z`, `develop`, `main`, `dependabot/*`; the version of a release or hotfix branch is valid SemVer and newer than the latest `vX.Y.Z` tag.
 - **Tags:** `vMAJOR.MINOR.PATCH`, optionally with a SemVer pre-release such as `v1.0.0-rc.1`.
 - **Release dry run:** `make next-version` and `make changelog-preview` (`git-cliff`, config in `cliff.toml`); the changelog is written on the release branch.
+- **Release procedure (gitflow, issue #11):** (1) `git switch -c release/X.Y.Z develop`; `make next-version` shows the version the commits imply. (2) On that branch only fixes, the docs set version and the changelog (`uvx git-cliff --bump --unreleased -o CHANGELOG.md`) change. (3) Merge `release/X.Y.Z` into `main` with a merge commit and tag it `vX.Y.Z` on `main`; pushing the tag runs `release.yml`. (4) Back-merge `main` into `develop`; delete the release branch. (5) Deploy with the operator playbook when ready (`ADR-015`). Rehearsal: run `release.yml` manually with a version such as `v0.0.0-rc.1`; it builds, scans and writes notes and SBOMs but pushes and releases nothing. Hotfixes follow the same steps from `hotfix/X.Y.Z` cut from `main`.
 
 ---
 
