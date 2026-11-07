@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { CAMERA_FILE } from './e2e/support/fake-camera';
 
 /**
- * End-to-end tests run against an already running stack (deploy/compose.yaml locally, an ephemeral
+ * End-to-end tests run against an already running stack (deploy/compose.yaml locally, reached over HTTPS through the proxy, an ephemeral
  * compose stack with the `ci` profile in CI). Override the target with E2E_BASE_URL.
  *
  *  - Browsers: Chromium, Firefox and WebKit; narrow with E2E_BROWSERS=chromium,firefox.
@@ -53,7 +53,7 @@ export default defineConfig({
   retries: process.env['CI'] ? 1 : 0,
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: process.env['E2E_BASE_URL'] ?? 'http://127.0.0.1:8080',
+    baseURL: process.env['E2E_BASE_URL'] ?? 'https://localhost:8443',
     ignoreHTTPSErrors: true,
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
