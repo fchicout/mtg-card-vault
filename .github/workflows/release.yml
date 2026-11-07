@@ -29,7 +29,7 @@ jobs:
       prerelease: ${{ steps.resolve.outputs.prerelease }}
       publish: ${{ steps.resolve.outputs.publish }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Resolve and validate the version
@@ -78,7 +78,7 @@ jobs:
       PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
       PUBLISH: ${{ needs.prepare.outputs.publish }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build the amd64 image for scanning
@@ -97,7 +97,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/sbom"
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/sbom:/out" \
             anchore/syft:v1.57.0 "mtgvault-${{ matrix.name }}:release" -o "cyclonedx-json=/out/sbom-${{ matrix.name }}-${VERSION}.cdx.json"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom-${{ matrix.name }}
           path: ${{ runner.temp }}/sbom/*.cdx.json
@@ -126,11 +126,11 @@ jobs:
       PUBLISH: ${{ needs.prepare.outputs.publish }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # git-cliff reads the whole history and the tags
-      - uses: astral-sh/setup-uv@v6
-      - uses: actions/download-artifact@v4
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: sbom-*
           path: sbom
@@ -143,7 +143,7 @@ jobs:
             uvx git-cliff --unreleased --tag "$TAG" --strip header -o notes.md
           fi
           echo "----- notes -----"; cat notes.md
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-notes
           path: notes.md
