@@ -8,8 +8,8 @@ computed locally; it never decides pass or fail.
 Sub-commands
   coverage     coverage of NEW code (lines added vs a base ref) for the back end and the front end
   duplication  duplicated-lines percentage, computed locally with jscpd
-  sonar        open bugs, vulnerabilities and blocker/critical issues read from SonarQube
-               (plus hotspots and maintainability rating when the token may read them)
+  sonar        open bugs, security issues and blocker/critical issues read from SonarQube
+               (plus the maintainability rating when the token may read measures)
 
 Exit code: 0 all evaluated conditions pass, 1 at least one fails, 2 usage or input error.
 Standard library only.
@@ -155,9 +155,11 @@ def _line_numbers(path: str) -> set[int]:
 
 
 # ---- SonarQube as an issue source ---------------------------------------------------------------
-# A read-only token can always search issues; measures and hotspots need extra permissions. The
-# gate therefore derives its verdict from issue counts and treats whatever it cannot read as
-# SKIPPED (visible, never silently passed).
+# A read-only token can always search issues; measures need an extra permission. The gate
+# therefore derives its verdict from issue counts and treats whatever it cannot read as SKIPPED
+# (visible, never silently passed). Security Hotspots are deprecated in SonarQube (26.7) and become
+# ordinary security issues (26.11), so there is no hotspot condition: a finding with a security
+# impact is counted as a security issue whatever its legacy type.
 HttpGet = Callable[[str, str], tuple[int, dict]]
 
 
@@ -199,22 +201,30 @@ class IssueCounts:
 
 
 def fetch_issue_counts(host: str, key: str, token: str, get: HttpGet) -> IssueCounts:
-    query = urllib.parse.urlencode({"componentKeys": key, "resolved": "false", "ps": "1",
-                                    "facets": "types,severities"})
-    status, body = get(f"{host}/api/issues/search?{query}", token)
+    base = {"componentKeys": key, "resolved": "false", "ps": "1"}
+    # impactSoftwareQualities is how SonarQube models "security issue" (MQR mode); older servers
+    # do not know the facet, so fall back to the legacy type facet alone.
+    for facet_names in ("types,severities,impactSoftwareQualities", "types,severities"):
+        query = urllib.parse.urlencode({**base, "facets": facet_names})
+        status, body = get(f"{host}/api/issues/search?{query}", token)
+        if status != 400:
+            break
     if status != 200:
         raise RuntimeError(f"issue search failed for {key}: HTTP {status} {body.get('errors', '')}")
     facets = {f["property"]: {v["val"]: int(v["count"]) for v in f["values"]}
               for f in body.get("facets", [])}
     types, severities = facets.get("types", {}), facets.get("severities", {})
-    return IssueCounts(bugs=types.get("BUG", 0), vulnerabilities=types.get("VULNERABILITY", 0),
+    qualities = facets.get("impactSoftwareQualities", {})
+    return IssueCounts(bugs=types.get("BUG", 0),
+                       vulnerabilities=max(types.get("VULNERABILITY", 0), qualities.get("SECURITY", 0)),
                        blocker_or_critical=severities.get("BLOCKER", 0) + severities.get("CRITICAL", 0))
 
 
 def fetch_blocking_issues(host: str, key: str, token: str, get: HttpGet, limit: int = 20) -> list[str]:
-    """One line per open bug, vulnerability or Blocker/Critical issue, so a failure is actionable."""
+    """One line per open bug, security or Blocker/Critical issue, so a failure is actionable."""
     lines: list[str] = []
-    for params in ({"types": "BUG,VULNERABILITY"}, {"severities": "BLOCKER,CRITICAL"}):
+    for params in ({"types": "BUG,VULNERABILITY"}, {"impactSoftwareQualities": "SECURITY"},
+                   {"severities": "BLOCKER,CRITICAL"}):
         query = urllib.parse.urlencode({"componentKeys": key, "resolved": "false", "ps": str(limit), **params})
         status, body = get(f"{host}/api/issues/search?{query}", token)
         if status != 200:
@@ -246,16 +256,10 @@ def fetch_server_gate_status(host: str, key: str, token: str, get: HttpGet) -> s
     return str(body["projectStatus"]["status"]) if status == 200 else None
 
 
-def sonar_conditions(counts: IssueCounts, hotspots_to_review: float | None,
-                     maintainability_rating: float | None) -> list[Condition]:
+def sonar_conditions(counts: IssueCounts, maintainability_rating: float | None) -> list[Condition]:
     def at_most_zero(name: str, value: int, detail: str) -> Condition:
         return Condition(name, PASS if value == 0 else FAIL, str(value), "0", detail)
 
-    if hotspots_to_review is None:
-        hotspots = Condition("Security hotspots to review", SKIPPED, "n/a", "0", "token cannot read hotspots")
-    else:
-        hotspots = Condition("Security hotspots to review", PASS if hotspots_to_review == 0 else FAIL,
-                             f"{hotspots_to_review:.0f}", "0", "equivalent to 100% reviewed")
     if maintainability_rating is None:
         maintainability = Condition("Maintainability rating", SKIPPED, "n/a", "A", "token cannot read measures")
     else:
@@ -264,11 +268,10 @@ def sonar_conditions(counts: IssueCounts, hotspots_to_review: float | None,
                                     "ABCDE"[value - 1] if 1 <= value <= 5 else str(value), "A")
     return [
         at_most_zero("Open bugs (reliability rating A)", counts.bugs, "any open bug lowers the rating"),
-        at_most_zero("Open vulnerabilities (security rating A)", counts.vulnerabilities,
-                     "any open vulnerability lowers the rating"),
+        at_most_zero("Open security issues (vulnerabilities, former hotspots)", counts.vulnerabilities,
+                     "any open issue with a security impact lowers the rating"),
         at_most_zero("Open Blocker/Critical issues", counts.blocker_or_critical, ""),
         maintainability,
-        hotspots,
     ]
 
 
@@ -342,13 +345,10 @@ def cmd_sonar(args: argparse.Namespace) -> int:
     except (RuntimeError, TimeoutError, OSError, KeyError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
-    hotspots = fetch_optional_number(
-        f"{host}/api/hotspots/search?project={key}&status=TO_REVIEW&ps=1", token, sonar_get,
-        lambda body: float(body["paging"]["total"]))
     maintainability = fetch_optional_number(
         f"{host}/api/measures/component?component={key}&metricKeys=sqale_rating", token, sonar_get,
         lambda body: next((float(m["value"]) for m in body["component"]["measures"]), None))
-    conditions = sonar_conditions(counts, hotspots, maintainability)
+    conditions = sonar_conditions(counts, maintainability)
     print(render(f"Quality gate - SonarQube issues for {args.project} (judged by this script)", conditions))
     if verdict(conditions):
         for issue_line in fetch_blocking_issues(host, args.project, token, sonar_get):
