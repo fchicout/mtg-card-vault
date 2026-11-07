@@ -1,8 +1,8 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.1.0
+**Docs set version:** 0.2.3
 **Status:** Draft
-**Last updated:** 2026-10-31
+**Last updated:** 2026-11-07
 
 This folder is the single source of truth for **what** MTG Card Vault is, **why** it exists, **what** it must do and **how** it is built. It is written to be read by humans *and* by LLM coding assistants: an LLM that reads only this folder should be able to understand the product, its scope, the problems it solves, and the architecture it must be implemented in.
 
@@ -77,4 +77,8 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.2.3 | 2026-11-07 | OQ-08 status: both Sonar jobs verified in CI; hotspots API returns 403 so that condition stays SKIPPED. |
+| 0.2.2 | 2026-11-07 | Frontend Sonar project exists; the `sonar-frontend` job uses its own token `SONAR_FRONTEND_TOKEN` (OQ-08, ADR-011 CI table). |
+| 0.2.1 | 2026-10-31 | SonarQube status recorded (backend project and CI secrets exist; frontend project pending) in OQ-08. |
+| 0.2.0 | 2026-10-31 | Quality gates are project-owned (`scripts/quality_gate.py`, run locally and in CI); SonarQube is an analysis/issue source only: CON-07, NFR-MNT-01, ADR-011, US-030, Definition of Done, CI job table. |
 | 0.1.0 | 2026-10-31 | Initial documentation set: charter, stories, SRS, use cases, architecture, traceability. |

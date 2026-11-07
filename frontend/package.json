@@ -1,0 +1,51 @@
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test --no-watch",
+    "test:coverage": "ng test --no-watch --coverage",
+    "lint": "ng lint",
+    "format:check": "prettier --check src e2e angular.json tsconfig*.json playwright.config.ts",
+    "format": "prettier --write src e2e angular.json tsconfig*.json playwright.config.ts",
+    "api:generate": "ng-openapi-gen --config ng-openapi-gen.json",
+    "e2e": "playwright test"
+  },
+  "private": true,
+  "packageManager": "npm@11.19.1",
+  "dependencies": {
+    "@angular/animations": "^22.2.4",
+    "@angular/cdk": "^22.2.5",
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@cds/core": "^6.17.0",
+    "@clr/angular": "^18.4.0",
+    "@clr/ui": "^18.4.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.5",
+    "@angular/cli": "^22.2.5",
+    "@angular/compiler-cli": "^22.2.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@vitest/coverage-v8": "^5.0.5",
+    "angular-eslint": "22.6.0",
+    "eslint": "^10.12.0",
+    "jscpd": "^5.4.2",
+    "jsdom": "^30.0.0",
+    "ng-openapi-gen": "^1.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "8.71.0",
+    "vitest": "^5.0.0"
+  }
+}

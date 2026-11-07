@@ -1,0 +1,96 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mtgvault-backend"
+version = "0.1.0"
+description = "MTG Card Vault REST API"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.162.0",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.16.2",
+    "sqlalchemy>=2.1.6",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mtgvault"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: needs Docker (PostgreSQL via testcontainers)",
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+# Relative paths in coverage.xml so SonarQube can map them inside the scanner container.
+relative_files = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = ["if __name__ == .__main__.:"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+strict = true
+python_version = "3.13"
+mypy_path = "src"
+packages = ["mtgvault"]
+
+# Architecture rules from docs/05 section 5.2 (NFR-MNT-03).
+[tool.importlinter]
+root_package = "mtgvault"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Layers: api -> application -> domain"
+type = "layers"
+layers = ["mtgvault.api", "mtgvault.application", "mtgvault.domain"]
+
+[[tool.importlinter.contracts]]
+name = "Domain and application never depend on adapters or the HTTP layer"
+type = "forbidden"
+source_modules = ["mtgvault.domain", "mtgvault.application"]
+forbidden_modules = ["mtgvault.adapters", "mtgvault.api"]
+
+[[tool.importlinter.contracts]]
+name = "The HTTP layer never imports concrete adapters (only the composition root does)"
+type = "forbidden"
+source_modules = ["mtgvault.api"]
+forbidden_modules = ["mtgvault.adapters"]
+
+[[tool.importlinter.contracts]]
+name = "Domain and application are framework-free"
+type = "forbidden"
+source_modules = ["mtgvault.domain", "mtgvault.application"]
+forbidden_modules = ["fastapi", "starlette", "sqlalchemy", "pydantic", "httpx"]
+allow_indirect_imports = true
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "import-linter>=2.15",
+    "mypy>=2.4.1",
+    "openapi-spec-validator>=0.9.0",
+    "pip-audit>=2.10.1",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.3",
+    "testcontainers[postgres]>=4.15.0",
+]
