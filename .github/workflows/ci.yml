@@ -49,6 +49,11 @@ jobs:
           python-version: "3.14"
       - name: Unit tests of the quality-gate and docs-sync tooling
         run: python3 -I -m unittest discover -s scripts/tests -v
+      - name: The security-exceptions script is covered at least 90 % (NFR-SEC-04)
+        run: |
+          python3 -m pip install --quiet coverage
+          python3 -m coverage run --branch --include=scripts/security_exceptions.py -m unittest discover -s scripts/tests -p test_security_exceptions.py
+          python3 -m coverage report --include=scripts/security_exceptions.py --fail-under=90
       - name: The docs-sync script is covered at least 90 % (NFR-DOC-01)
         run: |
           python3 -m pip install --quiet coverage
@@ -254,7 +259,7 @@ jobs:
           fetch-depth: 0
       - name: gitleaks over the full git history (NFR-SEC-03)
         run: |
-          docker run --rm -v "$GITHUB_WORKSPACE:/repo" ghcr.io/gitleaks/gitleaks:latest \
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 \
             git /repo --redact --verbose --exit-code 1
 
   dependency-audit:
@@ -269,18 +274,23 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: pip-audit (NFR-SEC-04)
+      - name: Security exceptions are valid and none has expired (issue #14)
+        run: python3 -I scripts/security_exceptions.py check
+      - name: pip-audit, any known vulnerability fails unless excepted (NFR-SEC-04)
         run: |
           uv sync --frozen --directory backend
-          uv run --directory backend pip-audit
-      - name: npm audit, fail on high or critical (NFR-SEC-04)
-        run: npm audit --prefix frontend --audit-level=high
-      - name: npm audit of production dependencies, fail on moderate or above
-        run: npm audit --prefix frontend --omit=dev --audit-level=moderate
+          uv run --directory backend pip-audit $(python3 -I scripts/security_exceptions.py ids --tool pip-audit --flag=--ignore-vuln)
+      - name: npm audit, fail on high or critical unless excepted (NFR-SEC-04)
+        run: python3 -I scripts/security_exceptions.py npm-audit --prefix frontend --level high
+      - name: npm audit of production dependencies, fail on moderate or above unless excepted
+        run: python3 -I scripts/security_exceptions.py npm-audit --prefix frontend --level moderate --omit dev
 
   container-scan:
     name: container-scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # upload the SARIF results to code scanning
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Build images
@@ -294,12 +304,49 @@ jobs:
             echo "$image runs as uid $uid"
             test "$uid" != "0"
           done
-      - name: Trivy scan, fail on unfixed High/Critical (NFR-SEC-05)
+      - name: Security exceptions are valid and none has expired (issue #14)
+        run: |
+          python3 -I scripts/security_exceptions.py check
+          python3 -I scripts/security_exceptions.py ids --tool trivy > "$RUNNER_TEMP/trivyignore"
+      - name: Trivy scan, fail on unfixed High/Critical unless excepted (NFR-SEC-05)
         run: |
           for image in mtgvault-api:ci mtgvault-frontend:ci; do
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
-              image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$image"
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/trivyignore:/trivyignore:ro" \
+              aquasec/trivy:0.76.2 image --severity HIGH,CRITICAL --ignore-unfixed --ignorefile /trivyignore \
+              --exit-code 1 --no-progress "$image"
           done
+      - name: Trivy SARIF for GitHub code scanning
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/sarif"
+          for pair in api frontend; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/trivyignore:/trivyignore:ro" \
+              -v "$RUNNER_TEMP/sarif:/out" aquasec/trivy:0.76.2 image --severity HIGH,CRITICAL --ignore-unfixed \
+              --ignorefile /trivyignore --format sarif --output "/out/trivy-$pair.sarif" --exit-code 0 --no-progress "mtgvault-$pair:ci"
+          done
+      - name: Upload Trivy results (api)
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: ${{ runner.temp }}/sarif/trivy-api.sarif
+          category: trivy-api
+      - name: Upload Trivy results (frontend)
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: ${{ runner.temp }}/sarif/trivy-frontend.sarif
+          category: trivy-frontend
+      - name: SBOMs (CycloneDX) for both images
+        run: |
+          mkdir -p "$RUNNER_TEMP/sbom"
+          for pair in api frontend; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/sbom:/out" \
+              anchore/syft:v1.57.0 "mtgvault-$pair:ci" -o "cyclonedx-json=/out/sbom-$pair.cdx.json"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: ${{ runner.temp }}/sbom/*.cdx.json
 
   # ------------------------------------------------------------------ sonarqube
   # SonarQube is an analysis and issue source only: the verdict is produced by
