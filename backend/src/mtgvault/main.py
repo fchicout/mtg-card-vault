@@ -12,12 +12,22 @@ from sqlalchemy.orm import sessionmaker
 
 from mtgvault.adapters.auth.deny_all import DenyAllTokenVerifier
 from mtgvault.adapters.auth.jwks import JwksTokenVerifier, httpx_json_fetcher
+from mtgvault.adapters.cache import TtlCache
 from mtgvault.adapters.db.unit_of_work import SqlAlchemyUnitOfWork
+from mtgvault.adapters.resilience import CircuitBreaker
+from mtgvault.adapters.scryfall.client import ScryfallClient
+from mtgvault.adapters.scryfall.provider import ScryfallCardProvider
 from mtgvault.adapters.sql_readiness import SqlReadinessProbe
 from mtgvault.api import health, v1
 from mtgvault.api.errors import PROBLEM_RESPONSES, install_error_handlers
 from mtgvault.api.middleware import CorrelationIdMiddleware
-from mtgvault.application.ports import ReadinessProbe, TokenVerifier, UnitOfWork
+from mtgvault.application.ports import (
+    Cache,
+    CardDataProvider,
+    ReadinessProbe,
+    TokenVerifier,
+    UnitOfWork,
+)
 from mtgvault.application.user_service import UserService
 from mtgvault.config import Settings, load_settings
 from mtgvault.logging_setup import configure_logging
@@ -29,6 +39,8 @@ def create_app(
     readiness_probe: ReadinessProbe | None = None,
     unit_of_work_factory: Callable[[], UnitOfWork] | None = None,
     token_verifier: TokenVerifier | None = None,
+    card_provider: CardDataProvider | None = None,
+    cache: Cache | None = None,
 ) -> FastAPI:
     """Build the application. Collaborators can be injected (tests, OpenAPI export).
 
@@ -43,17 +55,10 @@ def create_app(
         unit_of_work_factory = unit_of_work_factory or (
             lambda: SqlAlchemyUnitOfWork(session_factory)
         )
-    if token_verifier is None:
-        token_verifier = (
-            JwksTokenVerifier(
-                issuer=settings.oidc_issuer_url,
-                audience=settings.oidc_audience,
-                algorithms=settings.oidc_algorithms,
-                fetch_json=httpx_json_fetcher(),
-            )
-            if settings
-            else DenyAllTokenVerifier()
-        )
+    # `is None`, not `or`: an injected empty cache is falsy (it defines __len__) but must be kept.
+    token_verifier = _build_verifier(settings) if token_verifier is None else token_verifier
+    card_provider = _build_card_provider(settings) if card_provider is None else card_provider
+    cache = _build_cache(settings) if cache is None else cache
     docs_enabled = settings is None or settings.api_docs_enabled
 
     app = FastAPI(
@@ -76,24 +81,61 @@ def create_app(
     )
     app.state.readiness_probe = readiness_probe
     app.state.token_verifier = token_verifier
+    app.state.card_provider = card_provider
+    app.state.catalog_cache = cache
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
     app.add_middleware(CorrelationIdMiddleware)
-    if settings and settings.cors_origin_list:
-        # Outermost, so a preflight is answered before authentication. No cookies, no wildcard.
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=settings.cors_origin_list,
-            allow_credentials=False,
-            allow_methods=["GET", "POST", "PATCH", "DELETE"],
-            allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-            expose_headers=["X-Request-ID", "Retry-After"],
-            max_age=600,
-        )
+    _add_cors(app, settings)
     install_error_handlers(app)
     app.include_router(health.router)
     app.include_router(v1.router)
     return app
+
+
+def _build_verifier(settings: Settings | None) -> TokenVerifier:
+    if settings is None:
+        return DenyAllTokenVerifier()
+    return JwksTokenVerifier(
+        issuer=settings.oidc_issuer_url,
+        audience=settings.oidc_audience,
+        algorithms=settings.oidc_algorithms,
+        fetch_json=httpx_json_fetcher(),
+    )
+
+
+def _build_card_provider(settings: Settings | None) -> CardDataProvider | None:
+    if settings is None:
+        return None
+    # ONE client: its request spacing and circuit breaker are process-wide (FR-DAT-01).
+    return ScryfallCardProvider(
+        ScryfallClient(
+            base_url=settings.scryfall_base_url,
+            user_agent=settings.scryfall_user_agent,
+            breaker=CircuitBreaker("scryfall"),
+        )
+    )
+
+
+def _build_cache(settings: Settings | None) -> Cache:
+    if settings is None:
+        return TtlCache(300, 500)
+    return TtlCache(settings.catalog_cache_ttl_seconds, settings.catalog_cache_max_entries)
+
+
+def _add_cors(app: FastAPI, settings: Settings | None) -> None:
+    if settings is None or not settings.cors_origin_list:
+        return
+    # Outermost, so a preflight is answered before authentication. No cookies, no wildcard.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+        expose_headers=["X-Request-ID", "Retry-After"],
+        max_age=600,
+    )
 
 
 def _no_database() -> UnitOfWork:

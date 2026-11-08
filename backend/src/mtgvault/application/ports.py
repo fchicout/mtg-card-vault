@@ -1,9 +1,12 @@
 """Ports: interfaces the application layer needs, implemented by adapters (ADR-006)."""
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from types import TracebackType
 from typing import Protocol, Self
+from uuid import UUID
 
+from mtgvault.domain.card import Card, ResultPage
 from mtgvault.domain.identity import Principal
 from mtgvault.domain.user import User
 
@@ -54,3 +57,33 @@ class UnitOfWork(Protocol):
     def commit(self) -> None: ...
 
     def rollback(self) -> None: ...
+
+
+class CardDataProvider(Protocol):
+    """Where card data comes from (Scryfall today; ADR-006, ADR-007).
+
+    Raises ``NotFound`` for an unknown card, ``RateLimited`` or ``UpstreamUnavailable`` when the
+    source cannot answer. A search without matches is an empty page, not an error.
+    """
+
+    def search(self, query: str, page: int) -> ResultPage[Card]:
+        """Unique cards matching a Scryfall-syntax ``query`` (built by the application)."""
+        ...
+
+    def get(self, card_id: UUID) -> Card: ...
+
+    def printings(self, oracle_id: UUID, page: int) -> ResultPage[Card]:
+        """Every printing of a card, newest first."""
+        ...
+
+
+class Cache(Protocol):
+    """A small, short-lived cache. Implementations are thread-safe and bounded."""
+
+    def get_or_load[T](self, key: str, loader: Callable[[], T]) -> T:
+        """The cached value, or ``loader()``'s result stored under ``key``.
+
+        Concurrent callers with the same key share one ``loader`` call; a loader that raises
+        stores nothing.
+        """
+        ...
