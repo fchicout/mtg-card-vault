@@ -25,7 +25,7 @@ test('@UC-10 an outage shows a friendly message, never a stack trace, and the pa
   request,
 }) => {
   await controlScryfall(request, { fail: 503 });
-  await gotoSignedIn(page, '/catalogue?q=lightning%20bolt%20storm');
+  await gotoSignedIn(page, `/catalogue?q=lightning%20bolt%20storm%20${Date.now()}`);
   const error = page.getByTestId('error');
   await expect(error).toContainText('temporarily unavailable', { timeout: 30_000 });
   await expect(page.locator('body')).not.toContainText(/traceback|exception|stack/i);
@@ -40,6 +40,6 @@ test('@UC-10 an outage shows a friendly message, never a stack trace, and the pa
 
 test('@UC-10 a throttled source is reported as busy', async ({ page, request }) => {
   await controlScryfall(request, { fail: 429, retry_after: 60 });
-  await gotoSignedIn(page, '/catalogue?q=lightning%20bolt%20again');
+  await gotoSignedIn(page, `/catalogue?q=lightning%20bolt%20again%20${Date.now()}`);
   await expect(page.getByTestId('error')).toContainText('busy', { timeout: 30_000 });
 });

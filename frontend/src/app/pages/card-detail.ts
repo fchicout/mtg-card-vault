@@ -10,9 +10,11 @@ import {
   untracked,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { ClrModalModule } from '@clr/angular';
 
 import {
   Api,
+  addVaultEntry,
   getCard,
   getCardPrintings,
   type CardDetail,
@@ -20,6 +22,8 @@ import {
   type PrintingPage,
 } from '../api';
 import { HANDLES_OWN_ERRORS } from '../core/http/error.interceptor';
+import { describeFailure } from '../core/http/problem';
+import { EntryForm, type EntryValues } from '../shared/vault/entry-form';
 import { EmptyState } from '../shared/states/empty-state';
 import { ErrorState } from '../shared/states/error-state';
 import { LoadingState } from '../shared/states/loading-state';
@@ -32,7 +36,7 @@ interface PriceRow {
 /** Card detail with every printing (US-014, UC-10). The image is shown whole, never cropped. */
 @Component({
   selector: 'app-card-detail-page',
-  imports: [EmptyState, ErrorState, LoadingState, RouterLink],
+  imports: [ClrModalModule, EmptyState, EntryForm, ErrorState, LoadingState, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .layout {
@@ -124,17 +128,23 @@ interface PriceRow {
             <button
               type="button"
               class="btn btn-primary"
-              disabled
               data-testid="add"
-              aria-describedby="add-hint"
+              (click)="openAdd()"
               i18n="@@detail.add"
             >
               Add to vault
             </button>
-            <span id="add-hint" class="p5" i18n="@@detail.addHint">
-              Adding cards arrives with the vault feature.
-            </span>
+            <a
+              routerLink="/vault"
+              class="btn btn-link"
+              data-testid="to-vault"
+              i18n="@@detail.toVault"
+              >Open my vault</a
+            >
           </p>
+          @if (added(); as message) {
+            <p class="alert alert-success" role="status" data-testid="added">{{ message }}</p>
+          }
         </div>
       </div>
 
@@ -211,6 +221,29 @@ interface PriceRow {
           }
         }
       </section>
+
+      <clr-modal
+        [clrModalOpen]="adding()"
+        (clrModalOpenChange)="closeAdd()"
+        [clrModalClosable]="true"
+        data-testid="add-dialog"
+      >
+        <h3 class="modal-title" i18n="@@detail.addTitle">Add to vault</h3>
+        <div class="modal-body">
+          <p>
+            {{ c.name }} - {{ c.set_name }} ({{ c.set_code.toUpperCase() }})
+            {{ c.collector_number }}
+          </p>
+          <app-entry-form
+            [finishes]="c.finishes"
+            [errors]="addErrors()"
+            [busy]="busy()"
+            [submitLabel]="addLabel"
+            (submitted)="saveAdd($event)"
+            (cancelled)="closeAdd()"
+          />
+        </div>
+      </clr-modal>
     }
   `,
 })
@@ -228,6 +261,11 @@ export class CardDetailPage {
   protected readonly printings = signal<PrintingPage | null>(null);
   protected readonly printingsProblem = signal<string | null>(null);
   protected readonly printingsPage = signal(1);
+  protected readonly adding = signal(false);
+  protected readonly busy = signal(false);
+  protected readonly addErrors = signal<Record<string, string>>({});
+  protected readonly added = signal<string | null>(null);
+  protected readonly addLabel = $localize`:@@detail.addSubmit:Add`;
 
   protected readonly priceRows = computed<PriceRow[]>(() => this.rows(this.card()?.prices));
 
@@ -270,6 +308,51 @@ export class CardDetailPage {
       this.printings.set(null);
       this.printingsProblem.set(this.describe(error));
     }
+  }
+
+  protected openAdd(): void {
+    this.addErrors.set({});
+    this.adding.set(true);
+  }
+
+  protected closeAdd(): void {
+    this.adding.set(false);
+    this.addErrors.set({});
+  }
+
+  protected async saveAdd(values: EntryValues): Promise<void> {
+    const card = this.card();
+    if (!card) {
+      return;
+    }
+    this.busy.set(true);
+    try {
+      const entry = await this.api.invoke(
+        addVaultEntry,
+        { body: { card_id: card.id, ...values } },
+        this.own(),
+      );
+      this.closeAdd();
+      this.added.set(
+        $localize`:@@detail.added:Added. You now own ${entry.quantity}:quantity: of this printing (${entry.condition}:condition:, ${entry.finish}:finish:).`,
+      );
+    } catch (error) {
+      this.addErrors.set(this.fieldMessages(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private fieldMessages(error: unknown): Record<string, string> {
+    if (!(error instanceof HttpErrorResponse)) {
+      return { _: this.describe(error) };
+    }
+    const failure = describeFailure(error);
+    const byField: Record<string, string> = {};
+    for (const problem of failure.fields) {
+      byField[problem.field] = problem.message;
+    }
+    return Object.keys(byField).length > 0 ? byField : { _: failure.message };
   }
 
   protected select(printingId: string): void {

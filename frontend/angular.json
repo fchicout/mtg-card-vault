@@ -96,7 +96,14 @@
           "options": {
             "coverageReporters": ["lcov", "text-summary"],
             "coverageInclude": ["src/**/*.ts"],
-            "coverageExclude": ["src/app/api/**", "src/**/*.spec.ts", "src/main.ts"]
+            "coverageExclude": [
+              "src/app/api/**",
+              "src/**/*.spec.ts",
+              "src/main.ts",
+              "src/test-setup.ts",
+              "src/app/testing/**"
+            ],
+            "setupFiles": ["src/test-setup.ts"]
           }
         },
         "lint": {

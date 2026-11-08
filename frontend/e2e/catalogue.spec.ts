@@ -87,7 +87,7 @@ test.describe('@UC-10 card and printings', () => {
     const rows = page.getByTestId('printing');
     await expect(rows).toHaveCount(6);
     await expect(rows.first()).toContainText(/\(\w+\)/);
-    await expect(page.getByTestId('add')).toBeDisabled();
+    await expect(page.getByTestId('add')).toBeEnabled();
     await expectNoSeriousViolations(page);
 
     const before = page.url();

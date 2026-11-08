@@ -182,3 +182,22 @@ def test_the_double_can_serve_https_with_a_generated_certificate(tmp_path: Path)
         assert response.json()["keys"][0]["kid"]
     finally:
         secure.stop()
+
+
+def test_the_provider_session_keeps_the_user_until_logout(provider: OidcDouble) -> None:
+    assert (
+        verifier_for(provider)
+        .verify(sign_in(provider, login_hint="user-2")["access_token"])
+        .subject
+        == "user-2"
+    )
+    assert (
+        verifier_for(provider).verify(sign_in(provider)["access_token"]).subject == "user-1"
+    )  # a hint starts no session
+    httpx.post(f"{provider.issuer}/__control", json={"next_login": "user-2"})
+    sign_in(provider)  # the user logs in at the provider's page
+    again = verifier_for(provider).verify(sign_in(provider)["access_token"])  # no hint
+    assert again.subject == "user-2"
+    httpx.get(f"{provider.issuer}/logout", params={"rd": REDIRECT}, follow_redirects=False)
+    after = verifier_for(provider).verify(sign_in(provider)["access_token"])
+    assert after.subject == "user-1"

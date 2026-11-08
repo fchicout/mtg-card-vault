@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
-import { Api, getCard, getCardPrintings } from '../api';
+import { Api, addVaultEntry, getCard, getCardPrintings } from '../api';
 import { CardDetailPage } from './card-detail';
 
 const detail = (extra: Record<string, unknown> = {}) => ({
@@ -40,11 +40,12 @@ const printing = (id: string) => ({
 describe('CardDetailPage', () => {
   let invoke: ReturnType<typeof vi.fn>;
   let navigate: ReturnType<typeof vi.spyOn>;
-  let answers: { card: unknown; printings: unknown };
+  let answers: { card: unknown; printings: unknown; added?: unknown };
 
   async function render(): Promise<ComponentFixture<CardDetailPage>> {
     invoke.mockImplementation((fn: unknown) => {
-      const answer = fn === getCard ? answers.card : answers.printings;
+      const answer =
+        fn === getCard ? answers.card : fn === addVaultEntry ? answers.added : answers.printings;
       return answer instanceof HttpErrorResponse ? Promise.reject(answer) : Promise.resolve(answer);
     });
     TestBed.configureTestingModule({
@@ -132,12 +133,63 @@ describe('CardDetailPage', () => {
     );
   });
 
-  it('offers Add to vault only as a disabled entry point with an explanation', async () => {
+  it('adds the printing with the chosen quantity, condition and finish', async () => {
     const f = await render();
-    const button = q(f, '[data-testid="add"]') as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
-    expect(button.getAttribute('aria-describedby')).toBe('add-hint');
-    expect(q(f, '#add-hint')?.textContent).toContain('vault feature');
+    q(f, '[data-testid="add"]')!.click();
+    f.detectChanges();
+    (q(f, '#entry-quantity') as HTMLInputElement).value = '2';
+    (q(f, '#entry-condition') as HTMLSelectElement).value = 'LP';
+    (q(f, '#entry-finish') as HTMLSelectElement).value = 'foil';
+    answers.added = { id: 'e1', quantity: 2, condition: 'LP', finish: 'foil' };
+    q(f, '[data-testid="entry-form"]')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await f.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    f.detectChanges();
+    expect(invoke).toHaveBeenCalledWith(
+      addVaultEntry,
+      { body: { card_id: 'c1', quantity: 2, condition: 'LP', finish: 'foil' } },
+      expect.anything(),
+    );
+    expect(q(f, '[data-testid="added"]')?.textContent).toContain('You now own 2');
+  });
+
+  it('only offers the finishes the printing exists in', async () => {
+    answers.card = detail({ finishes: ['foil'] });
+    const f = await render();
+    q(f, '[data-testid="add"]')!.click();
+    f.detectChanges();
+    const options = Array.from((q(f, '#entry-finish') as HTMLSelectElement).options).map(
+      (o) => o.value,
+    );
+    expect(options).toEqual(['foil']);
+  });
+
+  it('shows the server problems next to their fields and sends nothing invalid', async () => {
+    const f = await render();
+    q(f, '[data-testid="add"]')!.click();
+    f.detectChanges();
+    (q(f, '#entry-quantity') as HTMLInputElement).value = '0';
+    q(f, '[data-testid="entry-form"]')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    f.detectChanges();
+    expect(q(f, '[data-testid="quantity-error"]')?.textContent).toContain('1 to 9999');
+    expect(invoke).not.toHaveBeenCalledWith(addVaultEntry, expect.anything(), expect.anything());
+
+    (q(f, '#entry-quantity') as HTMLInputElement).value = '3';
+    answers.added = new HttpErrorResponse({
+      status: 422,
+      error: {
+        type: 'x',
+        title: 'Unprocessable',
+        status: 422,
+        detail: 'd',
+        errors: [{ field: 'finish', message: 'Allowed finishes for this printing: foil.' }],
+      },
+    });
+    q(f, '[data-testid="entry-form"]')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await f.whenStable();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    f.detectChanges();
+    expect(q(f, '[data-testid="finish-error"]')?.textContent).toContain('Allowed finishes');
   });
 
   it.each([
