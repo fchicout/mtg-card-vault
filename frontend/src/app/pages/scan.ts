@@ -29,7 +29,7 @@ import { EntryForm, type EntryValues } from '../shared/vault/entry-form';
 type Phase = 'idle' | 'live' | 'scanning' | 'results';
 
 /**
- * Scan a card with the camera (US-020..US-024, UC-04). The frame is sent once, the answer lists the
+ * Scan a card with the camera (US-015..US-019, UC-02). The frame is sent once, the answer lists the
  * likeliest printings, and nothing is added to the vault until the person confirms one and its
  * quantity, condition and finish. Typing a name in the catalogue is always one click away.
  */

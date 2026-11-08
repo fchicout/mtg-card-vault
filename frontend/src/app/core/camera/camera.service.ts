@@ -8,7 +8,7 @@ export const MAX_FRAME_SIDE = 1280;
 const JPEG_QUALITY = 0.85;
 
 /**
- * Camera access for the scanner (US-020). The stream is opened on request, never kept after the
+ * Camera access for the scanner (US-015). The stream is opened on request, never kept after the
  * page is left, and frames are captured in memory only (nothing is stored in the browser).
  */
 @Injectable({ providedIn: 'root' })
