@@ -7,7 +7,7 @@ import { signIn } from './support/session';
  * Identity journeys of the identity milestone (US-001..US-004, UC-01, UC-09) against the OIDC test
  * double: sign-in, silent renewal, a revoked or failing refresh, a cancelled login, sign-out.
  */
-const OIDC = process.env['E2E_OIDC_URL'] ?? 'http://localhost:9000';
+const OIDC = process.env['E2E_OIDC_URL'] ?? 'https://localhost:9000';
 
 async function control(request: APIRequestContext, change: Record<string, unknown>): Promise<void> {
   const response = await request.post(`${OIDC}/__control`, { data: change });

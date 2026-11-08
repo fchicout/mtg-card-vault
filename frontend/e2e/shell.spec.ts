@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousViolations } from './support/axe';
-import { signIn } from './support/session';
+import { gotoSignedIn, signIn } from './support/session';
 
 /**
  * Application shell (issue #9, NFR-USA-01..03, NFR-LEG-01, FR-API-02). The API is mocked at the
@@ -30,7 +30,7 @@ for (const theme of THEMES) {
     for (const route of ROUTES) {
       test(`${route}: accessible, with the legal footer`, async ({ page }) => {
         await useTheme(page, theme);
-        await page.goto(route);
+        await gotoSignedIn(page, route);
         await expect(page.locator('h1')).toBeVisible();
         await expect(page.locator('body')).toHaveAttribute('cds-theme', theme);
 
@@ -47,7 +47,7 @@ for (const theme of THEMES) {
 
 test.describe('navigation', () => {
   test('the four sections are reachable and mark the current page', async ({ page }) => {
-    await page.goto('/');
+    await gotoSignedIn(page, '/');
     for (const [name, path] of [
       ['Vault', '/vault'],
       ['Catalogue', '/catalogue'],
@@ -68,7 +68,7 @@ test.describe('navigation', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 768, height: 900 });
-    await page.goto('/vault');
+    await gotoSignedIn(page, '/vault');
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
@@ -82,7 +82,7 @@ test.describe('navigation', () => {
   });
 
   test('can be operated with the keyboard alone', async ({ page }) => {
-    await page.goto('/');
+    await gotoSignedIn(page, '/');
     await page.keyboard.press('Tab');
     const focused = await page.evaluate(() => document.activeElement?.tagName);
     expect(focused).toBeTruthy();
@@ -92,7 +92,7 @@ test.describe('navigation', () => {
   });
 
   test('the theme switch works with Enter and with Space', async ({ page }) => {
-    await page.goto('/');
+    await gotoSignedIn(page, '/');
     const toggle = page.getByTestId('theme-toggle');
     const read = () => page.locator('body').getAttribute('cds-theme');
     const start = await read();
@@ -105,7 +105,7 @@ test.describe('navigation', () => {
   });
 
   test('the theme can be switched and is remembered', async ({ page }) => {
-    await page.goto('/');
+    await gotoSignedIn(page, '/');
     const before = await page.locator('body').getAttribute('cds-theme');
     await page.getByTestId('theme-toggle').click();
     const after = await page.locator('body').getAttribute('cds-theme');

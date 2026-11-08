@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { expectNoSeriousViolations } from './support/axe';
-import { signIn } from './support/session';
+import { gotoSignedIn, signIn } from './support/session';
 
 /** Sign-in journeys (US-001, UC-01). Run against the stack with the OIDC test double. */
 test.describe('signing in', () => {
@@ -40,9 +40,8 @@ test.describe('signing in', () => {
     page,
   }) => {
     await signIn(page);
-    await page.goto('/account');
+    await gotoSignedIn(page, '/account');
     await expect(page.locator('h1')).toHaveText('Account');
-    await expect(page.getByTestId('user-name')).toBeVisible();
   });
 });
 

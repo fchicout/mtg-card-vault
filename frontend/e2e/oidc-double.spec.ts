@@ -7,7 +7,7 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
  * PKCE, then a call to the protected API through the web entry point. Runs only when the overlay
  * `deploy/compose.e2e.yaml` provides the double (E2E_OIDC_URL, default http://localhost:9000).
  */
-const OIDC = process.env['E2E_OIDC_URL'] ?? 'http://localhost:9000';
+const OIDC = process.env['E2E_OIDC_URL'] ?? 'https://localhost:9000';
 const REDIRECT = 'https://localhost:8443/callback';
 
 test.beforeEach(async ({ request }, testInfo) => {
