@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.28
+**Docs set version:** 0.3.29
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -474,7 +474,7 @@ Troubleshooting: *401 on every call* — the token's audience or issuer differs 
 Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`) → back-merge to `develop`; `hotfix/*` from `main`. Conventional Commits drive the version bump (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; pre-1.0 rules apply). Commit scopes: `auth`, `vault`, `catalog`, `scan`, `pricing`, `api`, `ui`, `deploy`, `ci`, `docs`.
 
 Enforced conventions (`scripts/check_commit_policy.py`):
-- **Commit header:** `type(scope)!: subject [IDs]`, at most 100 characters before the ID list, no trailing period. Types: `feat fix docs refactor test chore ci build perf revert spike security`. Scopes: `auth vault catalog scan pricing api ui deploy ci docs skeleton repo core db gates sonar e2e arch dev github frontend backend docs-sync release security deps deps-dev`. `feat` and `fix` should cite a story or requirement ID (a warning today, an error with `--require-ids error` once the history is clean). Merge, revert and fixup commits are exempt.
+- **Commit header:** `type(scope)!: subject [IDs]`, at most 100 characters before the ID list, no trailing period. Types: `feat fix docs refactor test chore ci build perf revert spike security`. Scopes: `auth vault catalog scan pricing api ui deploy ci docs skeleton repo core db gates sonar e2e arch dev github frontend backend docs-sync release security deps deps-dev scryfall resilience`. `feat` and `fix` should cite a story or requirement ID (a warning today, an error with `--require-ids error` once the history is clean). Merge, revert and fixup commits are exempt.
 - **Pull-request branches:** `feature/<name>`, `release/X.Y.Z`, `hotfix/X.Y.Z`, `develop`, `main`, `dependabot/*`; the version of a release or hotfix branch is valid SemVer and newer than the latest `vX.Y.Z` tag.
 - **Tags:** `vMAJOR.MINOR.PATCH`, optionally with a SemVer pre-release such as `v1.0.0-rc.1`.
 - **Release dry run:** `make next-version` and `make changelog-preview` (`git-cliff`, config in `cliff.toml`); the changelog is written on the release branch.
