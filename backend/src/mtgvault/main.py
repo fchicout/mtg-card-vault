@@ -4,6 +4,8 @@ Run with: ``uvicorn mtgvault.main:create_app --factory``
 """
 
 from collections.abc import Callable
+from typing import NoReturn
+from uuid import UUID
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +23,7 @@ from mtgvault.adapters.sql_readiness import SqlReadinessProbe
 from mtgvault.api import health, v1
 from mtgvault.api.errors import PROBLEM_RESPONSES, install_error_handlers
 from mtgvault.api.middleware import CorrelationIdMiddleware
+from mtgvault.application.catalog_service import CatalogService
 from mtgvault.application.ports import (
     Cache,
     CardDataProvider,
@@ -30,6 +33,8 @@ from mtgvault.application.ports import (
 )
 from mtgvault.application.user_service import UserService
 from mtgvault.config import Settings, load_settings
+from mtgvault.domain.card import Card, Page
+from mtgvault.domain.errors import UpstreamUnavailable
 from mtgvault.logging_setup import configure_logging
 
 
@@ -94,6 +99,7 @@ def create_app(
         openapi_tags=[
             {"name": "health", "description": "Liveness and readiness (public)."},
             {"name": "account", "description": "The signed-in user (bearer token required)."},
+            {"name": "catalog", "description": "Search cards, details and printings."},
         ],
         responses=PROBLEM_RESPONSES,
         openapi_url="/api/v1/openapi.json" if docs_enabled else None,
@@ -104,6 +110,7 @@ def create_app(
     app.state.token_verifier = token_verifier
     app.state.card_provider = card_provider
     app.state.catalog_cache = cache
+    app.state.catalog_service = CatalogService(card_provider or _NoCards(), cache)
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
     app.add_middleware(CorrelationIdMiddleware)
@@ -126,3 +133,19 @@ def create_app(
 
 def _no_database() -> UnitOfWork:
     raise RuntimeError("No unit of work is configured (the app was built without a database)")
+
+
+class _NoCards:
+    """Stands in when no card source is configured (tests that do not touch the catalogue)."""
+
+    def _fail(self) -> NoReturn:
+        raise UpstreamUnavailable("No card data source is configured.")
+
+    def search(self, query: str, page: int) -> Page[Card]:
+        self._fail()
+
+    def get(self, card_id: UUID) -> Card:
+        self._fail()
+
+    def printings(self, oracle_id: UUID, page: int) -> Page[Card]:
+        self._fail()

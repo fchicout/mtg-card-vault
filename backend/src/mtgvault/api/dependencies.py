@@ -5,8 +5,13 @@ from typing import cast
 
 from fastapi import Request
 
+from mtgvault.application.catalog_service import CatalogService
 from mtgvault.application.ports import ReadinessProbe, UnitOfWork
 from mtgvault.application.user_service import UserService
+
+
+def get_catalog_service(request: Request) -> CatalogService:
+    return cast("CatalogService", request.app.state.catalog_service)
 
 
 def get_user_service(request: Request) -> UserService:

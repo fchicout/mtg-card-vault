@@ -30,7 +30,7 @@ def test_the_fake_satisfies_the_port_and_behaves_like_a_provider() -> None:
         make_card("Giant Growth"),
     ]
     provider: CardDataProvider = FakeCardProvider(cards)
-    found = provider.search("lightning", 1)
+    found = provider.search('name:"lightning"', 1)
     assert [c.name for c in found.items] == ["Lightning Bolt"]  # unique cards
     assert provider.get(cards[2].id).name == "Giant Growth"
     assert len(provider.printings(cards[0].oracle_id, 1).items) == 2  # type: ignore[arg-type]

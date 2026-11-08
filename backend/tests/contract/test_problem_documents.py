@@ -124,7 +124,7 @@ def test_validation_errors_list_the_offending_fields(client: TestClient) -> None
     assert fields == {"quantity"}
 
     response = client.get("/t/query", params={"limit": 0})
-    assert [e["field"] for e in response.json()["errors"]] == ["query.limit"]
+    assert [e["field"] for e in response.json()["errors"]] == ["limit"]
 
 
 def test_domain_validation_errors_carry_their_fields(client: TestClient) -> None:
