@@ -4,6 +4,7 @@ Run with: ``uvicorn mtgvault.main:create_app --factory``
 """
 
 from collections.abc import Callable
+from datetime import timedelta
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,6 +31,7 @@ from mtgvault.application.ports import (
     UnitOfWork,
 )
 from mtgvault.application.user_service import UserService
+from mtgvault.application.vault_service import VaultService
 from mtgvault.config import Settings, load_settings
 from mtgvault.domain.card import Card, ResultPage
 from mtgvault.domain.errors import UpstreamUnavailable
@@ -77,6 +79,7 @@ def create_app(
             {"name": "health", "description": "Liveness and readiness (public)."},
             {"name": "account", "description": "The signed-in user (bearer token required)."},
             {"name": "catalog", "description": "Search cards, details and printings."},
+            {"name": "vault", "description": "The signed-in user's collection."},
         ],
         responses=PROBLEM_RESPONSES,
         openapi_url="/api/v1/openapi.json" if docs_enabled else None,
@@ -87,7 +90,13 @@ def create_app(
     app.state.token_verifier = token_verifier
     app.state.card_provider = card_provider
     app.state.catalog_cache = cache
-    app.state.catalog_service = CatalogService(card_provider or _NoCards(), cache)
+    catalog = CatalogService(card_provider or _NoCards(), cache)
+    app.state.catalog_service = catalog
+    app.state.vault_service = VaultService(
+        unit_of_work_factory or _no_database,
+        catalog,
+        stale_after=timedelta(hours=settings.price_stale_after_hours if settings else 24),
+    )
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
     app.add_middleware(CorrelationIdMiddleware)

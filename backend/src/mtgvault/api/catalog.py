@@ -88,7 +88,7 @@ def _prices(prices: Prices) -> PricesDto:
     return PricesDto(**vars(prices))
 
 
-def _summary(card: Card) -> CardSummary:
+def card_summary(card: Card) -> CardSummary:
     return CardSummary(
         id=card.id,
         name=card.name,
@@ -113,7 +113,7 @@ def _face(face: CardFace) -> CardFaceDto:
 
 def _detail(card: Card) -> CardDetail:
     return CardDetail(
-        **_summary(card).model_dump(),
+        **card_summary(card).model_dump(),
         oracle_id=card.oracle_id,
         lang=card.lang,
         layout=card.layout,
@@ -169,7 +169,7 @@ def search_cards(  # one parameter per documented query field
         rarity=rarity,
     )
     result = service.search(q, filters, page)
-    return CardPage(items=[_summary(c) for c in result.items], **_meta(result))  # type: ignore[arg-type]
+    return CardPage(items=[card_summary(c) for c in result.items], **_meta(result))  # type: ignore[arg-type]
 
 
 @router.get("/cards/{card_id}", operation_id="getCard", summary="One printing in detail")
