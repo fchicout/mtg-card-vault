@@ -1,0 +1,951 @@
+{
+ "data": [
+  {
+   "artist": "Alix Branwyn",
+   "artist_ids": [
+    "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
+   ],
+   "booster": false,
+   "border_color": "black",
+   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+   "card_faces": [
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+     "mana_cost": "{1}{R}",
+     "name": "Emeritus of Conflict",
+     "object": "card_face",
+     "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+     "power": "2",
+     "toughness": "2",
+     "type_line": "Creature \u2014 Human Wizard"
+    },
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "mana_cost": "{R}",
+     "name": "Lightning Bolt",
+     "object": "card_face",
+     "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+     "type_line": "Instant"
+    }
+   ],
+   "cardmarket_id": 883322,
+   "cmc": 2.0,
+   "collector_number": "113p",
+   "color_identity": [
+    "R"
+   ],
+   "colors": [
+    "R"
+   ],
+   "digital": false,
+   "edhrec_rank": 6523,
+   "finishes": [
+    "nonfoil",
+    "foil"
+   ],
+   "foil": true,
+   "frame": "2015",
+   "full_art": false,
+   "game_changer": false,
+   "games": [
+    "paper"
+   ],
+   "highres_image": true,
+   "id": "699c0207-901e-4fe9-b22d-1f6cb994a1f2",
+   "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+   "image_status": "highres_scan",
+   "image_updated_at": "2026-07-13T00:45:45Z",
+   "image_uris": {
+    "art": "https://cards.scryfall.io/art/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.webp?1783903545",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.jpg?1783903545",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.jpg?1783903545",
+    "crop": "https://cards.scryfall.io/crop/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.webp?1783903545",
+    "display": "https://cards.scryfall.io/display/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.webp?1783903545",
+    "grid": "https://cards.scryfall.io/grid/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.webp?1783903545",
+    "jpeg": "https://cards.scryfall.io/normal/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.jpg?1783903545",
+    "large": "https://cards.scryfall.io/large/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.jpg?1783903545",
+    "normal": "https://cards.scryfall.io/normal/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.jpg?1783903545",
+    "png": "https://cards.scryfall.io/png/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.png?1783903545",
+    "small": "https://cards.scryfall.io/small/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.jpg?1783903545",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/9/699c0207-901e-4fe9-b22d-1f6cb994a1f2.webp?1783903545"
+   },
+   "keywords": [
+    "First strike",
+    "Prepared"
+   ],
+   "lang": "en",
+   "layout": "prepare",
+   "legalities": {
+    "alchemy": "legal",
+    "brawl": "legal",
+    "commander": "legal",
+    "competitivebrawl": "legal",
+    "duel": "legal",
+    "future": "legal",
+    "gladiator": "legal",
+    "historic": "legal",
+    "legacy": "legal",
+    "modern": "legal",
+    "oathbreaker": "legal",
+    "oldschool": "not_legal",
+    "pauper": "not_legal",
+    "paupercommander": "not_legal",
+    "penny": "not_legal",
+    "pioneer": "legal",
+    "predh": "not_legal",
+    "premodern": "not_legal",
+    "standard": "legal",
+    "standardbrawl": "legal",
+    "timeless": "legal",
+    "tlr": "legal",
+    "vintage": "legal"
+   },
+   "mana_cost": "{1}{R} // {R}",
+   "multiverse_ids": [],
+   "name": "Emeritus of Conflict // Lightning Bolt",
+   "nonfoil": true,
+   "object": "card",
+   "oracle_id": "5963eef1-1022-42b1-8a0c-fc9850bfc2a3",
+   "oversized": false,
+   "power": "2",
+   "prices": {
+    "eur": "1.78",
+    "eur_foil": "2.66",
+    "tix": null,
+    "usd": "3.08",
+    "usd_etched": null,
+    "usd_foil": "4.29"
+   },
+   "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5963eef1-1022-42b1-8a0c-fc9850bfc2a3&unique=prints",
+   "promo": true,
+   "promo_types": [
+    "promopack",
+    "stamped"
+   ],
+   "purchase_uris": {
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Emeritus+of+Conflict&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=883322&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689850%3Fpage%3D1"
+   },
+   "rarity": "mythic",
+   "related_uris": {
+    "edhrec": "https://edhrec.com/route/?cc=Emeritus+of+Conflict",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt"
+   },
+   "released_at": "2026-04-24",
+   "reprint": true,
+   "reserved": false,
+   "rulings_uri": "https://api.scryfall.com/cards/699c0207-901e-4fe9-b22d-1f6cb994a1f2/rulings",
+   "scryfall_set_uri": "https://scryfall.com/sets/psos?utm_source=api",
+   "scryfall_uri": "https://scryfall.com/card/psos/113p/emeritus-of-conflict-lightning-bolt?utm_source=api",
+   "security_stamp": "oval",
+   "set": "psos",
+   "set_id": "ad780626-4b50-4b92-b5c1-49e060bd597d",
+   "set_name": "Secrets of Strixhaven Promos",
+   "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Apsos&unique=prints",
+   "set_type": "promo",
+   "set_uri": "https://api.scryfall.com/sets/ad780626-4b50-4b92-b5c1-49e060bd597d",
+   "story_spotlight": false,
+   "tcgplayer_id": 689850,
+   "textless": false,
+   "toughness": "2",
+   "type_line": "Creature \u2014 Human Wizard // Instant",
+   "uri": "https://api.scryfall.com/cards/699c0207-901e-4fe9-b22d-1f6cb994a1f2",
+   "variation": false
+  },
+  {
+   "artist": "Alix Branwyn",
+   "artist_ids": [
+    "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
+   ],
+   "booster": false,
+   "border_color": "black",
+   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+   "card_faces": [
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+     "mana_cost": "{1}{R}",
+     "name": "Emeritus of Conflict",
+     "object": "card_face",
+     "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+     "power": "2",
+     "toughness": "2",
+     "type_line": "Creature \u2014 Human Wizard"
+    },
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "mana_cost": "{R}",
+     "name": "Lightning Bolt",
+     "object": "card_face",
+     "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+     "type_line": "Instant"
+    }
+   ],
+   "cardmarket_id": 882105,
+   "cmc": 2.0,
+   "collector_number": "332",
+   "color_identity": [
+    "R"
+   ],
+   "colors": [
+    "R"
+   ],
+   "digital": false,
+   "edhrec_rank": 6523,
+   "finishes": [
+    "nonfoil",
+    "foil"
+   ],
+   "foil": true,
+   "frame": "2015",
+   "frame_effects": [
+    "extendedart"
+   ],
+   "full_art": false,
+   "game_changer": false,
+   "games": [
+    "paper",
+    "mtgo"
+   ],
+   "highres_image": true,
+   "id": "f11b8d24-375d-40dc-8497-c1ee779e156a",
+   "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+   "image_status": "highres_scan",
+   "image_updated_at": "2026-07-13T00:46:33Z",
+   "image_uris": {
+    "art": "https://cards.scryfall.io/art/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.webp?1783903593",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.jpg?1783903593",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.jpg?1783903593",
+    "crop": "https://cards.scryfall.io/crop/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.webp?1783903593",
+    "display": "https://cards.scryfall.io/display/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.webp?1783903593",
+    "grid": "https://cards.scryfall.io/grid/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.webp?1783903593",
+    "jpeg": "https://cards.scryfall.io/normal/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.jpg?1783903593",
+    "large": "https://cards.scryfall.io/large/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.jpg?1783903593",
+    "normal": "https://cards.scryfall.io/normal/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.jpg?1783903593",
+    "png": "https://cards.scryfall.io/png/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.png?1783903593",
+    "small": "https://cards.scryfall.io/small/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.jpg?1783903593",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/1/f11b8d24-375d-40dc-8497-c1ee779e156a.webp?1783903593"
+   },
+   "keywords": [
+    "First strike",
+    "Prepared"
+   ],
+   "lang": "en",
+   "layout": "prepare",
+   "legalities": {
+    "alchemy": "legal",
+    "brawl": "legal",
+    "commander": "legal",
+    "competitivebrawl": "legal",
+    "duel": "legal",
+    "future": "legal",
+    "gladiator": "legal",
+    "historic": "legal",
+    "legacy": "legal",
+    "modern": "legal",
+    "oathbreaker": "legal",
+    "oldschool": "not_legal",
+    "pauper": "not_legal",
+    "paupercommander": "not_legal",
+    "penny": "not_legal",
+    "pioneer": "legal",
+    "predh": "not_legal",
+    "premodern": "not_legal",
+    "standard": "legal",
+    "standardbrawl": "legal",
+    "timeless": "legal",
+    "tlr": "legal",
+    "vintage": "legal"
+   },
+   "mana_cost": "{1}{R} // {R}",
+   "mtgo_id": 150167,
+   "multiverse_ids": [],
+   "name": "Emeritus of Conflict // Lightning Bolt",
+   "nonfoil": true,
+   "object": "card",
+   "oracle_id": "5963eef1-1022-42b1-8a0c-fc9850bfc2a3",
+   "oversized": false,
+   "power": "2",
+   "preview": {
+    "previewed_at": "2026-04-03",
+    "source": "Collider",
+    "source_uri": "https://collider.com/magic-the-gathering-secrets-of-strixhaven-card-preview-first-look-images/"
+   },
+   "prices": {
+    "eur": "2.50",
+    "eur_foil": "2.88",
+    "tix": "0.64",
+    "usd": "2.70",
+    "usd_etched": null,
+    "usd_foil": "2.45"
+   },
+   "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5963eef1-1022-42b1-8a0c-fc9850bfc2a3&unique=prints",
+   "promo": false,
+   "purchase_uris": {
+    "cardhoarder": "https://www.cardhoarder.com/cards/150167?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=882105&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688662%3Fpage%3D1"
+   },
+   "rarity": "mythic",
+   "related_uris": {
+    "edhrec": "https://edhrec.com/route/?cc=Emeritus+of+Conflict",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt"
+   },
+   "released_at": "2026-04-24",
+   "reprint": false,
+   "reserved": false,
+   "resource_id": "1EC9DF8DD74C0A6861907E072EAB4AB19ABD52A98F428F51A85104E48E119A7B",
+   "rulings_uri": "https://api.scryfall.com/cards/f11b8d24-375d-40dc-8497-c1ee779e156a/rulings",
+   "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+   "scryfall_uri": "https://scryfall.com/card/sos/332/emeritus-of-conflict-lightning-bolt?utm_source=api",
+   "security_stamp": "oval",
+   "set": "sos",
+   "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "set_name": "Secrets of Strixhaven",
+   "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+   "set_type": "expansion",
+   "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "story_spotlight": false,
+   "tcgplayer_id": 688662,
+   "textless": false,
+   "toughness": "2",
+   "type_line": "Creature \u2014 Human Wizard // Instant",
+   "uri": "https://api.scryfall.com/cards/f11b8d24-375d-40dc-8497-c1ee779e156a",
+   "variation": false
+  },
+  {
+   "artist": "Alix Branwyn",
+   "artist_ids": [
+    "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
+   ],
+   "booster": false,
+   "border_color": "black",
+   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+   "card_faces": [
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+     "mana_cost": "{1}{R}",
+     "name": "Emeritus of Conflict",
+     "object": "card_face",
+     "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+     "power": "2",
+     "printed_name": "Emerita des Konflikts",
+     "printed_text": "Erstschlag\nImmer wenn du deinen dritten Zauberspruch innerhalb desselben Zuges wirkst, wird diese Kreatur vorbereitet. (W\u00e4hrend eine Kreatur vorbereitet ist, kannst du eine Kopie ihres Zauberspruchs wirken. Das macht sie unvorbereitet.)",
+     "toughness": "2",
+     "type_line": "Creature \u2014 Human Wizard"
+    },
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "mana_cost": "{R}",
+     "name": "Lightning Bolt",
+     "object": "card_face",
+     "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+     "type_line": "Instant"
+    }
+   ],
+   "cmc": 2.0,
+   "collector_number": "332",
+   "color_identity": [
+    "R"
+   ],
+   "colors": [
+    "R"
+   ],
+   "digital": false,
+   "edhrec_rank": 6523,
+   "finishes": [
+    "nonfoil",
+    "foil"
+   ],
+   "foil": true,
+   "frame": "2015",
+   "full_art": false,
+   "game_changer": false,
+   "games": [
+    "paper",
+    "mtgo"
+   ],
+   "highres_image": true,
+   "id": "d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec",
+   "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+   "image_status": "highres_scan",
+   "image_updated_at": "2026-09-09T20:10:08Z",
+   "image_uris": {
+    "art": "https://cards.scryfall.io/art/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.webp?1788984608",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.jpg?1788984608",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.jpg?1788984608",
+    "crop": "https://cards.scryfall.io/crop/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.webp?1788984608",
+    "display": "https://cards.scryfall.io/display/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.webp?1788984608",
+    "grid": "https://cards.scryfall.io/grid/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.webp?1788984608",
+    "jpeg": "https://cards.scryfall.io/normal/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.jpg?1788984608",
+    "large": "https://cards.scryfall.io/large/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.jpg?1788984608",
+    "normal": "https://cards.scryfall.io/normal/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.jpg?1788984608",
+    "png": "https://cards.scryfall.io/png/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.png?1788984608",
+    "small": "https://cards.scryfall.io/small/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.jpg?1788984608",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/8/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec.webp?1788984608"
+   },
+   "keywords": [
+    "First strike",
+    "Prepared"
+   ],
+   "lang": "de",
+   "layout": "prepare",
+   "legalities": {
+    "alchemy": "legal",
+    "brawl": "legal",
+    "commander": "legal",
+    "competitivebrawl": "legal",
+    "duel": "legal",
+    "future": "legal",
+    "gladiator": "legal",
+    "historic": "legal",
+    "legacy": "legal",
+    "modern": "legal",
+    "oathbreaker": "legal",
+    "oldschool": "not_legal",
+    "pauper": "not_legal",
+    "paupercommander": "not_legal",
+    "penny": "not_legal",
+    "pioneer": "legal",
+    "predh": "not_legal",
+    "premodern": "not_legal",
+    "standard": "legal",
+    "standardbrawl": "legal",
+    "timeless": "legal",
+    "tlr": "legal",
+    "vintage": "legal"
+   },
+   "mana_cost": "{1}{R} // {R}",
+   "multiverse_ids": [],
+   "name": "Emeritus of Conflict // Lightning Bolt",
+   "nonfoil": true,
+   "object": "card",
+   "oracle_id": "5963eef1-1022-42b1-8a0c-fc9850bfc2a3",
+   "oversized": false,
+   "power": "2",
+   "prices": {
+    "eur": null,
+    "eur_foil": null,
+    "tix": null,
+    "usd": null,
+    "usd_etched": null,
+    "usd_foil": null
+   },
+   "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5963eef1-1022-42b1-8a0c-fc9850bfc2a3&unique=prints",
+   "promo": false,
+   "purchase_uris": {
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Emeritus+of+Conflict&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Emeritus+of+Conflict&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%26view%3Dgrid"
+   },
+   "rarity": "mythic",
+   "related_uris": {
+    "edhrec": "https://edhrec.com/route/?cc=Emeritus+of+Conflict",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt"
+   },
+   "released_at": "2026-04-24",
+   "reprint": false,
+   "reserved": false,
+   "resource_id": "289C956461CF11AC6A41A7F70DCA3E0670670B9A9B27C2EA6E9531A58AE80B1F",
+   "rulings_uri": "https://api.scryfall.com/cards/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec/rulings",
+   "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+   "scryfall_uri": "https://scryfall.com/card/sos/332/de/emerita-des-konflikts-(emeritus-of-conflict-lightning-bolt)?utm_source=api",
+   "security_stamp": "oval",
+   "set": "sos",
+   "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "set_name": "Secrets of Strixhaven",
+   "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+   "set_type": "expansion",
+   "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "story_spotlight": false,
+   "textless": false,
+   "toughness": "2",
+   "type_line": "Creature \u2014 Human Wizard // Instant",
+   "uri": "https://api.scryfall.com/cards/d8bfc48c-9f2e-4262-9c2d-b0eff8a695ec",
+   "variation": false
+  },
+  {
+   "artist": "Alix Branwyn",
+   "artist_ids": [
+    "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
+   ],
+   "booster": false,
+   "border_color": "black",
+   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+   "card_faces": [
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+     "mana_cost": "{1}{R}",
+     "name": "Emeritus of Conflict",
+     "object": "card_face",
+     "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+     "power": "2",
+     "printed_name": "\u00c9m\u00e9rite du conflit",
+     "printed_text": "Initiative\n\u00c0 chaque fois que vous lancez votre troisi\u00e8me sort \u00e0 chaque tour, cette cr\u00e9ature devient pr\u00e9par\u00e9e. (Tant qu'elle est pr\u00e9par\u00e9e, vous pouvez lancer une copie de son sort. Faire ainsi d\u00e9pr\u00e9pare la cr\u00e9ature.)",
+     "toughness": "2",
+     "type_line": "Creature \u2014 Human Wizard"
+    },
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "mana_cost": "{R}",
+     "name": "Lightning Bolt",
+     "object": "card_face",
+     "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+     "type_line": "Instant"
+    }
+   ],
+   "cmc": 2.0,
+   "collector_number": "332",
+   "color_identity": [
+    "R"
+   ],
+   "colors": [
+    "R"
+   ],
+   "digital": false,
+   "edhrec_rank": 6523,
+   "finishes": [
+    "nonfoil",
+    "foil"
+   ],
+   "foil": true,
+   "frame": "2015",
+   "full_art": false,
+   "game_changer": false,
+   "games": [
+    "paper",
+    "mtgo"
+   ],
+   "highres_image": true,
+   "id": "a19013ec-5db7-4727-9710-1297df221785",
+   "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+   "image_status": "highres_scan",
+   "image_updated_at": "2026-09-09T20:10:08Z",
+   "image_uris": {
+    "art": "https://cards.scryfall.io/art/front/a/1/a19013ec-5db7-4727-9710-1297df221785.webp?1788984608",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/1/a19013ec-5db7-4727-9710-1297df221785.jpg?1788984608",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/1/a19013ec-5db7-4727-9710-1297df221785.jpg?1788984608",
+    "crop": "https://cards.scryfall.io/crop/front/a/1/a19013ec-5db7-4727-9710-1297df221785.webp?1788984608",
+    "display": "https://cards.scryfall.io/display/front/a/1/a19013ec-5db7-4727-9710-1297df221785.webp?1788984608",
+    "grid": "https://cards.scryfall.io/grid/front/a/1/a19013ec-5db7-4727-9710-1297df221785.webp?1788984608",
+    "jpeg": "https://cards.scryfall.io/normal/front/a/1/a19013ec-5db7-4727-9710-1297df221785.jpg?1788984608",
+    "large": "https://cards.scryfall.io/large/front/a/1/a19013ec-5db7-4727-9710-1297df221785.jpg?1788984608",
+    "normal": "https://cards.scryfall.io/normal/front/a/1/a19013ec-5db7-4727-9710-1297df221785.jpg?1788984608",
+    "png": "https://cards.scryfall.io/png/front/a/1/a19013ec-5db7-4727-9710-1297df221785.png?1788984608",
+    "small": "https://cards.scryfall.io/small/front/a/1/a19013ec-5db7-4727-9710-1297df221785.jpg?1788984608",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/1/a19013ec-5db7-4727-9710-1297df221785.webp?1788984608"
+   },
+   "keywords": [
+    "First strike",
+    "Prepared"
+   ],
+   "lang": "fr",
+   "layout": "prepare",
+   "legalities": {
+    "alchemy": "legal",
+    "brawl": "legal",
+    "commander": "legal",
+    "competitivebrawl": "legal",
+    "duel": "legal",
+    "future": "legal",
+    "gladiator": "legal",
+    "historic": "legal",
+    "legacy": "legal",
+    "modern": "legal",
+    "oathbreaker": "legal",
+    "oldschool": "not_legal",
+    "pauper": "not_legal",
+    "paupercommander": "not_legal",
+    "penny": "not_legal",
+    "pioneer": "legal",
+    "predh": "not_legal",
+    "premodern": "not_legal",
+    "standard": "legal",
+    "standardbrawl": "legal",
+    "timeless": "legal",
+    "tlr": "legal",
+    "vintage": "legal"
+   },
+   "mana_cost": "{1}{R} // {R}",
+   "multiverse_ids": [],
+   "name": "Emeritus of Conflict // Lightning Bolt",
+   "nonfoil": true,
+   "object": "card",
+   "oracle_id": "5963eef1-1022-42b1-8a0c-fc9850bfc2a3",
+   "oversized": false,
+   "power": "2",
+   "prices": {
+    "eur": null,
+    "eur_foil": null,
+    "tix": null,
+    "usd": null,
+    "usd_etched": null,
+    "usd_foil": null
+   },
+   "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5963eef1-1022-42b1-8a0c-fc9850bfc2a3&unique=prints",
+   "promo": false,
+   "purchase_uris": {
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Emeritus+of+Conflict&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Emeritus+of+Conflict&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%26view%3Dgrid"
+   },
+   "rarity": "mythic",
+   "related_uris": {
+    "edhrec": "https://edhrec.com/route/?cc=Emeritus+of+Conflict",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt"
+   },
+   "released_at": "2026-04-24",
+   "reprint": false,
+   "reserved": false,
+   "resource_id": "E602F2667524BE2FBD2636D06B938DA0E9D50E2A605D3A8E3AB3093D7E7756A0",
+   "rulings_uri": "https://api.scryfall.com/cards/a19013ec-5db7-4727-9710-1297df221785/rulings",
+   "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+   "scryfall_uri": "https://scryfall.com/card/sos/332/fr/%C3%A9m%C3%A9rite-du-conflit-(emeritus-of-conflict-lightning-bolt)?utm_source=api",
+   "security_stamp": "oval",
+   "set": "sos",
+   "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "set_name": "Secrets of Strixhaven",
+   "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+   "set_type": "expansion",
+   "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "story_spotlight": false,
+   "textless": false,
+   "toughness": "2",
+   "type_line": "Creature \u2014 Human Wizard // Instant",
+   "uri": "https://api.scryfall.com/cards/a19013ec-5db7-4727-9710-1297df221785",
+   "variation": false
+  },
+  {
+   "artist": "Alix Branwyn",
+   "artist_ids": [
+    "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
+   ],
+   "booster": false,
+   "border_color": "black",
+   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+   "card_faces": [
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+     "mana_cost": "{1}{R}",
+     "name": "Emeritus of Conflict",
+     "object": "card_face",
+     "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+     "power": "2",
+     "printed_name": "\u5bfe\u7acb\u306e\u540d\u8a89\u6559\u6388",
+     "printed_text": "\u5148\u5236\u653b\u6483\n\u3042\u306a\u305f\u304c\u5404\u30bf\u30fc\u30f3\u5185\u306e\u3042\u306a\u305f\u306e\uff13\u3064\u76ee\u306e\u546a\u6587\u3092\u5531\u3048\u308b\u305f\u3073\u3001\u3053\u306e\u30af\u30ea\u30fc\u30c1\u30e3\u30fc\u306f\u6e96\u5099\u6e08\u72b6\u614b\u306b\u306a\u308b\u3002\uff08\u6e96\u5099\u6e08\u72b6\u614b\u3067\u3042\u308b\u9593\u3001\u3042\u306a\u305f\u306f\u3053\u308c\u306e\u546a\u6587\u306e\u30b3\u30d4\u30fc\u3092\u5531\u3048\u3066\u3082\u3088\u3044\u3002\u305d\u3046\u3057\u305f\u3089\u3001\u3053\u308c\u3092\u672a\u6e96\u5099\u72b6\u614b\u306b\u3059\u308b\u3002\uff09",
+     "toughness": "2",
+     "type_line": "Creature \u2014 Human Wizard"
+    },
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "mana_cost": "{R}",
+     "name": "Lightning Bolt",
+     "object": "card_face",
+     "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+     "type_line": "Instant"
+    }
+   ],
+   "cmc": 2.0,
+   "collector_number": "332",
+   "color_identity": [
+    "R"
+   ],
+   "colors": [
+    "R"
+   ],
+   "digital": false,
+   "edhrec_rank": 6523,
+   "finishes": [
+    "nonfoil",
+    "foil"
+   ],
+   "foil": true,
+   "frame": "2015",
+   "full_art": false,
+   "game_changer": false,
+   "games": [
+    "paper",
+    "mtgo"
+   ],
+   "highres_image": true,
+   "id": "e82577fc-1e65-4250-89d7-b7540dda65cc",
+   "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+   "image_status": "highres_scan",
+   "image_updated_at": "2026-09-09T20:10:07Z",
+   "image_uris": {
+    "art": "https://cards.scryfall.io/art/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.webp?1788984607",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.jpg?1788984607",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.jpg?1788984607",
+    "crop": "https://cards.scryfall.io/crop/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.webp?1788984607",
+    "display": "https://cards.scryfall.io/display/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.webp?1788984607",
+    "grid": "https://cards.scryfall.io/grid/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.webp?1788984607",
+    "jpeg": "https://cards.scryfall.io/normal/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.jpg?1788984607",
+    "large": "https://cards.scryfall.io/large/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.jpg?1788984607",
+    "normal": "https://cards.scryfall.io/normal/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.jpg?1788984607",
+    "png": "https://cards.scryfall.io/png/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.png?1788984607",
+    "small": "https://cards.scryfall.io/small/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.jpg?1788984607",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/8/e82577fc-1e65-4250-89d7-b7540dda65cc.webp?1788984607"
+   },
+   "keywords": [
+    "First strike",
+    "Prepared"
+   ],
+   "lang": "ja",
+   "layout": "prepare",
+   "legalities": {
+    "alchemy": "legal",
+    "brawl": "legal",
+    "commander": "legal",
+    "competitivebrawl": "legal",
+    "duel": "legal",
+    "future": "legal",
+    "gladiator": "legal",
+    "historic": "legal",
+    "legacy": "legal",
+    "modern": "legal",
+    "oathbreaker": "legal",
+    "oldschool": "not_legal",
+    "pauper": "not_legal",
+    "paupercommander": "not_legal",
+    "penny": "not_legal",
+    "pioneer": "legal",
+    "predh": "not_legal",
+    "premodern": "not_legal",
+    "standard": "legal",
+    "standardbrawl": "legal",
+    "timeless": "legal",
+    "tlr": "legal",
+    "vintage": "legal"
+   },
+   "mana_cost": "{1}{R} // {R}",
+   "multiverse_ids": [],
+   "name": "Emeritus of Conflict // Lightning Bolt",
+   "nonfoil": true,
+   "object": "card",
+   "oracle_id": "5963eef1-1022-42b1-8a0c-fc9850bfc2a3",
+   "oversized": false,
+   "power": "2",
+   "prices": {
+    "eur": null,
+    "eur_foil": null,
+    "tix": null,
+    "usd": null,
+    "usd_etched": null,
+    "usd_foil": null
+   },
+   "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5963eef1-1022-42b1-8a0c-fc9850bfc2a3&unique=prints",
+   "promo": false,
+   "purchase_uris": {
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Emeritus+of+Conflict&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Emeritus+of+Conflict&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fmagic%2Fproduct%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%26view%3Dgrid"
+   },
+   "rarity": "mythic",
+   "related_uris": {
+    "edhrec": "https://edhrec.com/route/?cc=Emeritus+of+Conflict",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt"
+   },
+   "released_at": "2026-04-24",
+   "reprint": false,
+   "reserved": false,
+   "resource_id": "FC8496149AFDE8A05C99C90DA39356283617916EFB1C589AC86E17AE58A59B52",
+   "rulings_uri": "https://api.scryfall.com/cards/e82577fc-1e65-4250-89d7-b7540dda65cc/rulings",
+   "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+   "scryfall_uri": "https://scryfall.com/card/sos/332/ja/%E5%AF%BE%E7%AB%8B%E3%81%AE%E5%90%8D%E8%AA%89%E6%95%99%E6%8E%88-(emeritus-of-conflict-lightning-bolt)?utm_source=api",
+   "security_stamp": "oval",
+   "set": "sos",
+   "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "set_name": "Secrets of Strixhaven",
+   "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+   "set_type": "expansion",
+   "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "story_spotlight": false,
+   "textless": false,
+   "toughness": "2",
+   "type_line": "Creature \u2014 Human Wizard // Instant",
+   "uri": "https://api.scryfall.com/cards/e82577fc-1e65-4250-89d7-b7540dda65cc",
+   "variation": false
+  },
+  {
+   "arena_id": 102572,
+   "artist": "Alix Branwyn",
+   "artist_ids": [
+    "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d"
+   ],
+   "booster": false,
+   "border_color": "black",
+   "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+   "card_faces": [
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+     "mana_cost": "{1}{R}",
+     "name": "Emeritus of Conflict",
+     "object": "card_face",
+     "oracle_text": "First strike\nWhenever you cast your third spell each turn, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+     "power": "2",
+     "toughness": "2",
+     "type_line": "Creature \u2014 Human Wizard"
+    },
+    {
+     "artist": "Alix Branwyn",
+     "artist_id": "4f0a0e38-d74c-4e0b-ad91-fecccb1afa5d",
+     "mana_cost": "{R}",
+     "name": "Lightning Bolt",
+     "object": "card_face",
+     "oracle_text": "Lightning Bolt deals 3 damage to any target.",
+     "type_line": "Instant"
+    }
+   ],
+   "cardmarket_id": 882058,
+   "cmc": 2.0,
+   "collector_number": "113",
+   "color_identity": [
+    "R"
+   ],
+   "colors": [
+    "R"
+   ],
+   "digital": false,
+   "edhrec_rank": 6523,
+   "finishes": [
+    "nonfoil",
+    "foil"
+   ],
+   "foil": true,
+   "frame": "2015",
+   "full_art": false,
+   "game_changer": false,
+   "games": [
+    "paper",
+    "mtgo",
+    "arena"
+   ],
+   "highres_image": true,
+   "id": "f58dba4f-1abb-47a3-a684-29c32bab95c0",
+   "illustration_id": "6967d2f3-9cd9-44fd-8843-c3a4eead6c52",
+   "image_status": "highres_scan",
+   "image_updated_at": "2026-07-13T00:47:50Z",
+   "image_uris": {
+    "art": "https://cards.scryfall.io/art/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.webp?1783903670",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.jpg?1783903670",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.jpg?1783903670",
+    "crop": "https://cards.scryfall.io/crop/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.webp?1783903670",
+    "display": "https://cards.scryfall.io/display/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.webp?1783903670",
+    "grid": "https://cards.scryfall.io/grid/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.webp?1783903670",
+    "jpeg": "https://cards.scryfall.io/normal/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.jpg?1783903670",
+    "large": "https://cards.scryfall.io/large/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.jpg?1783903670",
+    "normal": "https://cards.scryfall.io/normal/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.jpg?1783903670",
+    "png": "https://cards.scryfall.io/png/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.png?1783903670",
+    "small": "https://cards.scryfall.io/small/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.jpg?1783903670",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/5/f58dba4f-1abb-47a3-a684-29c32bab95c0.webp?1783903670"
+   },
+   "keywords": [
+    "First strike",
+    "Prepared"
+   ],
+   "lang": "en",
+   "layout": "prepare",
+   "legalities": {
+    "alchemy": "legal",
+    "brawl": "legal",
+    "commander": "legal",
+    "competitivebrawl": "legal",
+    "duel": "legal",
+    "future": "legal",
+    "gladiator": "legal",
+    "historic": "legal",
+    "legacy": "legal",
+    "modern": "legal",
+    "oathbreaker": "legal",
+    "oldschool": "not_legal",
+    "pauper": "not_legal",
+    "paupercommander": "not_legal",
+    "penny": "not_legal",
+    "pioneer": "legal",
+    "predh": "not_legal",
+    "premodern": "not_legal",
+    "standard": "legal",
+    "standardbrawl": "legal",
+    "timeless": "legal",
+    "tlr": "legal",
+    "vintage": "legal"
+   },
+   "mana_cost": "{1}{R} // {R}",
+   "mtgo_id": 149725,
+   "multiverse_ids": [],
+   "name": "Emeritus of Conflict // Lightning Bolt",
+   "nonfoil": true,
+   "object": "card",
+   "oracle_id": "5963eef1-1022-42b1-8a0c-fc9850bfc2a3",
+   "oversized": false,
+   "power": "2",
+   "prices": {
+    "eur": "1.66",
+    "eur_foil": "2.16",
+    "tix": "0.21",
+    "usd": "2.02",
+    "usd_etched": null,
+    "usd_foil": "1.98"
+   },
+   "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5963eef1-1022-42b1-8a0c-fc9850bfc2a3&unique=prints",
+   "promo": false,
+   "purchase_uris": {
+    "cardhoarder": "https://www.cardhoarder.com/cards/149725?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=882058&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688661%3Fpage%3D1"
+   },
+   "rarity": "mythic",
+   "related_uris": {
+    "edhrec": "https://edhrec.com/route/?cc=Emeritus+of+Conflict",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmeritus%2Bof%2BConflict%2B%252F%252F%2BLightning%2BBolt"
+   },
+   "released_at": "2026-04-24",
+   "reprint": false,
+   "reserved": false,
+   "resource_id": "07983FEAAA42E7A74D81C07D28F525A52CF8CAD64EF0D04C0E53305F246CE6B2",
+   "rulings_uri": "https://api.scryfall.com/cards/f58dba4f-1abb-47a3-a684-29c32bab95c0/rulings",
+   "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+   "scryfall_uri": "https://scryfall.com/card/sos/113/emeritus-of-conflict-lightning-bolt?utm_source=api",
+   "security_stamp": "oval",
+   "set": "sos",
+   "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "set_name": "Secrets of Strixhaven",
+   "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+   "set_type": "expansion",
+   "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+   "story_spotlight": false,
+   "tcgplayer_id": 688661,
+   "textless": false,
+   "toughness": "2",
+   "type_line": "Creature \u2014 Human Wizard // Instant",
+   "uri": "https://api.scryfall.com/cards/f58dba4f-1abb-47a3-a684-29c32bab95c0",
+   "variation": false
+  }
+ ],
+ "has_more": false,
+ "object": "list",
+ "total_cards": 11
+}
