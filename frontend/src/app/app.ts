@@ -1,6 +1,6 @@
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ClrMainContainerModule, ClrNavigationModule } from '@clr/angular';
+import { ClrMainContainerModule, ClrNavigationModule, ClrVerticalNavModule } from '@clr/angular';
 import {
   ClarityIcons,
   cameraIcon,
@@ -33,6 +33,7 @@ ClarityIcons.addIcons(
   imports: [
     ClrMainContainerModule,
     ClrNavigationModule,
+    ClrVerticalNavModule,
     Notifications,
     RouterLink,
     RouterLinkActive,
