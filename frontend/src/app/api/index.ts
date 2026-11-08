@@ -7,11 +7,24 @@ export { RequestBuilder } from './request-builder';
 export type { StrictHttpResponse } from './strict-http-response';
 export { Api } from './api';
 
+export type { CardDetail } from './models/card-detail';
+export type { CardFaceDto } from './models/card-face-dto';
+export type { CardPage } from './models/card-page';
+export type { CardSummary } from './models/card-summary';
 export type { FieldProblem } from './models/field-problem';
 export type { HealthStatus } from './models/health-status';
 export type { Me } from './models/me';
+export type { PricesDto } from './models/prices-dto';
+export type { Printing } from './models/printing';
+export type { PrintingPage } from './models/printing-page';
 export type { Problem } from './models/problem';
 
+export type { SearchCards$Params as SearchCards$Params } from './fn/catalog/search-cards';
+export { searchCards as searchCards } from './fn/catalog/search-cards';
+export type { GetCard$Params as GetCard$Params } from './fn/catalog/get-card';
+export { getCard as getCard } from './fn/catalog/get-card';
+export type { GetCardPrintings$Params as GetCardPrintings$Params } from './fn/catalog/get-card-printings';
+export { getCardPrintings as getCardPrintings } from './fn/catalog/get-card-printings';
 export type { GetMe$Params as GetMe$Params } from './fn/account/get-me';
 export { getMe as getMe } from './fn/account/get-me';
 export type { GetLiveness$Params as GetLiveness$Params } from './fn/health/get-liveness';

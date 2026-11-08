@@ -1,5 +1,6 @@
 """An in-memory CardDataProvider for service and API tests (no network, no fixtures)."""
 
+import re
 from decimal import Decimal
 from uuid import UUID, uuid5
 
@@ -36,6 +37,27 @@ def make_card(
     return Card(**values)  # type: ignore[arg-type]
 
 
+_TERM = re.compile(r'(name|t):"([^"]*)"|(set|c|r):(\S+)')
+
+
+def _matches(card: Card, query: str) -> bool:
+    """Understands exactly the terms the application builds (name, set, c, t, r)."""
+    for match in _TERM.finditer(query):
+        key = match.group(1) or match.group(3)
+        value = (match.group(2) if match.group(1) else match.group(4)).lower()
+        if key == "name" and value not in card.name.lower():
+            return False
+        if key == "t" and value not in (card.type_line or "").lower():
+            return False
+        if key == "set" and card.set_code != value:
+            return False
+        if key == "r" and card.rarity != value:
+            return False
+        if key == "c" and not set(value.upper()) <= set(card.colors):
+            return False
+    return True
+
+
 class FakeCardProvider:
     """Substring search over a list, ``PAGE_SIZE`` per page; can be told to fail."""
 
@@ -58,11 +80,10 @@ class FakeCardProvider:
     def search(self, query: str, page: int) -> ResultPage[Card]:
         self._check()
         self.search_calls.append((query, page))
-        needle = query.lower()
         seen: set[UUID | None] = set()
         found = []
         for card in self.cards:
-            if needle in card.name.lower() and card.oracle_id not in seen:
+            if _matches(card, query) and card.oracle_id not in seen:
                 seen.add(card.oracle_id)
                 found.append(card)
         return self._page(found, page)
