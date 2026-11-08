@@ -1,3 +1,53 @@
+## [0.2.0] - 2026-11-08
+
+### Bug fixes
+- **ci:** Publish SHA-tagged images from a final ci.yml job (3fdce99)
+- **auth:** Clear the SonarQube new-code issues of the JWT work (b893d91)
+- **auth:** Clear the SonarQube new-code issues of the identity work (c533526)
+- **frontend:** Clear the SonarQube new-code issues of the sign-in work (97cdbaf)
+- **e2e:** Shared writable certificate volume and a modern TLS context for the OIDC double (a87d0c2)
+- **frontend:** Restore the session at start-up on every page, not only behind the guard (2e9f067)
+- **ci:** Publish images on pushes although the pull-request-only commit-policy job is skipped (c182321)
+
+
+### Documentation
+- **arch:** Align stories and architecture with the external identity provider (b8023b0)
+- **auth:** Document JWT validation, OIDC settings and the removed skeleton route (5798e50)
+- **auth:** Document the principal and claim mapping (b050d6c)
+- **db:** Document the users table and provisioning rules (eb43a63)
+- **auth:** Document GET /api/v1/me and provisioning (12854aa)
+- **arch:** Document the OIDC test double and the E2E overlay (24c1875)
+- **auth:** Document the SPA sign-in design and run-time settings (27368ac)
+- **auth:** Document renewal, the identity journeys and the operator guide for the identity provider (7b928a2)
+
+
+### Features
+- **auth:** Validate bearer JWTs against the provider's JWKS and protect /api/v1 (e12e684)
+- **deploy:** Post-deploy smoke check script (5c91820)
+- **auth:** Principal built from verified claims with data minimisation (89fb0a2)
+- **db:** Users table and race-safe user repository (dc38b4f)
+- **auth:** Provision the user on the first authenticated request and expose GET /api/v1/me (2e3a6ff)
+- **frontend:** Generated client gains getMe; E2E checks the 401 challenge (c61b0c3)
+- **frontend:** Sign in with authorization code and PKCE, tokens in memory only (9778549)
+- **frontend:** Route guard, sign-in page with retry, user menu and sign-out (5f11127)
+- **security:** Allow only the identity provider's origin in connect-src (076fea1)
+- **frontend:** Silent renewal with refresh rotation, single-flight refresh and one retry on 401 (e4c18dd)
+
+
+### Refactoring
+- **frontend:** Drop the skeleton greeting, regenerate the API client (f0d8a8f)
+
+
+### Tests
+- **auth:** Deterministic OIDC provider for unit, integration and E2E tests (87c2f28)
+- **e2e:** Add the OIDC double to the E2E stack and call the API with its tokens (221649f)
+- **e2e:** Sign-in and sign-out journeys, CSP and CORS assertions (b731a14)
+- **auth:** OIDC double reports grant counts and can fail the next login (3a52da0)
+- **e2e:** Identity journeys for sign-in, renewal, revoked or failing refresh, cancel and sign-out (5e4fdea)
+- **auth:** The OIDC double issues an id_token with the nonce, like a real provider (975601f)
+- **e2e:** Wait for the provider round trip after a full page load (eecc029)
+- **e2e:** Serve the OIDC double over HTTPS with a generated certificate (30798c4)
+
 # Changelog
 
 All notable changes, generated from Conventional Commits.
