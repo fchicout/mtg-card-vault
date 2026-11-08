@@ -65,7 +65,8 @@ def test_never_more_than_75_identifiers_per_request(
     double: ScryfallDouble, count: int, requests: list[int]
 ) -> None:
     result = provider(double).lookup([uuid4() for _ in range(count)])
-    assert len(result.not_found) == count and result.cards == ()
+    assert len(result.not_found) == count
+    assert result.cards == ()
     assert [r["identifiers"] for r in collection_log(double)] == requests
 
 

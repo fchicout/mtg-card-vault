@@ -91,8 +91,10 @@ def test_batches_never_exceed_75_and_each_is_committed_on_its_own() -> None:
     _, store, provider, refresher = build(160)
     summary = refresher.refresh_all()
     assert [len(c) for c in provider.lookup_calls] == [75, 75, 10]
-    assert BATCH_SIZE == 75 and summary.batches == 3
-    assert store.commits == 3 and summary.refreshed == 160
+    assert BATCH_SIZE == 75
+    assert summary.batches == 3
+    assert store.commits == 3
+    assert summary.refreshed == 160
 
 
 def test_a_failed_batch_does_not_stop_the_others_and_keeps_what_is_stored() -> None:
@@ -118,8 +120,10 @@ def test_an_outage_ends_the_run_after_a_few_failed_batches() -> None:
     _, _, provider, refresher = build(75 * 6)
     provider.fail = True
     summary = refresher.refresh_all()
-    assert summary.aborted and summary.batches == ABORT_AFTER_FAILED_BATCHES
-    assert summary.failed == 75 * ABORT_AFTER_FAILED_BATCHES and summary.refreshed == 0
+    assert summary.aborted
+    assert summary.batches == ABORT_AFTER_FAILED_BATCHES
+    assert summary.failed == 75 * ABORT_AFTER_FAILED_BATCHES
+    assert summary.refreshed == 0
 
 
 def test_a_success_resets_the_failure_streak() -> None:
@@ -134,7 +138,9 @@ def test_a_success_resets_the_failure_streak() -> None:
 
     provider.lookup = sometimes  # type: ignore[method-assign]
     summary = refresher.refresh_all()
-    assert not summary.aborted and summary.batches == 6 and summary.failed == 75 * 4
+    assert not summary.aborted
+    assert summary.batches == 6
+    assert summary.failed == 75 * 4
 
 
 def test_a_storage_failure_counts_the_batch_as_failed_and_the_run_goes_on() -> None:
@@ -148,7 +154,8 @@ def test_the_run_stops_between_batches_when_asked() -> None:
     _, _, provider, refresher = build(300)
     stops = iter([False, False, True])
     summary = refresher.refresh_all(should_stop=lambda: next(stops))
-    assert summary.batches == 2 and len(provider.lookup_calls) == 2
+    assert summary.batches == 2
+    assert len(provider.lookup_calls) == 2
 
 
 def test_refreshing_given_ids_deduplicates_and_batches() -> None:
@@ -156,11 +163,14 @@ def test_refreshing_given_ids_deduplicates_and_batches() -> None:
     ids = [c.id for c in cards] + [cards[0].id, uuid4()]
     summary = refresher.refresh(ids)
     assert [len(c) for c in provider.lookup_calls] == [75, 6]
-    assert summary.not_found == 1 and summary.refreshed == 80
+    assert summary.not_found == 1
+    assert summary.refreshed == 80
 
 
 def test_nothing_owned_is_an_empty_successful_run() -> None:
     _, _, provider, refresher = build(0)
     summary = refresher.refresh_all()
-    assert summary.batches == 0 and provider.lookup_calls == [] and not summary.aborted
+    assert summary.batches == 0
+    assert provider.lookup_calls == []
+    assert not summary.aborted
     assert LookupResult((), ()).cards == ()

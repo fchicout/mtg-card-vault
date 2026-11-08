@@ -61,7 +61,9 @@ def stop_after(seconds: float) -> threading.Timer:
 def test_it_schedules_the_refresh_daily_at_four_utc_by_default() -> None:
     scheduler = worker.create_scheduler(load_settings(), lambda: None, lambda: None)
     job = scheduler.get_job(worker.JOB_ID)
-    assert job is not None and job.max_instances == 1 and job.coalesce
+    assert job is not None
+    assert job.max_instances == 1
+    assert job.coalesce
     after = datetime(2026, 11, 8, 4, 0, 1, tzinfo=UTC)
     assert job.trigger.get_next_fire_time(None, after) == datetime(2026, 11, 9, 4, 0, tzinfo=UTC)
 
@@ -97,7 +99,8 @@ def test_it_runs_until_it_is_asked_to_stop(
     assert worker.main() == 0
     timer.join()
     messages = [record.getMessage() for record in caplog.records]
-    assert "worker started" in messages and "stop requested" in messages
+    assert "worker started" in messages
+    assert "stop requested" in messages
     assert "worker stopped" in messages
     assert worker.is_alive(tmp_path / "alive")
 
@@ -119,7 +122,8 @@ def test_a_stop_during_a_run_lets_the_run_end_and_tells_it_to_stop(
     timer = stop_after(0.25)
     assert worker.main() == 0
     timer.join()
-    assert refresher.runs == 1 and refresher.saw_stop == [True]
+    assert refresher.runs == 1
+    assert refresher.saw_stop == [True]
     assert "price refresh finished" in [r.getMessage() for r in caplog.records]
 
 

@@ -32,6 +32,7 @@ async function addFromCatalogue(
   await gotoSignedIn(page, `/catalogue?q=${encodeURIComponent(search)}`);
   await page.getByTestId('result').nth(index).click();
   await expect(page.getByTestId('card-name')).toBeVisible();
+  await page.waitForURL(/\/catalogue\/[0-9a-f-]{36}$/);
   const id = page.url().split('/').pop() ?? '';
   await page.getByTestId('add').click();
   await page.locator('#entry-quantity').fill(String(quantity));
@@ -40,13 +41,19 @@ async function addFromCatalogue(
   return id;
 }
 
+/** The id of the plain Lightning Bolt: open its card page and read the address. */
+async function boltId(page: Page): Promise<string> {
+  await gotoSignedIn(page, '/catalogue?q=lightning%20bolt');
+  await page.getByTestId('result').nth(1).click();
+  await page.waitForURL(/\/catalogue\/[0-9a-f-]{36}$/);
+  return page.url().split('/').pop() ?? '';
+}
+
 test('@UC-07 the vault shows unit prices and line values and the summary adds them up', async ({
   page,
   request,
 }) => {
-  await gotoSignedIn(page, '/catalogue?q=lightning%20bolt');
-  await page.getByTestId('result').nth(1).click();
-  const bolt = page.url().split('/').pop() ?? '';
+  const bolt = await boltId(page);
   await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
   await addFromCatalogue(page, 'lightning bolt', 1, 2);
 
@@ -69,9 +76,7 @@ test('@UC-07 a card without a price says so and makes the total a lower bound', 
   page,
   request,
 }) => {
-  await gotoSignedIn(page, '/catalogue?q=lightning%20bolt');
-  await page.getByTestId('result').nth(1).click();
-  const bolt = page.url().split('/').pop() ?? '';
+  const bolt = await boltId(page);
   await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
   await addFromCatalogue(page, 'lightning bolt', 1, 1);
   await addFromCatalogue(page, 'lightning bolt', 0, 3); // the double-faced one has no prices
@@ -90,9 +95,7 @@ test('@UC-08 the refresh brings new prices into the vault and the summary', asyn
   page,
   request,
 }) => {
-  await gotoSignedIn(page, '/catalogue?q=lightning%20bolt');
-  await page.getByTestId('result').nth(1).click();
-  const bolt = page.url().split('/').pop() ?? '';
+  const bolt = await boltId(page);
   await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
   await addFromCatalogue(page, 'lightning bolt', 1, 2);
 
@@ -112,9 +115,7 @@ test('@UC-08 a throttled or failing source leaves the old prices in place', asyn
   page,
   request,
 }) => {
-  await gotoSignedIn(page, '/catalogue?q=lightning%20bolt');
-  await page.getByTestId('result').nth(1).click();
-  const bolt = page.url().split('/').pop() ?? '';
+  const bolt = await boltId(page);
   await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
   await addFromCatalogue(page, 'lightning bolt', 1, 1);
 

@@ -75,7 +75,8 @@ def test_prices_and_data_are_refreshed_from_the_source(
     ids = own_the_double_cards(migrated, double, 4)
     control(double, prices={str(ids[0]): {"usd": "42.42"}})
     summary = refresher(migrated, double).refresh_all()
-    assert summary.refreshed == 4 and summary.failed == 0
+    assert summary.refreshed == 4
+    assert summary.failed == 0
     with migrated.connect() as connection:
         usd = connection.execute(
             text("SELECT usd FROM cards WHERE scryfall_id = :i"), {"i": ids[0]}
@@ -86,7 +87,8 @@ def test_prices_and_data_are_refreshed_from_the_source(
         stamps = (
             connection.execute(text("SELECT DISTINCT prices_updated_at FROM cards")).scalars().all()
         )
-    assert usd == Decimal("42.42") and not names.startswith("Old ")  # data came from the source
+    assert usd == Decimal("42.42")
+    assert not names.startswith("Old ")
     assert stamps == [NOW]
 
 
@@ -96,7 +98,8 @@ def test_a_source_outage_leaves_the_stored_prices_untouched(
     ids = own_the_double_cards(migrated, double, 3)
     control(double, fail=503)
     summary = refresher(migrated, double).refresh_all()
-    assert summary.failed == 3 and summary.refreshed == 0
+    assert summary.failed == 3
+    assert summary.refreshed == 0
     with migrated.connect() as connection:
         rows = connection.execute(text("SELECT usd, prices_updated_at FROM cards")).all()
     assert {(r[0], r[1]) for r in rows} == {(Decimal("0.01"), OLD)}
@@ -114,6 +117,7 @@ def test_a_card_the_source_forgot_keeps_its_stored_data(
         unit.vault.add_or_merge(user.id, ghost.id, 1, Condition.NM, Finish.NONFOIL, OLD)
         unit.commit()
     summary = refresher(migrated, double).refresh_all()
-    assert summary.not_found == 1 and summary.refreshed == 0
+    assert summary.not_found == 1
+    assert summary.refreshed == 0
     with migrated.connect() as connection:
         assert connection.execute(text("SELECT usd FROM cards")).scalar_one() == Decimal("3.00")

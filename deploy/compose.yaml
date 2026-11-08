@@ -77,6 +77,7 @@ services:
       <<: *app-environment
       PRICE_REFRESH_CRON: ${PRICE_REFRESH_CRON:-0 4 * * *}
       PRICE_REFRESH_ON_START: ${PRICE_REFRESH_ON_START:-false}
+      WORKER_HEARTBEAT_FILE: /tmp/mtgvault-worker.alive
     depends_on:
       db:
         condition: service_healthy

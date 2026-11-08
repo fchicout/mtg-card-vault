@@ -59,8 +59,9 @@ class Settings(BaseSettings):
     price_refresh_cron: str = "0 4 * * *"
     # Also run one refresh when the worker starts (for example right after a deployment).
     price_refresh_on_start: bool = False
-    # The worker touches this file regularly; the container healthcheck reads its age.
-    worker_heartbeat_file: str = "/tmp/mtgvault-worker.alive"  # noqa: S108  # tmpfs in the container
+    # The worker touches this file regularly; the container healthcheck reads its age. The stack
+    # sets it to a path on the container's tmpfs; the default is relative to the working directory.
+    worker_heartbeat_file: str = "mtgvault-worker.alive"
     # The interactive API documentation is for development; production leaves it off.
     api_docs_enabled: bool = False
 

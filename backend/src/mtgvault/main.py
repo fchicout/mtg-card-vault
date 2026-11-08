@@ -5,6 +5,7 @@ Run with: ``uvicorn mtgvault.main:create_app --factory``
 
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from typing import NamedTuple
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +49,33 @@ from mtgvault.domain.errors import UpstreamUnavailable
 from mtgvault.logging_setup import configure_logging
 
 
+class _Collaborators(NamedTuple):
+    token_verifier: TokenVerifier
+    card_provider: CardDataProvider | None
+    cache: Cache
+    scan_rate_limiter: RateLimiter
+    text_recognizer: TextRecognizer | None
+
+
+def _resolve_database(
+    settings: Settings | None,
+    readiness_probe: ReadinessProbe | None,
+    unit_of_work_factory: Callable[[], UnitOfWork] | None,
+) -> tuple[Settings | None, ReadinessProbe | None, Callable[[], UnitOfWork] | None]:
+    """The real database when no probe was injected (exits with a readable message if invalid)."""
+    if readiness_probe is not None:
+        return settings, readiness_probe, unit_of_work_factory
+    settings = settings or load_settings()
+    configure_logging(settings.log_level)
+    engine = create_engine(settings.database_url, pool_pre_ping=True)
+    sessions = sessionmaker(engine, expire_on_commit=False)
+    return (
+        settings,
+        SqlReadinessProbe(engine),
+        unit_of_work_factory or (lambda: SqlAlchemyUnitOfWork(sessions)),
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -63,21 +91,19 @@ def create_app(
 
     Without settings and without an injected verifier no token is ever accepted (fail closed).
     """
-    if readiness_probe is None:
-        settings = settings or load_settings()  # exits with a readable message when invalid
-        configure_logging(settings.log_level)
-        engine = create_engine(settings.database_url, pool_pre_ping=True)
-        readiness_probe = SqlReadinessProbe(engine)
-        session_factory = sessionmaker(engine, expire_on_commit=False)
-        unit_of_work_factory = unit_of_work_factory or (
-            lambda: SqlAlchemyUnitOfWork(session_factory)
-        )
-    # `is None`, not `or`: an injected empty cache is falsy (it defines __len__) but must be kept.
-    token_verifier = _build_verifier(settings) if token_verifier is None else token_verifier
-    card_provider = _build_card_provider(settings) if card_provider is None else card_provider
-    cache = _build_cache(settings) if cache is None else cache
-    scan_rate_limiter = scan_rate_limiter or _build_rate_limiter(settings)
-    text_recognizer = _build_recognizer(settings) if text_recognizer is None else text_recognizer
+    settings, readiness_probe, unit_of_work_factory = _resolve_database(
+        settings, readiness_probe, unit_of_work_factory
+    )
+    parts = _Collaborators(
+        # `is None`, not `or`: an injected empty cache is falsy (it defines __len__) but is kept.
+        token_verifier=_build_verifier(settings) if token_verifier is None else token_verifier,
+        card_provider=_build_card_provider(settings) if card_provider is None else card_provider,
+        cache=_build_cache(settings) if cache is None else cache,
+        scan_rate_limiter=scan_rate_limiter or _build_rate_limiter(settings),
+        text_recognizer=_build_recognizer(settings) if text_recognizer is None else text_recognizer,
+    )
+    token_verifier, card_provider, cache = parts.token_verifier, parts.card_provider, parts.cache
+    scan_rate_limiter, text_recognizer = parts.scan_rate_limiter, parts.text_recognizer
     docs_enabled = settings is None or settings.api_docs_enabled
 
     app = FastAPI(

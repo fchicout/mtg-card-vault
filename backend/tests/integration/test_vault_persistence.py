@@ -347,7 +347,9 @@ def test_owned_ids_pages_through_distinct_owned_cards_only(migrated: Engine) -> 
         first = unit.cards.owned_ids(None, 3)
         second = unit.cards.owned_ids(first[-1], 3)
         third = unit.cards.owned_ids(second[-1], 3) if second else []
-    assert first == ids[:3] and second == ids[3:4] and third == []
+    assert first == ids[:3]
+    assert second == ids[3:4]
+    assert third == []
     assert unowned not in first + second
 
 
