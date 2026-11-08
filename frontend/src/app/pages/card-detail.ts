@@ -1,11 +1,14 @@
+import { formatDate } from '@angular/common';
 import { HttpContext, HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
+  LOCALE_ID,
   signal,
   untracked,
 } from '@angular/core';
@@ -27,6 +30,8 @@ import { EntryForm, type EntryValues } from '../shared/vault/entry-form';
 import { EmptyState } from '../shared/states/empty-state';
 import { ErrorState } from '../shared/states/error-state';
 import { LoadingState } from '../shared/states/loading-state';
+
+const PRICE_FOLLOW_UP_MS = 6000;
 
 interface PriceRow {
   label: string;
@@ -124,6 +129,28 @@ interface PriceRow {
               </tbody>
             </table>
           }
+          @if (c.collection; as mine) {
+            <p data-testid="freshness">
+              @if (mine.prices_updated_at; as updated) {
+                <ng-container i18n="@@detail.storedPrices"
+                  >Prices stored for your collection were updated</ng-container
+                >
+                {{ updatedAt(updated) }}.
+              } @else {
+                <ng-container i18n="@@detail.neverUpdated"
+                  >Prices stored for your collection have not been updated yet.</ng-container
+                >
+              }
+              @if (mine.prices_stale) {
+                <span class="label label-warning" data-testid="stale" i18n="@@detail.stale"
+                  >outdated</span
+                >
+              }
+            </p>
+          }
+          <p data-testid="price-source" i18n="@@detail.priceSource">
+            Prices come from Scryfall and are for information only.
+          </p>
           <p>
             <button
               type="button"
@@ -250,6 +277,8 @@ interface PriceRow {
 export class CardDetailPage {
   private readonly api = inject(Api);
   private readonly router = inject(Router);
+  private readonly locale = inject(LOCALE_ID);
+  private followUp: ReturnType<typeof setTimeout> | undefined;
 
   /** The route parameter :id (withComponentInputBinding). */
   readonly id = input.required<string>();
@@ -270,6 +299,7 @@ export class CardDetailPage {
   protected readonly priceRows = computed<PriceRow[]>(() => this.rows(this.card()?.prices));
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.followUp));
     effect(() => {
       this.id();
       untracked(() => {
@@ -291,7 +321,32 @@ export class CardDetailPage {
     } finally {
       this.loading.set(false);
     }
+    this.scheduleFollowUp();
     await this.loadPrintings();
+  }
+
+  /**
+   * The server refreshes stale stored prices after answering: look at the card once more, quietly,
+   * so the note about the update catches up without a reload.
+   */
+  private scheduleFollowUp(): void {
+    clearTimeout(this.followUp);
+    if (!this.card()?.collection?.prices_stale) {
+      return;
+    }
+    this.followUp = setTimeout(() => void this.reloadCard(), PRICE_FOLLOW_UP_MS);
+  }
+
+  private async reloadCard(): Promise<void> {
+    try {
+      this.card.set(await this.api.invoke(getCard, { card_id: this.id() }, this.own()));
+    } catch {
+      // The page keeps what it has; the follow-up is a courtesy, not a requirement.
+    }
+  }
+
+  protected updatedAt(moment: string): string {
+    return formatDate(moment, 'medium', this.locale);
   }
 
   protected async loadPrintings(): Promise<void> {
@@ -333,6 +388,7 @@ export class CardDetailPage {
         this.own(),
       );
       this.closeAdd();
+      void this.reloadCard();
       this.added.set(
         $localize`:@@detail.added:Added. You now own ${entry.quantity}:quantity: of this printing (${entry.condition}:condition:, ${entry.finish}:finish:).`,
       );

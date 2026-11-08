@@ -1,11 +1,14 @@
+import { formatDate } from '@angular/common';
 import { HttpContext, HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   input,
+  LOCALE_ID,
   signal,
   untracked,
 } from '@angular/core';
@@ -25,8 +28,11 @@ import { describeFailure } from '../core/http/problem';
 import { EmptyState } from '../shared/states/empty-state';
 import { ErrorState } from '../shared/states/error-state';
 import { LoadingState } from '../shared/states/loading-state';
+import { formatMoney, type Currency } from '../shared/money/money';
 import { EntryForm, type EntryValues } from '../shared/vault/entry-form';
+import { VaultSummary } from '../shared/vault/summary';
 
+const PRICE_FOLLOW_UP_MS = 6000;
 const SORTS = ['added', 'name', 'set', 'price', 'quantity'] as const;
 const PAGE_SIZES = [25, 50, 100, 200] as const;
 const RARITIES = ['common', 'uncommon', 'rare', 'mythic'] as const;
@@ -38,7 +44,15 @@ const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
  */
 @Component({
   selector: 'app-vault-page',
-  imports: [ClrModalModule, EmptyState, EntryForm, ErrorState, LoadingState, RouterLink],
+  imports: [
+    ClrModalModule,
+    EmptyState,
+    EntryForm,
+    ErrorState,
+    LoadingState,
+    RouterLink,
+    VaultSummary,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .filters {
@@ -95,6 +109,8 @@ const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
   `,
   template: `
     <h1 i18n="@@page.vault.title">Vault</h1>
+
+    <app-vault-summary [version]="summaryVersion()" />
 
     @if (notice(); as text) {
       <p class="alert alert-info notice" role="status" data-testid="notice">{{ text }}</p>
@@ -273,6 +289,7 @@ const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
                     Unit price
                   </button>
                 </th>
+                <th i18n="@@vault.colValue">Value</th>
                 <th><span class="clr-sr-only" i18n="@@vault.colActions">Actions</span></th>
               </tr>
             </thead>
@@ -301,19 +318,34 @@ const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
                   <td>{{ item.condition }}</td>
                   <td data-testid="entry-quantity">{{ item.quantity }}</td>
                   <td>
-                    @if (item.unit_price; as price) {
-                      <span data-testid="entry-price">\${{ price }}</span>
-                    } @else {
-                      <span data-testid="entry-price" i18n="@@vault.noPrice">unknown</span>
-                    }
+                    <span data-testid="entry-price">{{
+                      money(item.unit_price, 'USD') ?? noPrice
+                    }}</span>
+                    <br />
+                    <span data-testid="entry-price-eur">{{
+                      money(item.unit_price_eur, 'EUR') ?? noPrice
+                    }}</span>
                     @if (item.prices_stale) {
                       <span
                         class="label label-warning stale"
                         data-testid="stale"
+                        [attr.title]="staleNote(item)"
                         i18n="@@vault.stale"
                         >outdated</span
                       >
+                      <span class="clr-sr-only" data-testid="stale-note">{{
+                        staleNote(item)
+                      }}</span>
                     }
+                  </td>
+                  <td>
+                    <span data-testid="entry-value">{{
+                      money(item.line_value_usd, 'USD') ?? noPrice
+                    }}</span>
+                    <br />
+                    <span data-testid="entry-value-eur">{{
+                      money(item.line_value_eur, 'EUR') ?? noPrice
+                    }}</span>
                   </td>
                   <td>
                     <button
@@ -433,6 +465,8 @@ const COLORS = ['W', 'U', 'B', 'R', 'G', 'C'] as const;
 export class VaultPage {
   private readonly api = inject(Api);
   private readonly router = inject(Router);
+  private readonly locale = inject(LOCALE_ID);
+  private followUp: ReturnType<typeof setTimeout> | undefined;
 
   // Bound from the query string (withComponentInputBinding).
   readonly q = input<string | undefined>();
@@ -451,6 +485,9 @@ export class VaultPage {
   protected readonly emptyHeading = $localize`:@@page.vault.empty:Your vault is empty`;
   protected readonly noMatches = $localize`:@@vault.noMatches:No entries match`;
   protected readonly saveLabel = $localize`:@@vault.save:Save`;
+  protected readonly noPrice = $localize`:@@vault.noPrice:no price`;
+  /** Bumped when entries change, so the summary above the table reloads. */
+  protected readonly summaryVersion = signal(0);
 
   protected readonly loading = signal(false);
   protected readonly result = signal<VaultPageData | null>(null);
@@ -482,6 +519,7 @@ export class VaultPage {
   );
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.followUp));
     effect(() => {
       // Any change of the address loads the page again.
       this.q();
@@ -508,33 +546,62 @@ export class VaultPage {
     return this.descending() ? 'descending' : 'ascending';
   }
 
-  protected async load(): Promise<void> {
-    this.loading.set(true);
-    this.problem.set(null);
+  /** `quiet` reloads in the background: no spinner, no flicker (used for the price follow-up). */
+  protected async load(quiet = false): Promise<void> {
+    if (!quiet) {
+      this.loading.set(true);
+      this.problem.set(null);
+    }
     try {
-      this.result.set(
-        await this.api.invoke(
-          listVaultEntries,
-          {
-            page: this.pageNumber(),
-            page_size: this.pageSize(),
-            q: this.q() || null,
-            set: this.set() || null,
-            colors: this.colors() || null,
-            rarity: this.rarity() || null,
-            type: this.type() || null,
-            sort: this.activeSort(),
-            dir: this.dir() || null,
-          },
-          this.own(),
-        ),
+      const loaded = await this.api.invoke(
+        listVaultEntries,
+        {
+          page: this.pageNumber(),
+          page_size: this.pageSize(),
+          q: this.q() || null,
+          set: this.set() || null,
+          colors: this.colors() || null,
+          rarity: this.rarity() || null,
+          type: this.type() || null,
+          sort: this.activeSort(),
+          dir: this.dir() || null,
+        },
+        this.own(),
       );
+      this.result.set(loaded);
+      if (!quiet && loaded.items.some((entry) => entry.prices_stale)) {
+        this.scheduleFollowUp();
+      }
     } catch (error) {
-      this.result.set(null);
-      this.problem.set(this.describe(error));
+      if (!quiet) {
+        this.result.set(null);
+        this.problem.set(this.describe(error));
+      }
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** Stale prices are refreshed in the background by the server: look again once, shortly after. */
+  private scheduleFollowUp(): void {
+    clearTimeout(this.followUp);
+    this.followUp = setTimeout(() => {
+      this.summaryVersion.update((v) => v + 1);
+      void this.load(true);
+    }, PRICE_FOLLOW_UP_MS);
+  }
+
+  protected money(value: string | null | undefined, currency: Currency): string | null {
+    return formatMoney(value, currency, this.locale);
+  }
+
+  protected staleNote(item: VaultItemDto): string {
+    const when = item.prices_updated_at
+      ? formatDate(item.prices_updated_at, 'medium', this.locale)
+      : null;
+    return when
+      ? $localize`:@@vault.staleSince:Prices may be out of date. Last updated ${when}:date:.`
+      : $localize`:@@vault.staleNever:Prices may be out of date. They have not been updated yet.`;
   }
 
   // ------------------------------------------------------------------ the address
@@ -615,6 +682,7 @@ export class VaultPage {
           ? $localize`:@@vault.saved:Saved.`
           : $localize`:@@vault.merged:Merged with an existing entry: you now own ${saved.quantity}:quantity: of this card in ${saved.condition}:condition:, ${saved.finish}:finish:.`,
       );
+      this.summaryVersion.update((v) => v + 1);
       await this.load();
     } catch (error) {
       this.formErrors.set(this.fieldMessages(error));
@@ -623,6 +691,7 @@ export class VaultPage {
         this.notice.set(
           $localize`:@@vault.gone:That entry no longer exists. The list was refreshed.`,
         );
+        this.summaryVersion.update((v) => v + 1);
         await this.load();
       }
     } finally {
@@ -648,6 +717,7 @@ export class VaultPage {
     } finally {
       this.busy.set(false);
       this.closeDialogs();
+      this.summaryVersion.update((v) => v + 1);
       await this.load();
     }
   }

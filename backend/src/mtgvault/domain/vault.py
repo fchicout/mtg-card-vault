@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from uuid import UUID
 
@@ -24,6 +24,14 @@ class Finish(StrEnum):
     NONFOIL = "nonfoil"
     FOIL = "foil"
     ETCHED = "etched"
+
+
+class Currency(StrEnum):
+    USD = "usd"
+    EUR = "eur"
+
+
+_CENT = Decimal("0.01")
 
 
 @dataclass(frozen=True)
@@ -57,6 +65,33 @@ class VaultItem:
     def unit_price(self) -> Decimal | None:
         return unit_price(self.snapshot.card.prices, self.entry.finish)
 
+    @property
+    def unit_price_eur(self) -> Decimal | None:
+        return unit_price(self.snapshot.card.prices, self.entry.finish, Currency.EUR)
+
+    @property
+    def line_value_usd(self) -> Decimal | None:
+        return line_value(self.unit_price, self.entry.quantity)
+
+    @property
+    def line_value_eur(self) -> Decimal | None:
+        return line_value(self.unit_price_eur, self.entry.quantity)
+
+
+@dataclass(frozen=True)
+class VaultSummary:
+    """What a collection is worth (FR-PRC-03). Unpriced entries add nothing to a value, so a
+    non-zero ``unpriced_*`` count means the value is a lower bound."""
+
+    total_cards: int
+    entries: int
+    value_usd: Decimal
+    value_eur: Decimal
+    unpriced_usd: int
+    unpriced_eur: int
+    oldest_prices_updated_at: datetime | None
+    newest_prices_updated_at: datetime | None
+
 
 def validate_quantity(quantity: int) -> int:
     if not 1 <= quantity <= MAX_QUANTITY:
@@ -88,10 +123,28 @@ def merged_quantity(first: int, second: int) -> int:
     return total
 
 
-def unit_price(prices: Prices, finish: Finish) -> Decimal | None:
-    """The USD price that matches the finish; None when the source has none (never zero)."""
-    return {
-        Finish.NONFOIL: prices.usd,
-        Finish.FOIL: prices.usd_foil,
-        Finish.ETCHED: prices.usd_etched,
-    }[finish]
+def unit_price(prices: Prices, finish: Finish, currency: Currency = Currency.USD) -> Decimal | None:
+    """The price in the currency that matches the finish; None when the source has none.
+
+    A missing price is never zero (FR-PRC-02).
+    """
+    if currency is Currency.EUR:
+        by_finish = {
+            Finish.NONFOIL: prices.eur,
+            Finish.FOIL: prices.eur_foil,
+            Finish.ETCHED: prices.eur_etched,
+        }
+    else:
+        by_finish = {
+            Finish.NONFOIL: prices.usd,
+            Finish.FOIL: prices.usd_foil,
+            Finish.ETCHED: prices.usd_etched,
+        }
+    return by_finish[finish]
+
+
+def line_value(price: Decimal | None, quantity: int) -> Decimal | None:
+    """Unit price x quantity in exact decimals, to the cent; None stays None (unpriced)."""
+    if price is None:
+        return None
+    return (price * quantity).quantize(_CENT, rounding=ROUND_HALF_UP)

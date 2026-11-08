@@ -2,6 +2,7 @@
 by it: a caller cannot reach another user's rows through this class (FR-VLT-07, ADR-005)."""
 
 from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -16,10 +17,12 @@ from mtgvault.adapters.db.models import CardRow, VaultEntryRow
 from mtgvault.application.vault_query import VaultQuery
 from mtgvault.domain.vault import (
     MAX_QUANTITY,
+    CardSnapshot,
     Condition,
     Finish,
     VaultEntry,
     VaultItem,
+    VaultSummary,
     merged_quantity,
 )
 
@@ -248,3 +251,73 @@ class SqlAlchemyVaultRepository:
             )
         )
         return result.rowcount > 0  # type: ignore[attr-defined,no-any-return]
+
+    def owned_snapshot(self, user_id: UUID, card_id: UUID) -> CardSnapshot | None:
+        statement = (
+            select(CardRow)
+            .join(VaultEntryRow, VaultEntryRow.card_id == CardRow.scryfall_id)
+            .where(VaultEntryRow.user_id == user_id, CardRow.scryfall_id == card_id)
+            .limit(1)
+        )
+        row = self._session.scalars(statement).first()
+        return None if row is None else snapshot_from_row(row)
+
+    def stale_card_ids(self, user_id: UUID, before: datetime, limit: int) -> list[UUID]:
+        stamp = CardRow.prices_updated_at
+        statement = (
+            select(CardRow.scryfall_id)
+            .join(VaultEntryRow, VaultEntryRow.card_id == CardRow.scryfall_id)
+            .where(VaultEntryRow.user_id == user_id)
+            .where((stamp.is_(None)) | (stamp < before))
+            .group_by(CardRow.scryfall_id, stamp)
+            .order_by(stamp.asc().nulls_first(), CardRow.scryfall_id)
+            .limit(limit)
+        )
+        return list(self._session.scalars(statement))
+
+    # ------------------------------------------------------------------ summary
+    def summary(self, user_id: UUID) -> VaultSummary:
+        usd, eur = _unit_price_column("usd"), _unit_price_column("eur")
+        statement = (
+            select(
+                func.coalesce(func.sum(VaultEntryRow.quantity), 0),
+                func.count(),
+                func.coalesce(func.sum(VaultEntryRow.quantity * usd), 0),
+                func.coalesce(func.sum(VaultEntryRow.quantity * eur), 0),
+                func.count().filter(usd.is_(None)),
+                func.count().filter(eur.is_(None)),
+                func.min(CardRow.prices_updated_at),
+                func.max(CardRow.prices_updated_at),
+            )
+            .select_from(VaultEntryRow)
+            .join(CardRow, CardRow.scryfall_id == VaultEntryRow.card_id)
+            .where(VaultEntryRow.user_id == user_id)
+        )
+        cards, entries, value_usd, value_eur, no_usd, no_eur, oldest, newest = (
+            self._session.execute(statement).one()
+        )
+        return VaultSummary(
+            total_cards=int(cards),
+            entries=int(entries),
+            value_usd=Decimal(value_usd).quantize(_CENT, rounding=ROUND_HALF_UP),
+            value_eur=Decimal(value_eur).quantize(_CENT, rounding=ROUND_HALF_UP),
+            unpriced_usd=int(no_usd),
+            unpriced_eur=int(no_eur),
+            oldest_prices_updated_at=oldest,
+            newest_prices_updated_at=newest,
+        )
+
+
+_CENT = Decimal("0.01")
+
+
+def _unit_price_column(currency: str) -> ColumnElement[Any]:
+    """The price column of the card that matches the entry's finish (NULL when unknown)."""
+    suffix = {"nonfoil": "", "foil": "_foil", "etched": "_etched"}
+    return case(
+        *[
+            (VaultEntryRow.finish == finish, getattr(CardRow, f"{currency}{tail}"))
+            for finish, tail in suffix.items()
+        ],
+        else_=None,
+    )

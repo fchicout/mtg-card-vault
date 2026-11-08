@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
 from pydantic import BaseModel, ConfigDict
 
 from mtgvault.api.catalog import CardSummary, card_summary
@@ -15,7 +15,7 @@ from mtgvault.api.security import current_user
 from mtgvault.application.vault_query import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, build_vault_query
 from mtgvault.application.vault_service import VaultService
 from mtgvault.domain.user import User
-from mtgvault.domain.vault import Condition, Finish, VaultItem
+from mtgvault.domain.vault import Condition, Finish, VaultItem, VaultSummary
 
 router = APIRouter(prefix="/vault", tags=["vault"])
 Service = Annotated[VaultService, Depends(get_vault_service)]
@@ -32,6 +32,9 @@ class VaultItemDto(BaseModel):
     card: CardSummary
     available_finishes: list[str]
     unit_price: Decimal | None = None
+    unit_price_eur: Decimal | None = None
+    line_value_usd: Decimal | None = None
+    line_value_eur: Decimal | None = None
     prices_updated_at: datetime | None = None
     prices_stale: bool
 
@@ -41,6 +44,22 @@ class VaultPage(BaseModel):
     page: int
     page_size: int
     total: int
+
+
+class VaultSummaryDto(BaseModel):
+    """Totals of the whole collection. A non-zero ``unpriced_*`` count means the matching value is
+    a lower bound: entries without a price add nothing to it."""
+
+    total_cards: int
+    entries: int
+    value_usd: Decimal
+    value_eur: Decimal
+    unpriced_usd: int
+    unpriced_eur: int
+    lower_bound_usd: bool
+    lower_bound_eur: bool
+    oldest_prices_updated_at: datetime | None = None
+    newest_prices_updated_at: datetime | None = None
 
 
 class AddEntry(BaseModel):
@@ -74,6 +93,9 @@ def _dto(item: VaultItem, service: VaultService) -> VaultItemDto:
         card=card_summary(card),
         available_finishes=list(card.finishes),
         unit_price=item.unit_price,
+        unit_price_eur=item.unit_price_eur,
+        line_value_usd=item.line_value_usd,
+        line_value_eur=item.line_value_eur,
         prices_updated_at=item.snapshot.prices_updated_at,
         prices_stale=service.prices_stale(item.snapshot),
     )
@@ -97,6 +119,7 @@ def add_entry(body: AddEntry, owner: Owner, service: Service, response: Response
 def list_entries(  # one parameter per documented query field
     owner: Owner,
     service: Service,
+    background: BackgroundTasks,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
     q: Annotated[str | None, Query(max_length=100, description="Part of the card name")] = None,
@@ -112,6 +135,7 @@ def list_entries(  # one parameter per documented query field
         type_text=type, sort=sort, direction=dir,
     )  # fmt: skip
     items, total = service.list(owner.id, query)
+    background.add_task(service.refresh_stale_prices, owner.id)  # after the response (FR-PRC-05)
     return VaultPage(
         items=[_dto(i, service) for i in items], page=page, page_size=page_size, total=total
     )
@@ -132,3 +156,29 @@ def edit_entry(entry_id: UUID, body: EditEntry, owner: Owner, service: Service) 
 )
 def remove_entry(entry_id: UUID, owner: Owner, service: Service) -> None:
     service.remove(owner.id, entry_id)
+
+
+@router.get(
+    "/summary",
+    operation_id="getVaultSummary",
+    summary="Totals and value of the caller's whole collection",
+)
+def get_summary(owner: Owner, service: Service, background: BackgroundTasks) -> VaultSummaryDto:
+    summary = _summary_dto(service.summary(owner.id))
+    background.add_task(service.refresh_stale_prices, owner.id)  # after the response (FR-PRC-05)
+    return summary
+
+
+def _summary_dto(summary: VaultSummary) -> VaultSummaryDto:
+    return VaultSummaryDto(
+        total_cards=summary.total_cards,
+        entries=summary.entries,
+        value_usd=summary.value_usd,
+        value_eur=summary.value_eur,
+        unpriced_usd=summary.unpriced_usd,
+        unpriced_eur=summary.unpriced_eur,
+        lower_bound_usd=summary.unpriced_usd > 0,
+        lower_bound_eur=summary.unpriced_eur > 0,
+        oldest_prices_updated_at=summary.oldest_prices_updated_at,
+        newest_prices_updated_at=summary.newest_prices_updated_at,
+    )

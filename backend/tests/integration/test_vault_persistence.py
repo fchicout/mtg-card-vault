@@ -295,3 +295,104 @@ def test_delete_is_true_once_then_false(migrated: Engine) -> None:
 def test_session_type_is_a_plain_sqlalchemy_session(migrated: Engine) -> None:
     with Session(migrated) as session:
         assert session.execute(text("SELECT 1")).scalar_one() == 1
+
+
+# ---------------------------------------------------------------------------- summary (#133)
+def test_the_summary_counts_values_and_flags_unpriced_entries(migrated: Engine) -> None:
+    alice, bob = new_user(migrated, "alice"), new_user(migrated, "bob")
+    both = put_card(migrated, name="Both", number="1", prices=Prices(usd=Decimal("1.10"), eur=Decimal("1.00"), usd_foil=Decimal("2.20")))  # fmt: skip
+    usd_only = put_card(migrated, name="Usd only", number="2", prices=Prices(usd=Decimal("0.35")))
+    nothing = put_card(migrated, name="Nothing", number="3", prices=Prices())
+    add(migrated, alice, both, 3)  # 3.30 USD, 3.00 EUR
+    add(migrated, alice, both, 1, finish=Finish.FOIL)  # 2.20 USD, no foil EUR
+    add(migrated, alice, usd_only, 2, cond=Condition.LP)  # 0.70 USD, no EUR
+    add(migrated, alice, nothing, 4)  # no price at all
+    add(migrated, bob, both, 9999)  # another user's cards never count
+    with uow(migrated) as unit:
+        summary = unit.vault.summary(alice)
+    assert (summary.total_cards, summary.entries) == (10, 4)
+    assert summary.value_usd == Decimal("6.20")
+    assert summary.value_eur == Decimal("3.00")
+    assert (summary.unpriced_usd, summary.unpriced_eur) == (1, 3)
+    assert summary.oldest_prices_updated_at == summary.newest_prices_updated_at == NOW
+
+
+def test_an_empty_vault_summarises_to_zeros(migrated: Engine) -> None:
+    user = new_user(migrated, "empty")
+    with uow(migrated) as unit:
+        summary = unit.vault.summary(user)
+    assert (summary.total_cards, summary.entries, summary.unpriced_usd) == (0, 0, 0)
+    assert summary.value_usd == Decimal("0.00")
+    assert summary.value_eur == Decimal("0.00")
+    assert summary.oldest_prices_updated_at is None
+
+
+def test_a_real_price_of_zero_is_priced_not_unpriced(migrated: Engine) -> None:
+    user = new_user(migrated, "zero")
+    free = put_card(migrated, name="Free", number="1", prices=Prices(usd=Decimal("0.00")))
+    add(migrated, user, free, 5)
+    with uow(migrated) as unit:
+        summary = unit.vault.summary(user)
+    assert summary.unpriced_usd == 0
+    assert summary.value_usd == Decimal("0.00")
+
+
+# ---------------------------------------------------------------------------- bulk refresh (#137)
+def test_owned_ids_pages_through_distinct_owned_cards_only(migrated: Engine) -> None:
+    alice, bob = new_user(migrated, "alice"), new_user(migrated, "bob")
+    ids = sorted(put_card(migrated, name=f"Card {n}", number=str(n)) for n in range(1, 6))
+    unowned = put_card(migrated, name="Unowned", number="99")
+    for owner in (alice, bob):  # owned twice, still listed once
+        for card in ids[:4]:
+            add(migrated, owner, card)
+    with uow(migrated) as unit:
+        first = unit.cards.owned_ids(None, 3)
+        second = unit.cards.owned_ids(first[-1], 3)
+        third = unit.cards.owned_ids(second[-1], 3) if second else []
+    assert first == ids[:3]
+    assert second == ids[3:4]
+    assert third == []
+    assert unowned not in first + second
+
+
+def test_a_batch_of_75_is_one_statement_and_refreshes_prices(migrated: Engine) -> None:
+    from sqlalchemy import event
+
+    cards = [
+        make_card(
+            name=f"Card {n}", set_code="tst", number=str(n), prices=Prices(usd=Decimal("1.00"))
+        )
+        for n in range(75)
+    ]
+    with uow(migrated) as unit:
+        unit.cards.upsert_snapshots(cards, NOW)
+        unit.commit()
+    cheaper = [
+        make_card(
+            name=f"Card {n}", set_code="tst", number=str(n), prices=Prices(usd=Decimal("0.50"))
+        )
+        for n in range(75)
+    ]
+    later = NOW + timedelta(days=1)
+    statements: list[str] = []
+    event.listen(
+        migrated, "before_cursor_execute", lambda c, cur, stmt, *a: statements.append(stmt)
+    )
+    with uow(migrated) as unit:
+        unit.cards.upsert_snapshots([*cheaper, cheaper[0]], later)  # a duplicate collapses
+        unit.commit()
+    assert sum("INSERT INTO cards" in s for s in statements) == 1
+    assert scalar(migrated, "SELECT count(*) FROM cards") == 75
+    assert scalar(migrated, "SELECT count(*) FROM cards WHERE usd = 0.50") == 75
+    with migrated.connect() as connection:
+        stamps = (
+            connection.execute(text("SELECT DISTINCT prices_updated_at FROM cards")).scalars().all()
+        )
+    assert stamps == [later]
+
+
+def test_an_empty_batch_writes_nothing(migrated: Engine) -> None:
+    with uow(migrated) as unit:
+        unit.cards.upsert_snapshots([], NOW)
+        unit.commit()
+    assert scalar(migrated, "SELECT count(*) FROM cards") == 0

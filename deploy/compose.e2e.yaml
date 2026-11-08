@@ -80,6 +80,21 @@ services:
       - --host=0.0.0.0
       - --port=9100
 
+  # The worker shares the API's network namespace, like the Scryfall double: its `localhost:9100` is
+  # the double. The journeys run one refresh on demand with `exec worker python -m mtgvault.worker --once`.
+  worker:
+    network_mode: "service:api"
+    networks: !reset []
+    depends_on:
+      scryfall:
+        condition: service_healthy
+    environment:
+      SSL_CERT_FILE: /certs/oidc.pem
+      SCRYFALL_BASE_URL: http://localhost:9100
+      SCRYFALL_BREAKER_OPEN_SECONDS: "3"
+    volumes:
+      - oidc-certs:/certs:ro
+
 volumes:
   # A world-writable in-memory volume: the two containers run as different unprivileged users.
   oidc-certs:

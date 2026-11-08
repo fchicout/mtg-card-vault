@@ -55,6 +55,13 @@ class Settings(BaseSettings):
     scan_rate_per_minute: int = Field(default=30, ge=1, le=600)
     # Prices older than this are marked stale in the vault (FR-DAT-03).
     price_stale_after_hours: int = Field(default=24, ge=1, le=720)
+    # When the worker refreshes every owned card (ADR-012): a 5-field cron expression in UTC.
+    price_refresh_cron: str = "0 4 * * *"
+    # Also run one refresh when the worker starts (for example right after a deployment).
+    price_refresh_on_start: bool = False
+    # The worker touches this file regularly; the container healthcheck reads its age. The stack
+    # sets it to a path on the container's tmpfs; the default is relative to the working directory.
+    worker_heartbeat_file: str = "mtgvault-worker.alive"
     # The interactive API documentation is for development; production leaves it off.
     api_docs_enabled: bool = False
 
@@ -64,6 +71,19 @@ class Settings(BaseSettings):
         if not is_acceptable_url(value):
             raise ValueError("must be an https URL (http only for localhost)")
         return value.rstrip("/")
+
+    @field_validator("price_refresh_cron")
+    @classmethod
+    def _cron_is_valid(cls, value: str) -> str:
+        from mtgvault.cron import cron_trigger
+
+        try:
+            cron_trigger(value)
+        except ValueError as error:
+            raise ValueError(
+                f"must be a 5-field cron expression such as '0 4 * * *' ({error})"
+            ) from error
+        return value.strip()
 
     @field_validator("oidc_allowed_algs")
     @classmethod
