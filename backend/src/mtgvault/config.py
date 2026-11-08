@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     # Scryfall (FR-DAT-01): identify the application with a contact, as their API rules ask.
     scryfall_user_agent: str = Field(min_length=10)
     scryfall_base_url: str = "https://api.scryfall.com"
+    # How long the circuit stays open after repeated Scryfall failures before one probe (FR-DAT-03).
+    scryfall_breaker_open_seconds: float = Field(default=30.0, ge=1, le=600)
     # Catalogue results are cached briefly (ADR-007).
     catalog_cache_ttl_seconds: int = Field(default=300, ge=1, le=3600)
     catalog_cache_max_entries: int = Field(default=500, ge=1, le=10000)
