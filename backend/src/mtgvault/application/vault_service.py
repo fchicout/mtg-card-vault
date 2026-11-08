@@ -25,6 +25,7 @@ from mtgvault.domain.vault import (
 )
 
 DEFAULT_STALE_AFTER = timedelta(hours=24)
+_NO_ENTRY = "No such entry."
 
 
 def _utc_now() -> datetime:
@@ -62,7 +63,7 @@ class VaultService:
             item = unit.vault.get_item(user_id, entry.id)
             unit.commit()
         if item is None:  # pragma: no cover  # the row was just written in this transaction
-            raise NotFound("The entry could not be read back.")
+            raise NotFound(_NO_ENTRY)
         return item, created
 
     def _resolve(self, card_id: UUID) -> tuple[Card, bool]:
@@ -85,7 +86,7 @@ class VaultService:
         with self._uow() as unit:
             item = unit.vault.get_item(user_id, entry_id)
         if item is None:
-            raise NotFound("No such entry.")
+            raise NotFound(_NO_ENTRY)
         return item
 
     # ------------------------------------------------------------------ change
@@ -109,17 +110,17 @@ class VaultService:
         with self._uow() as unit:
             current = unit.vault.get_item(user_id, entry_id)
             if current is None:
-                raise NotFound("No such entry.")
+                raise NotFound(_NO_ENTRY)
             if finish is not None:
                 validate_finish(finish, current.snapshot.card.finishes)
             result = unit.vault.update(user_id, entry_id, quantity, condition, finish, now)
             if result is None:  # pragma: no cover  # deleted between the two statements
-                raise NotFound("No such entry.")
+                raise NotFound(_NO_ENTRY)
             entry, merged = result
             item = unit.vault.get_item(user_id, entry.id)
             unit.commit()
         if item is None:  # pragma: no cover
-            raise NotFound("No such entry.")
+            raise NotFound(_NO_ENTRY)
         return item, merged
 
     def remove(self, user_id: UUID, entry_id: UUID) -> None:
@@ -127,7 +128,7 @@ class VaultService:
             removed = unit.vault.delete(user_id, entry_id)
             unit.commit()
         if not removed:
-            raise NotFound("No such entry.")
+            raise NotFound(_NO_ENTRY)
 
     # ------------------------------------------------------------------ prices
     def prices_stale(self, snapshot: CardSnapshot) -> bool:
