@@ -9,9 +9,25 @@
         <source>MTG Card Vault</source>
       </segment>
     </unit>
-    <unit id="theme.light">
+    <unit id="auth.signout">
+      <notes>
+        <note category="location">src/app/app.html:15,16</note>
+      </notes>
+      <segment>
+        <source>Sign out</source>
+      </segment>
+    </unit>
+    <unit id="auth.signin">
       <notes>
         <note category="location">src/app/app.html:20,21</note>
+      </notes>
+      <segment>
+        <source>Sign in</source>
+      </segment>
+    </unit>
+    <unit id="theme.light">
+      <notes>
+        <note category="location">src/app/app.html:34,35</note>
       </notes>
       <segment>
         <source>Light theme</source>
@@ -19,7 +35,7 @@
     </unit>
     <unit id="theme.dark">
       <notes>
-        <note category="location">src/app/app.html:22,23</note>
+        <note category="location">src/app/app.html:36,37</note>
       </notes>
       <segment>
         <source>Dark theme</source>
@@ -27,7 +43,7 @@
     </unit>
     <unit id="nav.label">
       <notes>
-        <note category="location">src/app/app.html:33,35</note>
+        <note category="location">src/app/app.html:47,49</note>
       </notes>
       <segment>
         <source>Main navigation</source>
@@ -35,7 +51,7 @@
     </unit>
     <unit id="nav.vault">
       <notes>
-        <note category="location">src/app/app.html:37,38</note>
+        <note category="location">src/app/app.html:51,52</note>
       </notes>
       <segment>
         <source>Vault</source>
@@ -43,7 +59,7 @@
     </unit>
     <unit id="nav.catalogue">
       <notes>
-        <note category="location">src/app/app.html:41,43</note>
+        <note category="location">src/app/app.html:55,57</note>
       </notes>
       <segment>
         <source>Catalogue</source>
@@ -51,7 +67,7 @@
     </unit>
     <unit id="nav.scan">
       <notes>
-        <note category="location">src/app/app.html:45,46</note>
+        <note category="location">src/app/app.html:59,60</note>
       </notes>
       <segment>
         <source>Scan</source>
@@ -59,7 +75,7 @@
     </unit>
     <unit id="nav.account">
       <notes>
-        <note category="location">src/app/app.html:49,50</note>
+        <note category="location">src/app/app.html:63,64</note>
       </notes>
       <segment>
         <source>Account</source>
@@ -67,7 +83,7 @@
     </unit>
     <unit id="footer.scryfall">
       <notes>
-        <note category="location">src/app/app.html:61,62</note>
+        <note category="location">src/app/app.html:75,76</note>
       </notes>
       <segment>
         <source>Card data and images are provided by</source>
@@ -75,7 +91,7 @@
     </unit>
     <unit id="footer.scryfallNote">
       <notes>
-        <note category="location">src/app/app.html:64,67</note>
+        <note category="location">src/app/app.html:78,81</note>
       </notes>
       <segment>
         <source>which is not affiliated with this project.</source>
@@ -83,7 +99,7 @@
     </unit>
     <unit id="footer.fancontent">
       <notes>
-        <note category="location">src/app/app.html:68,72</note>
+        <note category="location">src/app/app.html:82,86</note>
       </notes>
       <segment>
         <source> MTG Card Vault is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. It is not approved or endorsed by Wizards of the Coast. Magic: The Gathering is a trademark of Wizards of the Coast LLC. </source>
@@ -91,7 +107,7 @@
     </unit>
     <unit id="route.home">
       <notes>
-        <note category="location">src/app/app.routes.ts:8</note>
+        <note category="location">src/app/app.routes.ts:10</note>
       </notes>
       <segment>
         <source>MTG Card Vault</source>
@@ -99,7 +115,7 @@
     </unit>
     <unit id="route.vault">
       <notes>
-        <note category="location">src/app/app.routes.ts:13</note>
+        <note category="location">src/app/app.routes.ts:16</note>
       </notes>
       <segment>
         <source>Vault - MTG Card Vault</source>
@@ -107,7 +123,7 @@
     </unit>
     <unit id="route.catalogue">
       <notes>
-        <note category="location">src/app/app.routes.ts:18</note>
+        <note category="location">src/app/app.routes.ts:22</note>
       </notes>
       <segment>
         <source>Catalogue - MTG Card Vault</source>
@@ -115,7 +131,7 @@
     </unit>
     <unit id="route.scan">
       <notes>
-        <note category="location">src/app/app.routes.ts:23</note>
+        <note category="location">src/app/app.routes.ts:28</note>
       </notes>
       <segment>
         <source>Scan - MTG Card Vault</source>
@@ -123,7 +139,7 @@
     </unit>
     <unit id="route.account">
       <notes>
-        <note category="location">src/app/app.routes.ts:28</note>
+        <note category="location">src/app/app.routes.ts:34</note>
       </notes>
       <segment>
         <source>Account - MTG Card Vault</source>
@@ -131,7 +147,7 @@
     </unit>
     <unit id="route.signin">
       <notes>
-        <note category="location">src/app/app.routes.ts:33</note>
+        <note category="location">src/app/app.routes.ts:39</note>
       </notes>
       <segment>
         <source>Sign in required - MTG Card Vault</source>
@@ -139,7 +155,7 @@
     </unit>
     <unit id="route.callback">
       <notes>
-        <note category="location">src/app/app.routes.ts:38</note>
+        <note category="location">src/app/app.routes.ts:44</note>
       </notes>
       <segment>
         <source>Signing in - MTG Card Vault</source>
@@ -147,10 +163,18 @@
     </unit>
     <unit id="route.notfound">
       <notes>
-        <note category="location">src/app/app.routes.ts:43</note>
+        <note category="location">src/app/app.routes.ts:49</note>
       </notes>
       <segment>
         <source>Page not found - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="auth.account">
+      <notes>
+        <note category="location">src/app/app.ts:52</note>
+      </notes>
+      <segment>
+        <source>Account</source>
       </segment>
     </unit>
     <unit id="error.unreachable">
@@ -387,23 +411,63 @@
     </unit>
     <unit id="page.signin.title">
       <notes>
-        <note category="location">src/app/pages/signin-required.ts:11,12</note>
+        <note category="location">src/app/pages/signin-required.ts:12,13</note>
       </notes>
       <segment>
         <source>Sign in required</source>
       </segment>
     </unit>
+    <unit id="page.signin.unavailable">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:16,18</note>
+      </notes>
+      <segment>
+        <source>Signing in is not available right now. Please contact the administrator.</source>
+      </segment>
+    </unit>
+    <unit id="page.signin.failed">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:20,22</note>
+      </notes>
+      <segment>
+        <source>The sign-in was cancelled or could not be completed. You can try again.</source>
+      </segment>
+    </unit>
     <unit id="page.signin.text">
       <notes>
-        <note category="location">src/app/pages/signin-required.ts:13,14</note>
+        <note category="location">src/app/pages/signin-required.ts:23,25</note>
       </notes>
       <segment>
         <source>You need to sign in to see this page.</source>
       </segment>
     </unit>
+    <unit id="page.signin.retry">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:34,35</note>
+      </notes>
+      <segment>
+        <source>Try again</source>
+      </segment>
+    </unit>
+    <unit id="page.signin.action">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:36,38</note>
+      </notes>
+      <segment>
+        <source>Sign in</source>
+      </segment>
+    </unit>
+    <unit id="page.signin.failedHeading">
+      <notes>
+        <note category="location">src/app/pages/signin-required.ts:54</note>
+      </notes>
+      <segment>
+        <source>Sign-in did not complete</source>
+      </segment>
+    </unit>
     <unit id="page.signin.empty">
       <notes>
-        <note category="location">src/app/pages/signin-required.ts:18</note>
+        <note category="location">src/app/pages/signin-required.ts:55</note>
       </notes>
       <segment>
         <source>Please sign in</source>

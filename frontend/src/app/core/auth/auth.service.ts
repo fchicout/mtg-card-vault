@@ -15,7 +15,13 @@ export interface UserManagerLike {
   signinRedirectCallback(url?: string): Promise<User>;
   getUser(): Promise<User | null>;
   removeUser(): Promise<void>;
+  revokeTokens(types?: ('access_token' | 'refresh_token')[]): Promise<void>;
 }
+
+/** Leaves the application for another address; replaced in tests. */
+export const NAVIGATE = new InjectionToken<(url: string) => void>('NAVIGATE', {
+  factory: () => (url: string) => window.location.assign(url),
+});
 
 export const USER_MANAGER = new InjectionToken<UserManagerLike | null>('USER_MANAGER', {
   factory: () => {
@@ -61,6 +67,8 @@ interface SignInState {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly manager = inject(USER_MANAGER);
+  private readonly config = inject(AUTH_CONFIG).value;
+  private readonly navigate = inject(NAVIGATE);
   private readonly current = signal<User | null>(null);
 
   readonly configured = this.manager !== null;
@@ -114,6 +122,24 @@ export class AuthService {
     }
     this.write(RESTORE_ATTEMPT, String(Date.now()));
     await this.signIn(returnUrl);
+  }
+
+  /**
+   * Signs out (US-002): revokes the refresh token (best effort), discards every token and leaves
+   * through the provider's own logout page, which returns to the start page. The provider has no
+   * OIDC end-session endpoint, so its portal logout address is derived from the issuer.
+   */
+  async signOut(): Promise<void> {
+    try {
+      await this.manager?.revokeTokens(['refresh_token']);
+    } catch {
+      // An unreachable provider must not keep the user signed in here.
+    }
+    await this.clear();
+    if (this.config) {
+      const back = encodeURIComponent(`${window.location.origin}/`);
+      this.navigate(`${this.config.issuer}/logout?rd=${back}`);
+    }
   }
 
   /** Forgets the local session (used by sign-out and by a failed renewal). */

@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import type { User } from 'oidc-client-ts';
 
+import { AUTH_CONFIG } from './auth-config';
 import {
   AuthService,
+  NAVIGATE,
   USER_MANAGER,
   userManagerSettings,
   type UserManagerLike,
@@ -18,6 +20,8 @@ function user(overrides: Partial<User> = {}): User {
   } as unknown as User;
 }
 
+let revokeFails = false;
+
 function fakeManager(result: User | Error): UserManagerLike & { calls: string[] } {
   const calls: string[] = [];
   return {
@@ -32,6 +36,10 @@ function fakeManager(result: User | Error): UserManagerLike & { calls: string[] 
     removeUser: () => {
       calls.push('remove');
       return Promise.resolve();
+    },
+    revokeTokens: (types) => {
+      calls.push(`revoke:${types?.join(',')}`);
+      return revokeFails ? Promise.reject(new Error('provider down')) : Promise.resolve();
     },
   };
 }
@@ -113,6 +121,49 @@ describe('AuthService', () => {
     const manager = fakeManager(user());
     await service(manager).restore('/');
     expect(manager.calls).toEqual([]);
+  });
+});
+
+describe('AuthService sign-out', () => {
+  const navigations: string[] = [];
+
+  function withConfig(manager: UserManagerLike): AuthService {
+    revokeFails = false;
+    navigations.length = 0;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: USER_MANAGER, useValue: manager },
+        {
+          provide: AUTH_CONFIG,
+          useValue: { value: { issuer: 'https://idp.example', clientId: 'spa', audience: 'api' } },
+        },
+        { provide: NAVIGATE, useValue: (url: string) => navigations.push(url) },
+      ],
+    });
+    return TestBed.inject(AuthService);
+  }
+
+  it('revokes the refresh token, drops every token and leaves through the provider logout', async () => {
+    const manager = fakeManager(user());
+    const auth = withConfig(manager);
+    await auth.completeSignIn('x');
+    await auth.signOut();
+    expect(manager.calls).toEqual(expect.arrayContaining(['revoke:refresh_token', 'remove']));
+    expect(auth.authenticated()).toBe(false);
+    expect(auth.accessToken()).toBeNull();
+    expect(navigations).toEqual([
+      `https://idp.example/logout?rd=${encodeURIComponent(window.location.origin + '/')}`,
+    ]);
+    expect(sessionStorage.getItem('mtgvault.session')).toBeNull();
+  });
+
+  it('still signs out locally when the provider cannot be reached', async () => {
+    const auth = withConfig(fakeManager(user()));
+    await auth.completeSignIn('x');
+    revokeFails = true;
+    await auth.signOut();
+    expect(auth.authenticated()).toBe(false);
+    expect(navigations).toHaveLength(1);
   });
 });
 
