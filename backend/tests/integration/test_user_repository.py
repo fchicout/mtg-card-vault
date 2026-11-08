@@ -115,3 +115,34 @@ def test_downgrade_removes_the_table(database_url: str, migrated: Engine) -> Non
 
     command.downgrade(alembic_config(database_url, BACKEND_DIR), "0001")
     assert not inspect(migrated).has_table("users")
+
+
+def test_parallel_first_requests_to_me_create_one_user(database_url: str, migrated: Engine) -> None:
+    """US-004 scenario 2 end to end: the HTTP layer, the service and the real database."""
+    from fastapi.testclient import TestClient
+
+    from mtgvault.config import Settings
+    from mtgvault.domain.errors import Unauthenticated
+    from mtgvault.main import create_app
+
+    class Verifier:
+        def verify(self, token: str) -> Principal:
+            if token != "racer-token":  # noqa: S105  # a stand-in value, not a credential
+                raise Unauthenticated("The access token is invalid or expired.")
+            return Principal("racer", "Racer")
+
+    settings = Settings(
+        database_url=database_url,
+        oidc_issuer_url="https://idp.example.test",
+        oidc_audience="mtgvault-api",
+    )
+    app = create_app(settings, token_verifier=Verifier())
+    headers = {"Authorization": "Bearer racer-token"}
+
+    def call(_: int) -> str:
+        return str(TestClient(app).get("/api/v1/me", headers=headers).json()["id"])
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        ids = list(pool.map(call, range(16)))
+    assert len(set(ids)) == 1
+    assert rows(migrated) == 1

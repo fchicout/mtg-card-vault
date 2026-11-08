@@ -18,6 +18,7 @@ from mtgvault.api import health, v1
 from mtgvault.api.errors import PROBLEM_RESPONSES, install_error_handlers
 from mtgvault.api.middleware import CorrelationIdMiddleware
 from mtgvault.application.ports import ReadinessProbe, TokenVerifier, UnitOfWork
+from mtgvault.application.user_service import UserService
 from mtgvault.config import Settings, load_settings
 from mtgvault.logging_setup import configure_logging
 
@@ -64,7 +65,10 @@ def create_app(
             "Every error is an RFC 9457 `application/problem+json` document carrying a "
             "`correlation_id`, also returned in the `X-Request-ID` header."
         ),
-        openapi_tags=[{"name": "health", "description": "Liveness and readiness (public)."}],
+        openapi_tags=[
+            {"name": "health", "description": "Liveness and readiness (public)."},
+            {"name": "account", "description": "The signed-in user (bearer token required)."},
+        ],
         responses=PROBLEM_RESPONSES,
         openapi_url="/api/v1/openapi.json" if docs_enabled else None,
         docs_url="/api/v1/docs" if docs_enabled else None,
@@ -73,6 +77,7 @@ def create_app(
     app.state.readiness_probe = readiness_probe
     app.state.token_verifier = token_verifier
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
+    app.state.user_service = UserService(app.state.unit_of_work_factory)
     app.add_middleware(CorrelationIdMiddleware)
     if settings and settings.cors_origin_list:
         # Outermost, so a preflight is answered before authentication. No cookies, no wildcard.
