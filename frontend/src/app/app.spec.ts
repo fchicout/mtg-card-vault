@@ -8,7 +8,6 @@ import { provideApiConfiguration } from './api';
 import { App } from './app';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
-import { installResizeObserverStub } from './testing/resize-observer';
 
 describe('App shell', () => {
   let element: HTMLElement;
@@ -78,8 +77,6 @@ describe('App shell', () => {
 });
 
 describe('routes', () => {
-  beforeAll(() => installResizeObserverStub());
-
   let signedIn = true;
   let harness: RouterTestingHarness;
   let http: HttpTestingController;
