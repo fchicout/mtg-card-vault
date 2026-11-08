@@ -23,7 +23,7 @@ class PageParams(BaseModel):
 PageQuery = Annotated[PageParams, Query()]
 
 
-class Page[T](BaseModel):
+class ResultPage[T](BaseModel):
     """One page of results plus what a client needs to navigate."""
 
     items: list[T]

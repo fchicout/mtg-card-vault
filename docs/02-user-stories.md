@@ -1,6 +1,6 @@
 # 02 — User Stories
 
-**Docs set version:** 0.3.27
+**Docs set version:** 0.3.34
 **Document:** 02 User Stories (Connextra format, INVEST, Gherkin acceptance criteria)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -320,7 +320,7 @@ Scenario: Lists only contain my entries
 ```gherkin
 Scenario: Search by partial name
   When I search "black lotus"
-  Then results list matching cards with image, name, type line and set count
+  Then results list matching cards with image, name, type line and set
 
 Scenario: No results
   When I search for a nonsense string

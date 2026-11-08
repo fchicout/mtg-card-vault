@@ -129,9 +129,17 @@
         <source>Catalogue - MTG Card Vault</source>
       </segment>
     </unit>
-    <unit id="route.scan">
+    <unit id="route.card">
       <notes>
         <note category="location">src/app/app.routes.ts:28</note>
+      </notes>
+      <segment>
+        <source>Card - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.scan">
+      <notes>
+        <note category="location">src/app/app.routes.ts:34</note>
       </notes>
       <segment>
         <source>Scan - MTG Card Vault</source>
@@ -139,7 +147,7 @@
     </unit>
     <unit id="route.account">
       <notes>
-        <note category="location">src/app/app.routes.ts:34</note>
+        <note category="location">src/app/app.routes.ts:40</note>
       </notes>
       <segment>
         <source>Account - MTG Card Vault</source>
@@ -147,7 +155,7 @@
     </unit>
     <unit id="route.signin">
       <notes>
-        <note category="location">src/app/app.routes.ts:39</note>
+        <note category="location">src/app/app.routes.ts:45</note>
       </notes>
       <segment>
         <source>Sign in required - MTG Card Vault</source>
@@ -155,7 +163,7 @@
     </unit>
     <unit id="route.callback">
       <notes>
-        <note category="location">src/app/app.routes.ts:44</note>
+        <note category="location">src/app/app.routes.ts:50</note>
       </notes>
       <segment>
         <source>Signing in - MTG Card Vault</source>
@@ -163,7 +171,7 @@
     </unit>
     <unit id="route.notfound">
       <notes>
-        <note category="location">src/app/app.routes.ts:49</note>
+        <note category="location">src/app/app.routes.ts:55</note>
       </notes>
       <segment>
         <source>Page not found - MTG Card Vault</source>
@@ -171,7 +179,7 @@
     </unit>
     <unit id="auth.account">
       <notes>
-        <note category="location">src/app/app.ts:52</note>
+        <note category="location">src/app/app.ts:53</note>
       </notes>
       <segment>
         <source>Account</source>
@@ -313,28 +321,492 @@
         <source>Your account</source>
       </segment>
     </unit>
+    <unit id="detail.back">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:72,74</note>
+      </notes>
+      <segment>
+        <source>Back to the catalogue</source>
+      </segment>
+    </unit>
+    <unit id="detail.set">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:102</note>
+      </notes>
+      <segment>
+        <source>Set</source>
+      </segment>
+    </unit>
+    <unit id="detail.number">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:103,104</note>
+      </notes>
+      <segment>
+        <source>Collector number</source>
+      </segment>
+    </unit>
+    <unit id="detail.rarity">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:105,106</note>
+      </notes>
+      <segment>
+        <source>Rarity</source>
+      </segment>
+    </unit>
+    <unit id="detail.finishes">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:107,108</note>
+      </notes>
+      <segment>
+        <source>Finishes</source>
+      </segment>
+    </unit>
+    <unit id="detail.prices">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:110,111</note>
+      </notes>
+      <segment>
+        <source>Prices</source>
+      </segment>
+    </unit>
+    <unit id="detail.noPrices">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:113,114</note>
+      </notes>
+      <segment>
+        <source> No price is known for this printing. </source>
+      </segment>
+    </unit>
+    <unit id="detail.add">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:135,136</note>
+      </notes>
+      <segment>
+        <source> Add to vault </source>
+      </segment>
+    </unit>
+    <unit id="detail.toVault">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:142,144</note>
+      </notes>
+      <segment>
+        <source>Open my vault</source>
+      </segment>
+    </unit>
+    <unit id="detail.printings">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:152,153</note>
+      </notes>
+      <segment>
+        <source>Printings</source>
+      </segment>
+    </unit>
+    <unit id="detail.colSet">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:163</note>
+      </notes>
+      <segment>
+        <source>Set</source>
+      </segment>
+    </unit>
+    <unit id="detail.colNumber">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:163,164</note>
+      </notes>
+      <segment>
+        <source>Number</source>
+      </segment>
+    </unit>
+    <unit id="detail.colLang">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:164,165</note>
+      </notes>
+      <segment>
+        <source>Language</source>
+      </segment>
+    </unit>
+    <unit id="detail.colFinishes">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:165,166</note>
+      </notes>
+      <segment>
+        <source>Finishes</source>
+      </segment>
+    </unit>
+    <unit id="detail.colRarity">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:166,167</note>
+      </notes>
+      <segment>
+        <source>Rarity</source>
+      </segment>
+    </unit>
+    <unit id="detail.colAction">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:167,168</note>
+      </notes>
+      <segment>
+        <source>Select</source>
+      </segment>
+    </unit>
+    <unit id="detail.current">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:180,181</note>
+      </notes>
+      <segment>
+        <source>Shown</source>
+      </segment>
+    </unit>
+    <unit id="detail.select">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:188,189</note>
+      </notes>
+      <segment>
+        <source>Select</source>
+      </segment>
+    </unit>
+    <unit id="detail.prev">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:208,209</note>
+      </notes>
+      <segment>
+        <source> Previous page </source>
+      </segment>
+    </unit>
+    <unit id="detail.next">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:218,219</note>
+      </notes>
+      <segment>
+        <source> Next page </source>
+      </segment>
+    </unit>
+    <unit id="detail.addTitle">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:231,232</note>
+      </notes>
+      <segment>
+        <source>Add to vault</source>
+      </segment>
+    </unit>
+    <unit id="detail.noPrintings">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:257</note>
+      </notes>
+      <segment>
+        <source>No printings found</source>
+      </segment>
+    </unit>
+    <unit id="detail.addSubmit">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:268</note>
+      </notes>
+      <segment>
+        <source>Add</source>
+      </segment>
+    </unit>
+    <unit id="detail.added">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:337</note>
+      </notes>
+      <segment>
+        <source>Added. You now own <ph id="0" equiv="quantity" disp="entry.quantity"/> of this printing (<ph id="1" equiv="condition" disp="entry.condition"/>, <ph id="2" equiv="finish" disp="entry.finish"/>).</source>
+      </segment>
+    </unit>
+    <unit id="price.usd">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:376</note>
+      </notes>
+      <segment>
+        <source>USD</source>
+      </segment>
+    </unit>
+    <unit id="price.usdFoil">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:377</note>
+      </notes>
+      <segment>
+        <source>USD foil</source>
+      </segment>
+    </unit>
+    <unit id="price.usdEtched">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:378</note>
+      </notes>
+      <segment>
+        <source>USD etched</source>
+      </segment>
+    </unit>
+    <unit id="price.eur">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:379</note>
+      </notes>
+      <segment>
+        <source>EUR</source>
+      </segment>
+    </unit>
+    <unit id="price.eurFoil">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:380</note>
+      </notes>
+      <segment>
+        <source>EUR foil</source>
+      </segment>
+    </unit>
+    <unit id="price.eurEtched">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:381</note>
+      </notes>
+      <segment>
+        <source>EUR etched</source>
+      </segment>
+    </unit>
+    <unit id="detail.notFound">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:392</note>
+      </notes>
+      <segment>
+        <source>We could not find this card.</source>
+      </segment>
+    </unit>
+    <unit id="detail.unavailable">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:394</note>
+      </notes>
+      <segment>
+        <source>The catalogue is temporarily unavailable. Please try again in a moment.</source>
+      </segment>
+    </unit>
+    <unit id="detail.busy">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:396</note>
+      </notes>
+      <segment>
+        <source>The catalogue is busy right now. Wait a moment and try again.</source>
+      </segment>
+    </unit>
+    <unit id="detail.failed">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:398</note>
+      </notes>
+      <segment>
+        <source>The card could not be loaded. Try again.</source>
+      </segment>
+    </unit>
+    <unit id="color.white">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:21</note>
+      </notes>
+      <segment>
+        <source>White</source>
+      </segment>
+    </unit>
+    <unit id="color.blue">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:22</note>
+      </notes>
+      <segment>
+        <source>Blue</source>
+      </segment>
+    </unit>
+    <unit id="color.black">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:23</note>
+      </notes>
+      <segment>
+        <source>Black</source>
+      </segment>
+    </unit>
+    <unit id="color.red">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:24</note>
+      </notes>
+      <segment>
+        <source>Red</source>
+      </segment>
+    </unit>
+    <unit id="color.green">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:25</note>
+      </notes>
+      <segment>
+        <source>Green</source>
+      </segment>
+    </unit>
+    <unit id="color.colourless">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:26</note>
+      </notes>
+      <segment>
+        <source>Colourless</source>
+      </segment>
+    </unit>
     <unit id="page.catalogue.title">
       <notes>
-        <note category="location">src/app/pages/catalogue.ts:11,12</note>
+        <note category="location">src/app/pages/catalogue.ts:121,123</note>
       </notes>
       <segment>
         <source>Catalogue</source>
       </segment>
     </unit>
-    <unit id="page.catalogue.text">
+    <unit id="catalogue.q">
       <notes>
-        <note category="location">src/app/pages/catalogue.ts:14,16</note>
+        <note category="location">src/app/pages/catalogue.ts:125,127</note>
       </notes>
       <segment>
-        <source>Searching Scryfall cards arrives with the catalogue feature.</source>
+        <source>Card name</source>
       </segment>
     </unit>
-    <unit id="page.catalogue.empty">
+    <unit id="catalogue.set">
       <notes>
-        <note category="location">src/app/pages/catalogue.ts:20</note>
+        <note category="location">src/app/pages/catalogue.ts:137,139</note>
       </notes>
       <segment>
-        <source>Nothing to search yet</source>
+        <source>Set code</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.type">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:149,151</note>
+      </notes>
+      <segment>
+        <source>Type</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.rarity">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:160,161</note>
+      </notes>
+      <segment>
+        <source>Rarity</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.anyRarity">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:162,163</note>
+      </notes>
+      <segment>
+        <source>Any</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.colors">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:169,170</note>
+      </notes>
+      <segment>
+        <source>Colours</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.search">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:190,192</note>
+      </notes>
+      <segment>
+        <source> Search </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.clear">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:200,201</note>
+      </notes>
+      <segment>
+        <source> Clear </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.noneText">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:215,216</note>
+      </notes>
+      <segment>
+        <source> Try another spelling, fewer words or other filters. </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.noImage">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:226,228</note>
+      </notes>
+      <segment>
+        <source>No image</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.pages">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:235</note>
+      </notes>
+      <segment>
+        <source>Pages</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.prev">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:244,245</note>
+      </notes>
+      <segment>
+        <source> Previous page </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.next">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:255,256</note>
+      </notes>
+      <segment>
+        <source> Next page </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.startText">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:262,263</note>
+      </notes>
+      <segment>
+        <source> Search all Magic: The Gathering cards by name, then narrow them with filters. </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.none">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:283</note>
+      </notes>
+      <segment>
+        <source>No cards found</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.start">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:284</note>
+      </notes>
+      <segment>
+        <source>Find a card</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.unavailable">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:379</note>
+      </notes>
+      <segment>
+        <source>The catalogue is temporarily unavailable. Please try again in a moment.</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.busy">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:381</note>
+      </notes>
+      <segment>
+        <source>The catalogue is busy right now. Wait a moment and try again.</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.invalid">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:383</note>
+      </notes>
+      <segment>
+        <source>That search is not valid. Check the words and filters.</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.failed">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:385</note>
+      </notes>
+      <segment>
+        <source>The search could not be completed. Try again.</source>
       </segment>
     </unit>
     <unit id="page.home.title">
@@ -475,26 +947,379 @@
     </unit>
     <unit id="page.vault.title">
       <notes>
-        <note category="location">src/app/pages/vault.ts:11,12</note>
+        <note category="location">src/app/pages/vault.ts:97,99</note>
       </notes>
       <segment>
         <source>Vault</source>
       </segment>
     </unit>
-    <unit id="page.vault.text">
+    <unit id="vault.q">
       <notes>
-        <note category="location">src/app/pages/vault.ts:14,16</note>
+        <note category="location">src/app/pages/vault.ts:105,106</note>
       </notes>
       <segment>
-        <source>Cards you add will appear here. This page is ready for the vault feature.</source>
+        <source>Card name</source>
+      </segment>
+    </unit>
+    <unit id="vault.set">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:117,119</note>
+      </notes>
+      <segment>
+        <source>Set code</source>
+      </segment>
+    </unit>
+    <unit id="vault.type">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:129,131</note>
+      </notes>
+      <segment>
+        <source>Type</source>
+      </segment>
+    </unit>
+    <unit id="vault.rarity">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:140,141</note>
+      </notes>
+      <segment>
+        <source>Rarity</source>
+      </segment>
+    </unit>
+    <unit id="vault.anyRarity">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:142,143</note>
+      </notes>
+      <segment>
+        <source>Any</source>
+      </segment>
+    </unit>
+    <unit id="vault.colors">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:149,150</note>
+      </notes>
+      <segment>
+        <source>Colours</source>
+      </segment>
+    </unit>
+    <unit id="vault.pageSize">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:164,165</note>
+      </notes>
+      <segment>
+        <source>Per page</source>
+      </segment>
+    </unit>
+    <unit id="vault.search">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:173,174</note>
+      </notes>
+      <segment>
+        <source> Search </source>
+      </segment>
+    </unit>
+    <unit id="vault.clear">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:183,184</note>
+      </notes>
+      <segment>
+        <source> Clear </source>
+      </segment>
+    </unit>
+    <unit id="vault.emptyText">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:197,198</note>
+      </notes>
+      <segment>
+        <source>Cards you add will appear here.</source>
+      </segment>
+    </unit>
+    <unit id="vault.scan">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:204,206</note>
+      </notes>
+      <segment>
+        <source>Scan a card</source>
+      </segment>
+    </unit>
+    <unit id="vault.browse">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:211,213</note>
+      </notes>
+      <segment>
+        <source>Search the catalogue</source>
+      </segment>
+    </unit>
+    <unit id="vault.noMatchText">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:218,220</note>
+      </notes>
+      <segment>
+        <source>Try other words or clear the filters.</source>
+      </segment>
+    </unit>
+    <unit id="vault.total">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:223</note>
+      </notes>
+      <segment>
+        <source>Entries:</source>
+      </segment>
+    </unit>
+    <unit id="vault.colImage">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:228,229</note>
+      </notes>
+      <segment>
+        <source>Image</source>
+      </segment>
+    </unit>
+    <unit id="vault.colName">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:237,238</note>
+      </notes>
+      <segment>
+        <source> Name </source>
+      </segment>
+    </unit>
+    <unit id="vault.colSet">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:248,249</note>
+      </notes>
+      <segment>
+        <source> Set </source>
+      </segment>
+    </unit>
+    <unit id="vault.colNumber">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:251,252</note>
+      </notes>
+      <segment>
+        <source>Number</source>
+      </segment>
+    </unit>
+    <unit id="vault.colFinish">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:252,253</note>
+      </notes>
+      <segment>
+        <source>Finish</source>
+      </segment>
+    </unit>
+    <unit id="vault.colCondition">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:253,254</note>
+      </notes>
+      <segment>
+        <source>Condition</source>
+      </segment>
+    </unit>
+    <unit id="vault.colQuantity">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:262,263</note>
+      </notes>
+      <segment>
+        <source> Quantity </source>
+      </segment>
+    </unit>
+    <unit id="vault.colPrice">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:273,274</note>
+      </notes>
+      <segment>
+        <source> Unit price </source>
+      </segment>
+    </unit>
+    <unit id="vault.colActions">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:276,277</note>
+      </notes>
+      <segment>
+        <source>Actions</source>
+      </segment>
+    </unit>
+    <unit id="vault.noPrice">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:307,308</note>
+      </notes>
+      <segment>
+        <source>unknown</source>
+      </segment>
+    </unit>
+    <unit id="vault.stale">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:314,315</note>
+      </notes>
+      <segment>
+        <source>outdated</source>
+      </segment>
+    </unit>
+    <unit id="vault.edit">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:325,326</note>
+      </notes>
+      <segment>
+        <source>Edit</source>
+      </segment>
+    </unit>
+    <unit id="vault.remove">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:334,335</note>
+      </notes>
+      <segment>
+        <source>Remove</source>
+      </segment>
+    </unit>
+    <unit id="vault.pages">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:342</note>
+      </notes>
+      <segment>
+        <source>Pages</source>
+      </segment>
+    </unit>
+    <unit id="vault.prev">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:351,352</note>
+      </notes>
+      <segment>
+        <source> Previous page </source>
+      </segment>
+    </unit>
+    <unit id="vault.next">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:362,363</note>
+      </notes>
+      <segment>
+        <source> Next page </source>
+      </segment>
+    </unit>
+    <unit id="vault.editTitle">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:375,376</note>
+      </notes>
+      <segment>
+        <source>Edit entry</source>
+      </segment>
+    </unit>
+    <unit id="vault.removeTitle">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:400,401</note>
+      </notes>
+      <segment>
+        <source>Remove entry</source>
+      </segment>
+    </unit>
+    <unit id="vault.removeAsk">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:404,405</note>
+      </notes>
+      <segment>
+        <source>Remove</source>
+      </segment>
+    </unit>
+    <unit id="entry.cancel">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:417,418</note>
+        <note category="location">src/app/shared/vault/entry-form.ts:106,107</note>
+      </notes>
+      <segment>
+        <source> Cancel </source>
+      </segment>
+    </unit>
+    <unit id="vault.removeConfirm">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:427,429</note>
+      </notes>
+      <segment>
+        <source> Remove </source>
       </segment>
     </unit>
     <unit id="page.vault.empty">
       <notes>
-        <note category="location">src/app/pages/vault.ts:20</note>
+        <note category="location">src/app/pages/vault.ts:451</note>
       </notes>
       <segment>
         <source>Your vault is empty</source>
+      </segment>
+    </unit>
+    <unit id="vault.noMatches">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:452</note>
+      </notes>
+      <segment>
+        <source>No entries match</source>
+      </segment>
+    </unit>
+    <unit id="vault.save">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:453</note>
+      </notes>
+      <segment>
+        <source>Save</source>
+      </segment>
+    </unit>
+    <unit id="vault.saved">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:615</note>
+      </notes>
+      <segment>
+        <source>Saved.</source>
+      </segment>
+    </unit>
+    <unit id="vault.merged">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:616</note>
+      </notes>
+      <segment>
+        <source>Merged with an existing entry: you now own <ph id="0" equiv="quantity" disp="saved.quantity"/> of this card in <ph id="1" equiv="condition" disp="saved.condition"/>, <ph id="2" equiv="finish" disp="saved.finish"/>.</source>
+      </segment>
+    </unit>
+    <unit id="vault.gone">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:624</note>
+      </notes>
+      <segment>
+        <source>That entry no longer exists. The list was refreshed.</source>
+      </segment>
+    </unit>
+    <unit id="vault.removed">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:641</note>
+      </notes>
+      <segment>
+        <source>The entry was removed.</source>
+      </segment>
+    </unit>
+    <unit id="vault.alreadyGone">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:645</note>
+      </notes>
+      <segment>
+        <source>That entry was not found (it may already be removed). The list was refreshed.</source>
+      </segment>
+    </unit>
+    <unit id="vault.invalid">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:675</note>
+      </notes>
+      <segment>
+        <source>That request is not valid. Check the filters.</source>
+      </segment>
+    </unit>
+    <unit id="vault.failed">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:676</note>
+      </notes>
+      <segment>
+        <source>Your vault could not be loaded. Try again.</source>
+      </segment>
+    </unit>
+    <unit id="state.retry">
+      <notes>
+        <note category="location">src/app/shared/states/error-state.ts:15,16</note>
+      </notes>
+      <segment>
+        <source>Try again</source>
       </segment>
     </unit>
     <unit id="state.loading">
@@ -503,6 +1328,78 @@
       </notes>
       <segment>
         <source>Loading…</source>
+      </segment>
+    </unit>
+    <unit id="condition.nm">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:6</note>
+      </notes>
+      <segment>
+        <source>Near mint (NM)</source>
+      </segment>
+    </unit>
+    <unit id="condition.lp">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:7</note>
+      </notes>
+      <segment>
+        <source>Lightly played (LP)</source>
+      </segment>
+    </unit>
+    <unit id="condition.mp">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:8</note>
+      </notes>
+      <segment>
+        <source>Moderately played (MP)</source>
+      </segment>
+    </unit>
+    <unit id="condition.hp">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:9</note>
+      </notes>
+      <segment>
+        <source>Heavily played (HP)</source>
+      </segment>
+    </unit>
+    <unit id="condition.dmg">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:10</note>
+      </notes>
+      <segment>
+        <source>Damaged (DMG)</source>
+      </segment>
+    </unit>
+    <unit id="entry.quantity">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:45,47</note>
+      </notes>
+      <segment>
+        <source>Quantity</source>
+      </segment>
+    </unit>
+    <unit id="entry.condition">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:67,69</note>
+      </notes>
+      <segment>
+        <source>Condition</source>
+      </segment>
+    </unit>
+    <unit id="entry.finish">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:79,81</note>
+      </notes>
+      <segment>
+        <source>Finish</source>
+      </segment>
+    </unit>
+    <unit id="entry.quantityHint">
+      <notes>
+        <note category="location">src/app/shared/vault/entry-form.ts:141</note>
+      </notes>
+      <segment>
+        <source>Use a whole number from 1 to 9999.</source>
       </segment>
     </unit>
   </file>

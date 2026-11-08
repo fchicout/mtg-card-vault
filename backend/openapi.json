@@ -1,6 +1,383 @@
 {
   "components": {
     "schemas": {
+      "AddEntry": {
+        "additionalProperties": false,
+        "description": "Only these fields are accepted: a user id in the body is rejected, not ignored.",
+        "properties": {
+          "card_id": {
+            "format": "uuid",
+            "title": "Card Id",
+            "type": "string"
+          },
+          "condition": {
+            "$ref": "#/components/schemas/Condition",
+            "default": "NM"
+          },
+          "finish": {
+            "$ref": "#/components/schemas/Finish"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "card_id",
+          "quantity",
+          "finish"
+        ],
+        "title": "AddEntry",
+        "type": "object"
+      },
+      "CardDetail": {
+        "properties": {
+          "collector_number": {
+            "title": "Collector Number",
+            "type": "string"
+          },
+          "colors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Colors",
+            "type": "array"
+          },
+          "faces": {
+            "items": {
+              "$ref": "#/components/schemas/CardFaceDto"
+            },
+            "title": "Faces",
+            "type": "array"
+          },
+          "finishes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Finishes",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "image_normal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Normal"
+          },
+          "image_small": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Small"
+          },
+          "lang": {
+            "title": "Lang",
+            "type": "string"
+          },
+          "layout": {
+            "title": "Layout",
+            "type": "string"
+          },
+          "mana_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mana Cost"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "oracle_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oracle Id"
+          },
+          "oracle_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oracle Text"
+          },
+          "prices": {
+            "$ref": "#/components/schemas/PricesDto"
+          },
+          "rarity": {
+            "title": "Rarity",
+            "type": "string"
+          },
+          "set_code": {
+            "title": "Set Code",
+            "type": "string"
+          },
+          "set_name": {
+            "title": "Set Name",
+            "type": "string"
+          },
+          "type_line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Line"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "set_code",
+          "set_name",
+          "collector_number",
+          "rarity",
+          "lang",
+          "layout",
+          "colors",
+          "finishes",
+          "faces",
+          "prices"
+        ],
+        "title": "CardDetail",
+        "type": "object"
+      },
+      "CardFaceDto": {
+        "properties": {
+          "image_normal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Normal"
+          },
+          "mana_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mana Cost"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "oracle_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oracle Text"
+          },
+          "type_line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Line"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CardFaceDto",
+        "type": "object"
+      },
+      "CardPage": {
+        "properties": {
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CardSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "page",
+          "has_more",
+          "items"
+        ],
+        "title": "CardPage",
+        "type": "object"
+      },
+      "CardSummary": {
+        "properties": {
+          "collector_number": {
+            "title": "Collector Number",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "image_small": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Small"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rarity": {
+            "title": "Rarity",
+            "type": "string"
+          },
+          "set_code": {
+            "title": "Set Code",
+            "type": "string"
+          },
+          "set_name": {
+            "title": "Set Name",
+            "type": "string"
+          },
+          "type_line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Line"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "set_code",
+          "set_name",
+          "collector_number",
+          "rarity"
+        ],
+        "title": "CardSummary",
+        "type": "object"
+      },
+      "Condition": {
+        "enum": [
+          "NM",
+          "LP",
+          "MP",
+          "HP",
+          "DMG"
+        ],
+        "title": "Condition",
+        "type": "string"
+      },
+      "EditEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Condition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "finish": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Finish"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          }
+        },
+        "title": "EditEntry",
+        "type": "object"
+      },
       "FieldProblem": {
         "properties": {
           "field": {
@@ -18,6 +395,15 @@
         ],
         "title": "FieldProblem",
         "type": "object"
+      },
+      "Finish": {
+        "enum": [
+          "nonfoil",
+          "foil",
+          "etched"
+        ],
+        "title": "Finish",
+        "type": "string"
       },
       "HealthStatus": {
         "properties": {
@@ -67,6 +453,178 @@
           "id"
         ],
         "title": "Me",
+        "type": "object"
+      },
+      "PricesDto": {
+        "description": "Prices as Scryfall reports them (decimal strings); null means no price, not zero.",
+        "properties": {
+          "eur": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eur"
+          },
+          "eur_etched": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eur Etched"
+          },
+          "eur_foil": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eur Foil"
+          },
+          "usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usd"
+          },
+          "usd_etched": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usd Etched"
+          },
+          "usd_foil": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usd Foil"
+          }
+        },
+        "title": "PricesDto",
+        "type": "object"
+      },
+      "Printing": {
+        "properties": {
+          "collector_number": {
+            "title": "Collector Number",
+            "type": "string"
+          },
+          "finishes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Finishes",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "image_small": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Small"
+          },
+          "lang": {
+            "title": "Lang",
+            "type": "string"
+          },
+          "prices": {
+            "$ref": "#/components/schemas/PricesDto"
+          },
+          "rarity": {
+            "title": "Rarity",
+            "type": "string"
+          },
+          "set_code": {
+            "title": "Set Code",
+            "type": "string"
+          },
+          "set_name": {
+            "title": "Set Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "set_code",
+          "set_name",
+          "collector_number",
+          "lang",
+          "rarity",
+          "finishes",
+          "prices"
+        ],
+        "title": "Printing",
+        "type": "object"
+      },
+      "PrintingPage": {
+        "properties": {
+          "has_more": {
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Printing"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "page",
+          "has_more",
+          "items"
+        ],
+        "title": "PrintingPage",
         "type": "object"
       },
       "Problem": {
@@ -122,6 +680,116 @@
         ],
         "title": "Problem",
         "type": "object"
+      },
+      "VaultItemDto": {
+        "properties": {
+          "available_finishes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Available Finishes",
+            "type": "array"
+          },
+          "card": {
+            "$ref": "#/components/schemas/CardSummary"
+          },
+          "condition": {
+            "$ref": "#/components/schemas/Condition"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "finish": {
+            "$ref": "#/components/schemas/Finish"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "prices_stale": {
+            "title": "Prices Stale",
+            "type": "boolean"
+          },
+          "prices_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prices Updated At"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "quantity",
+          "condition",
+          "finish",
+          "created_at",
+          "updated_at",
+          "card",
+          "available_finishes",
+          "prices_stale"
+        ],
+        "title": "VaultItemDto",
+        "type": "object"
+      },
+      "VaultPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VaultItemDto"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "VaultPage",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -136,10 +804,391 @@
     "description": "REST API of MTG Card Vault. Every versioned route needs an OIDC bearer token. Every error is an RFC 9457 `application/problem+json` document carrying a `correlation_id`, also returned in the `X-Request-ID` header.",
     "summary": "Private, priced inventory of a Magic: The Gathering collection.",
     "title": "MTG Card Vault API",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/catalog/cards": {
+      "get": {
+        "description": "Unique cards matching the text and filters; an empty list when nothing matches.",
+        "operationId": "searchCards",
+        "parameters": [
+          {
+            "description": "Words of the card name",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Words of the card name",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Set code, e.g. lea",
+            "in": "query",
+            "name": "set",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 6,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Set code, e.g. lea",
+              "title": "Set"
+            }
+          },
+          {
+            "description": "Letters W U B R G or C",
+            "in": "query",
+            "name": "colors",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 11,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Letters W U B R G or C",
+              "title": "Colors"
+            }
+          },
+          {
+            "description": "Part of the type line",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of the type line",
+              "title": "Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rarity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "common",
+                    "uncommon",
+                    "rare",
+                    "mythic"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rarity"
+            }
+          },
+          {
+            "description": "1-based page of the source list",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "1-based page of the source list",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Search cards by name and filters",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/cards/{card_id}": {
+      "get": {
+        "operationId": "getCard",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "One printing in detail",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/cards/{card_id}/printings": {
+      "get": {
+        "operationId": "getCardPrintings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "1-based page of the source list",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "description": "1-based page of the source list",
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintingPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "All printings of a card, newest first",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/me": {
       "get": {
         "description": "Provisions the account on the first authenticated request, then returns the profile.",
@@ -214,6 +1263,496 @@
         "summary": "The signed-in user's profile",
         "tags": [
           "account"
+        ]
+      }
+    },
+    "/api/v1/vault/entries": {
+      "get": {
+        "operationId": "listVaultEntries",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Part of the card name",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of the card name",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "set",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 6,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Set"
+            }
+          },
+          {
+            "in": "query",
+            "name": "colors",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 11,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Colors"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rarity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 10,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rarity"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "description": "name, set, price, added or quantity",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "added",
+              "description": "name, set, price, added or quantity",
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "description": "asc or desc",
+            "in": "query",
+            "name": "dir",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "asc or desc",
+              "title": "Dir"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The caller's entries",
+        "tags": [
+          "vault"
+        ]
+      },
+      "post": {
+        "operationId": "addVaultEntry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddEntry"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultItemDto"
+                }
+              }
+            },
+            "description": "Merged into an entry"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultItemDto"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add a printing, or add to the entry that already exists",
+        "tags": [
+          "vault"
+        ]
+      }
+    },
+    "/api/v1/vault/entries/{entry_id}": {
+      "delete": {
+        "operationId": "removeVaultEntry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove an entry",
+        "tags": [
+          "vault"
+        ]
+      },
+      "patch": {
+        "description": "A new combination that equals another entry merges the two; the merged entry comes back.",
+        "operationId": "editVaultEntry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditEntry"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultItemDto"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Change an entry",
+        "tags": [
+          "vault"
         ]
       }
     },
@@ -318,6 +1857,14 @@
     {
       "description": "The signed-in user (bearer token required).",
       "name": "account"
+    },
+    {
+      "description": "Search cards, details and printings.",
+      "name": "catalog"
+    },
+    {
+      "description": "The signed-in user's collection.",
+      "name": "vault"
     }
   ]
 }

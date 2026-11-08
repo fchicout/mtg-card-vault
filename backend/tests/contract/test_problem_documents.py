@@ -7,7 +7,7 @@ from fastapi import HTTPException, Query
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
-from mtgvault.api.pagination import MAX_PAGE_SIZE, Page, PageQuery
+from mtgvault.api.pagination import MAX_PAGE_SIZE, PageQuery, ResultPage
 from mtgvault.domain.errors import (
     Conflict,
     DomainError,
@@ -61,8 +61,8 @@ def _app_with_error_routes() -> TestClient:
         return limit
 
     @app.get("/t/page")
-    def page(params: PageQuery) -> Page[int]:
-        return Page[int](items=[], page=params.page, page_size=params.page_size, total=0)
+    def page(params: PageQuery) -> ResultPage[int]:
+        return ResultPage[int](items=[], page=params.page, page_size=params.page_size, total=0)
 
     return TestClient(app, raise_server_exceptions=False)
 
@@ -124,7 +124,7 @@ def test_validation_errors_list_the_offending_fields(client: TestClient) -> None
     assert fields == {"quantity"}
 
     response = client.get("/t/query", params={"limit": 0})
-    assert [e["field"] for e in response.json()["errors"]] == ["query.limit"]
+    assert [e["field"] for e in response.json()["errors"]] == ["limit"]
 
 
 def test_domain_validation_errors_carry_their_fields(client: TestClient) -> None:

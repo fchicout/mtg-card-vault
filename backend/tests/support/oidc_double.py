@@ -125,6 +125,7 @@ class OidcDouble:
             self.code_grants = 0
             self.refresh_grants = 0
             self.next_login: str | None = None
+            self.session_user: str | None = None  # who the provider's own session belongs to
             self.revoked: list[str] = []
 
     def control(self, change: dict[str, Any]) -> None:
@@ -228,7 +229,10 @@ class OidcDouble:
         state = query.get("state", "")
         if query.get("code_challenge_method") != "S256" or not query.get("code_challenge"):
             return self._error_redirect(redirect, "invalid_request", state)
-        hint = self.next_login or query.get("login_hint", "user-1")
+        # Like single sign-on: without a hint the user of the provider's session comes back.
+        explicit = query.get("login_hint")
+        chosen = self.next_login  # a user who logged in at the provider's own page
+        hint = chosen or explicit or self.session_user or "user-1"
         self.next_login = None
         if hint == "deny":
             return self._error_redirect(redirect, "access_denied", state)
@@ -237,6 +241,8 @@ class OidcDouble:
             return self._error_redirect(redirect, "invalid_target", state)
         code = secrets.token_urlsafe(24)
         with self._lock:
+            if chosen:  # an explicit login_hint is for non-browser callers: it starts no session
+                self.session_user = chosen
             self.codes[code] = {
                 "sub": hint,
                 "challenge": query["code_challenge"],
@@ -271,6 +277,10 @@ class OidcDouble:
                 self.refresh_grants += 1
                 return 200, self._issue(entry["sub"], entry["aud"])
             return 400, {"error": "unsupported_grant_type"}
+
+    def end_session(self) -> None:
+        with self._lock:
+            self.session_user = None
 
     def state(self) -> dict[str, int]:
         with self._lock:
@@ -334,6 +344,7 @@ def _make_handler(provider: OidcDouble) -> type[BaseHTTPRequestHandler]:
             elif parts.path == "/__state":
                 self._send(200, provider.state())
             elif parts.path == "/logout":
+                provider.end_session()
                 self._send(302, None, {"Location": query.get("rd", "/")})
             else:
                 self._send(404, {"error": "not_found"})

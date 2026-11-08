@@ -9,8 +9,10 @@ from typing import Self
 
 from sqlalchemy.orm import Session, sessionmaker
 
+from mtgvault.adapters.db.card_repository import SqlAlchemyCardRepository
 from mtgvault.adapters.db.user_repository import SqlAlchemyUserRepository
-from mtgvault.application.ports import UserRepository
+from mtgvault.adapters.db.vault_repository import SqlAlchemyVaultRepository
+from mtgvault.application.ports import CardRepository, UserRepository, VaultRepository
 
 
 class SqlAlchemyUnitOfWork:
@@ -44,6 +46,14 @@ class SqlAlchemyUnitOfWork:
     @property
     def users(self) -> UserRepository:
         return SqlAlchemyUserRepository(self.session)
+
+    @property
+    def cards(self) -> CardRepository:
+        return SqlAlchemyCardRepository(self.session)
+
+    @property
+    def vault(self) -> VaultRepository:
+        return SqlAlchemyVaultRepository(self.session)
 
     def commit(self) -> None:
         self.session.commit()

@@ -12,8 +12,11 @@ services:
   api:
     ports:
       - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9100:9100"
     environment:
       SSL_CERT_FILE: /certs/oidc.pem
+      SCRYFALL_BASE_URL: http://localhost:9100
+      SCRYFALL_BREAKER_OPEN_SECONDS: "3"
     volumes:
       - oidc-certs:/certs:ro
   oidc:
@@ -47,6 +50,35 @@ services:
       - --port=9000
       - --client-id=mtgvault-test
       - --redirect-uri=https://localhost:8443/callback
+
+  # Scryfall-shaped server with the recorded fixtures (issue #77): the E2E stack needs no internet.
+  scryfall:
+    image: mtgvault-api:local
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    network_mode: "service:api"
+    depends_on:
+      - api
+    volumes:
+      - ../backend/tests/support/scryfall_double.py:/double/scryfall_double.py:ro
+      - ../backend/tests/fixtures/scryfall:/fixtures/scryfall:ro
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request as u; u.urlopen('http://localhost:9100/__requests')"
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    command:
+      - python
+      - /double/scryfall_double.py
+      - --host=0.0.0.0
+      - --port=9100
 
 volumes:
   # A world-writable in-memory volume: the two containers run as different unprivileged users.

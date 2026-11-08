@@ -37,7 +37,8 @@ SCOPES = ("auth", "vault", "catalog", "scan", "pricing", "api", "ui", "deploy", 
           "skeleton", "repo",
           # used by the project since M0
           "core", "db", "gates", "sonar", "e2e", "arch", "dev", "github", "frontend", "backend",
-          "docs-sync", "release", "security", "deps", "deps-dev")
+          "docs-sync", "release", "security", "deps", "deps-dev",
+          "scryfall", "resilience")
 MAX_HEADER = 100  # measured without the trailing "[US-005, FR-VLT-01]" ID list
 ID_LIST_RE = re.compile(r"\s*\[[^\]]*\]\s*$")
 

@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.27
+**Docs set version:** 0.3.34
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,13 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.34 | 2026-11-08 | Issues #102-#106: vault page, add/edit/remove dialogs, filters in the address and the vault journeys documented; the OIDC double keeps an SSO-like session. |
+| 0.3.33 | 2026-11-08 | Issues #92-#101: cards and vault_entries tables, user-scoped repository, vault endpoints (add, list, filter, edit, remove), isolation suite, outage behaviour and stale-price flag documented; name search uses name_search instead of pg_trgm. |
+| 0.3.32 | 2026-11-08 | Side navigation fixed (vertical nav module), catalogue tiles and filter panel; branch protection applies to administrators and Dependabot alerts are enabled (issue #55). |
+| 0.3.31 | 2026-11-08 | Issues #84-#87: catalogue pages and journeys documented; session restore may repeat after a completed sign-in; new setting SCRYFALL_BREAKER_OPEN_SECONDS. |
+| 0.3.30 | 2026-11-08 | Issues #80-#83: catalogue search, filters, detail and printings endpoints; US-012 lists the set of the shown printing (the source gives no set count); query-parameter problems name the parameter. |
+| 0.3.29 | 2026-11-08 | Commit scopes `scryfall` and `resilience` added to the policy. |
+| 0.3.28 | 2026-11-08 | Issues #73-#79: the card model, the Scryfall adapter (client rules, backoff, circuit breaker, mapper, cache) and the Scryfall test double documented; new settings. |
 | 0.3.27 | 2026-11-08 | Issues #63, #65, #66: session renewal behaviour, the operator guide for the identity provider (7.7) and the identity journeys documented. |
 | 0.3.26 | 2026-11-08 | Issues #61, #62, #64: route guard, sign-in page, user menu, sign-out and the CSP/CORS rules for the identity provider documented. |
 | 0.3.25 | 2026-11-08 | Issue #60: SPA sign-in (library choice, storage rules, run-time settings) documented. |

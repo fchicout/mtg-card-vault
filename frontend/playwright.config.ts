@@ -34,20 +34,27 @@ const projects = [
   { name: 'webkit', use: { ...devices['Desktop Safari'] } },
 ].filter((project) => wanted.includes(project.name));
 
-// The identity journeys change the shared OIDC test double (token lifetimes, faults), so they run
-// alone, serially and in Chromium only, after every other project has finished.
-const IDENTITY_SPEC = /identity-journeys\.spec\.ts$/;
-const regular = projects.map((project) => ({ ...project, testIgnore: IDENTITY_SPEC }));
-const identity = wanted.includes('chromium')
-  ? [
-      {
-        name: 'identity',
-        testMatch: IDENTITY_SPEC,
-        fullyParallel: false,
-        dependencies: regular.map((project) => project.name),
-        use: { ...devices['Desktop Chrome'] },
-      },
-    ]
+// The identity, outage and vault journeys change shared state (the test doubles, one user's vault),
+// so they run one file after the other, in Chromium only, after every other project has finished.
+// (Files of one project may run in parallel workers, so each file is its own project in a chain.)
+const SERIAL_SPECS = ['identity-journeys', 'catalogue-outage', 'vault-journeys', 'vault-privacy'];
+const SERIAL_PATTERN = new RegExp(`(${SERIAL_SPECS.join('|')})\\.spec\\.ts$`);
+const regular = projects.map((project) => ({ ...project, testIgnore: SERIAL_PATTERN }));
+const serial = wanted.includes('chromium')
+  ? SERIAL_SPECS.map((spec, index) => ({
+      name: spec === 'identity-journeys' ? 'identity' : spec,
+      testMatch: new RegExp(`${spec}\\.spec\\.ts$`),
+      fullyParallel: false,
+      dependencies:
+        index === 0
+          ? regular.map((project) => project.name)
+          : [
+              SERIAL_SPECS[index - 1] === 'identity-journeys'
+                ? 'identity'
+                : SERIAL_SPECS[index - 1],
+            ],
+      use: { ...devices['Desktop Chrome'] },
+    }))
   : [];
 
 export default defineConfig({
@@ -68,5 +75,5 @@ export default defineConfig({
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [...regular, ...identity],
+  projects: [...regular, ...serial],
 });

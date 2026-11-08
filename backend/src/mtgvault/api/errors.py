@@ -28,6 +28,7 @@ from mtgvault.domain.errors import (
 )
 
 PROBLEM_JSON = "application/problem+json"
+_LOCATIONS = frozenset({"body", "query", "path", "header", "cookie"})  # where, not a field name
 _log = logging.getLogger("mtgvault.errors")
 
 
@@ -127,7 +128,7 @@ def _request_validation(_: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, RequestValidationError)  # noqa: S101  # registered for it only
     fields = [
         FieldProblem(
-            field=".".join(str(part) for part in problem["loc"] if part != "body"),
+            field=".".join(str(part) for part in problem["loc"] if part not in _LOCATIONS),
             message=problem["msg"],
         )
         for problem in error.errors()

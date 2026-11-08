@@ -6,7 +6,7 @@ live outside it.
 
 from fastapi import APIRouter, Depends, status
 
-from mtgvault.api import me
+from mtgvault.api import catalog, me, vault
 from mtgvault.api.errors import Problem
 from mtgvault.api.security import current_principal
 
@@ -26,3 +26,5 @@ router = APIRouter(
 )
 
 router.include_router(me.router)
+router.include_router(catalog.router)
+router.include_router(vault.router)
