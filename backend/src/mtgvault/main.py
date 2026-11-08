@@ -147,14 +147,17 @@ def _no_database() -> UnitOfWork:
     raise RuntimeError("No unit of work is configured (the app was built without a database)")
 
 
+_NO_SOURCE = "No card data source is configured."
+
+
 class _NoCards:
     """Stands in when no card source is configured (tests that do not touch the catalogue)."""
 
     def search(self, *_: object) -> ResultPage[Card]:
-        raise UpstreamUnavailable("No card data source is configured.")
+        raise UpstreamUnavailable(_NO_SOURCE)
 
     def get(self, *_: object) -> Card:
-        raise UpstreamUnavailable("No card data source is configured.")
+        raise UpstreamUnavailable(_NO_SOURCE)
 
     def printings(self, *_: object) -> ResultPage[Card]:
-        raise UpstreamUnavailable("No card data source is configured.")
+        raise UpstreamUnavailable(_NO_SOURCE)
