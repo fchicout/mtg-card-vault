@@ -39,6 +39,13 @@ describe('ScanPage', () => {
     f.detectChanges();
   };
 
+  /** Starts the camera and lets the preview report its size, as a browser does. */
+  const startCamera = async (f: ComponentFixture<unknown>): Promise<void> => {
+    await click(f, '[data-testid="start-camera"]');
+    q(f, 'video')!.dispatchEvent(new Event('loadedmetadata'));
+    f.detectChanges();
+  };
+
   function render(): ComponentFixture<ScanPage> {
     invoke.mockImplementation((fn: unknown) => {
       const answer =
@@ -74,6 +81,15 @@ describe('ScanPage', () => {
     answers = { scan: found, added: { quantity: 1, condition: 'NM', finish: 'nonfoil' } };
   });
 
+  it('does not offer the capture before the preview has a size', async () => {
+    const f = render();
+    await click(f, '[data-testid="start-camera"]');
+    expect(q(f, '[data-testid="capture"]')!.hasAttribute('disabled')).toBe(true);
+    q(f, 'video')!.dispatchEvent(new Event('loadedmetadata'));
+    f.detectChanges();
+    expect(q(f, '[data-testid="capture"]')!.hasAttribute('disabled')).toBe(false);
+  });
+
   it('starts idle with a way to search by name', () => {
     const f = render();
     expect(q(f, '[data-testid="start-camera"]')).not.toBeNull();
@@ -96,7 +112,7 @@ describe('ScanPage', () => {
 
   it('scans a frame, lists candidates and releases the camera', async () => {
     const f = render();
-    await click(f, '[data-testid="start-camera"]');
+    await startCamera(f);
     await click(f, '[data-testid="capture"]');
     expect(invoke).toHaveBeenCalledWith(
       scanCard,
@@ -111,7 +127,7 @@ describe('ScanPage', () => {
 
   it('adds nothing until the person confirms the printing and its details', async () => {
     const f = render();
-    await click(f, '[data-testid="start-camera"]');
+    await startCamera(f);
     await click(f, '[data-testid="capture"]');
     await click(f, '[data-testid="choose"]');
     expect(q(f, '[data-testid="confirm-dialog"]')).not.toBeNull();
@@ -134,7 +150,7 @@ describe('ScanPage', () => {
   ])('offers manual search when the answer is %s', async (reason, text) => {
     answers.scan = { text: { title: 'Bolt', collector: '' }, candidates: [], reason };
     const f = render();
-    await click(f, '[data-testid="start-camera"]');
+    await startCamera(f);
     await click(f, '[data-testid="capture"]');
     expect((f.nativeElement as HTMLElement).textContent).toContain(text);
     expect(q(f, '[data-testid="manual-search"]')!.getAttribute('href')).toBe('/catalogue?q=Bolt');
@@ -149,7 +165,7 @@ describe('ScanPage', () => {
   ])('keeps the camera on a %s answer', async (status, text) => {
     answers.scan = new HttpErrorResponse({ status });
     const f = render();
-    await click(f, '[data-testid="start-camera"]');
+    await startCamera(f);
     await click(f, '[data-testid="capture"]');
     expect(q(f, '[data-testid="scan-problem"]')!.textContent).toContain(text);
     expect(q(f, '[data-testid="capture"]')).not.toBeNull();
@@ -157,7 +173,7 @@ describe('ScanPage', () => {
 
   it('stops the camera on request and when the page is destroyed', async () => {
     const f = render();
-    await click(f, '[data-testid="start-camera"]');
+    await startCamera(f);
     await click(f, '[data-testid="stop-camera"]');
     expect(camera.close).toHaveBeenCalledTimes(1);
     await click(f, '[data-testid="start-camera"]');

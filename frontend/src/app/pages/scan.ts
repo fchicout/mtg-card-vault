@@ -128,7 +128,14 @@ type Phase = 'idle' | 'live' | 'scanning' | 'results';
 
     @if (phase() === 'live' || phase() === 'scanning') {
       <div class="stage">
-        <video #video autoplay playsinline muted data-testid="camera-preview"></video>
+        <video
+          #video
+          autoplay
+          playsinline
+          muted
+          data-testid="camera-preview"
+          (loadedmetadata)="ready.set(true)"
+        ></video>
         <div class="guide" aria-hidden="true"></div>
       </div>
       <div class="actions">
@@ -136,7 +143,7 @@ type Phase = 'idle' | 'live' | 'scanning' | 'results';
           type="button"
           class="btn btn-primary"
           data-testid="capture"
-          [disabled]="phase() === 'scanning'"
+          [disabled]="phase() === 'scanning' || !ready()"
           (click)="capture()"
         >
           @if (phase() === 'scanning') {
@@ -263,6 +270,8 @@ export class ScanPage {
   protected readonly addErrors = signal<Record<string, string>>({});
   protected readonly added = signal<string | null>(null);
   protected readonly busy = signal(false);
+  /** The video has a size: before that there is no frame to capture. */
+  protected readonly ready = signal(false);
   protected readonly addLabel = $localize`:@@scan.addSubmit:Add`;
 
   constructor() {
@@ -273,6 +282,7 @@ export class ScanPage {
   protected async start(): Promise<void> {
     this.problem.set(null);
     this.added.set(null);
+    this.ready.set(false);
     try {
       this.stream = await this.camera.open();
     } catch (error) {
@@ -305,6 +315,7 @@ export class ScanPage {
   private release(): void {
     this.camera.close(this.stream);
     this.stream = null;
+    this.ready.set(false);
   }
 
   protected async capture(): Promise<void> {
