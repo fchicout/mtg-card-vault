@@ -47,15 +47,19 @@ def test_a_json_object_is_returned(base: str) -> None:
 
 @pytest.mark.parametrize("path", ["/list", "/broken", "/missing", "/redirect"])
 def test_anything_else_is_reported_as_unreachable(base: str, path: str) -> None:
+    fetch = httpx_json_fetcher()
+    url = f"{base}{path}"
     with pytest.raises(ProviderUnreachable):
-        httpx_json_fetcher()(f"{base}{path}")
+        fetch(url)
 
 
 def test_an_unreachable_host_is_reported_not_raised_raw() -> None:
+    fetch = httpx_json_fetcher(timeout=0.5)
     with pytest.raises(ProviderUnreachable):
-        httpx_json_fetcher(timeout=0.5)("http://127.0.0.1:1/x")
+        fetch("http://127.0.0.1:1/x")
 
 
 def test_deny_all_rejects_everything() -> None:
+    verifier = DenyAllTokenVerifier()
     with pytest.raises(Unauthenticated):
-        DenyAllTokenVerifier().verify("anything")
+        verifier.verify("anything")

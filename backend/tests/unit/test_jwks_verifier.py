@@ -76,6 +76,15 @@ def other_key() -> rsa.RSAPrivateKey:
     return make_key()
 
 
+def rejection(
+    verifier: JwksTokenVerifier, bad: str, expected: type[Exception] = Unauthenticated
+) -> Exception:
+    """Verify ``bad`` and return the error; the ``raises`` block holds a single call (S5778)."""
+    with pytest.raises(expected) as caught:
+        verifier.verify(bad)
+    return caught.value
+
+
 def build(provider: Provider, clock: Clock | None = None, **kwargs: Any) -> JwksTokenVerifier:
     return JwksTokenVerifier(
         issuer=ISSUER, audience=AUDIENCE, algorithms=["RS256"], fetch_json=provider,
@@ -112,10 +121,10 @@ def test_a_valid_token_yields_the_principal(key: rsa.RSAPrivateKey) -> None:
     ],
 )
 def test_defective_tokens_are_rejected(key: rsa.RSAPrivateKey, overrides: dict[str, Any]) -> None:
-    with pytest.raises(Unauthenticated) as rejected:
-        build(Provider(("k1", key))).verify(token(key, **overrides))
-    assert rejected.value.invalid_token
-    assert rejected.value.detail == "The access token is invalid or expired."  # one generic text
+    rejected = rejection(build(Provider(("k1", key))), token(key, **overrides))
+    assert isinstance(rejected, Unauthenticated)
+    assert rejected.invalid_token
+    assert rejected.detail == "The access token is invalid or expired."  # one generic text
 
 
 def test_small_clock_skew_is_tolerated(key: rsa.RSAPrivateKey) -> None:
@@ -125,8 +134,7 @@ def test_small_clock_skew_is_tolerated(key: rsa.RSAPrivateKey) -> None:
 def test_token_signed_by_another_key_is_rejected(
     key: rsa.RSAPrivateKey, other_key: rsa.RSAPrivateKey
 ) -> None:
-    with pytest.raises(Unauthenticated):
-        build(Provider(("k1", key))).verify(token(other_key))
+    rejection(build(Provider(("k1", key))), token(other_key))
 
 
 def test_alg_none_and_hmac_tokens_are_rejected(key: rsa.RSAPrivateKey) -> None:
@@ -138,14 +146,12 @@ def test_alg_none_and_hmac_tokens_are_rejected(key: rsa.RSAPrivateKey) -> None:
     hmac_token = jwt.encode(claims, "secret" * 8, algorithm="HS256", headers={"kid": "k1"})
     verifier = build(Provider(("k1", key)))
     for bad in (unsigned, hmac_token):
-        with pytest.raises(Unauthenticated):
-            verifier.verify(bad)
+        rejection(verifier, bad)
 
 
 @pytest.mark.parametrize("garbage", ["", "abc", "a.b.c", "Bearer x"])
 def test_garbage_is_rejected(key: rsa.RSAPrivateKey, garbage: str) -> None:
-    with pytest.raises(Unauthenticated):
-        build(Provider(("k1", key))).verify(garbage)
+    rejection(build(Provider(("k1", key))), garbage)
 
 
 def test_keys_are_cached_between_requests(key: rsa.RSAPrivateKey) -> None:
@@ -173,8 +179,7 @@ def test_forged_key_ids_cannot_make_us_hammer_the_provider(key: rsa.RSAPrivateKe
     verifier = build(provider)
     verifier.verify(token(key))
     for index in range(20):
-        with pytest.raises(Unauthenticated):
-            verifier.verify(token(key, kid=f"forged-{index}"))
+        rejection(verifier, token(key, kid=f"forged-{index}"))
     assert provider.jwks_calls <= 2
 
 
@@ -193,39 +198,33 @@ def test_too_stale_keys_become_a_503(key: rsa.RSAPrivateKey) -> None:
     verifier.verify(token(key))
     provider.down = True
     clock.now += 7201
-    with pytest.raises(UpstreamUnavailable):
-        verifier.verify(token(key))
+    rejection(verifier, token(key), UpstreamUnavailable)
 
 
 def test_provider_down_from_the_start_is_a_503_not_a_401(key: rsa.RSAPrivateKey) -> None:
     provider = Provider(("k1", key))
     provider.down = True
-    with pytest.raises(UpstreamUnavailable):
-        build(provider).verify(token(key))
+    rejection(build(provider), token(key), UpstreamUnavailable)
 
 
 def test_discovery_document_for_another_issuer_is_refused(key: rsa.RSAPrivateKey) -> None:
     provider = Provider(("k1", key))
     provider.issuer_in_document = "https://evil.example"
-    with pytest.raises(UpstreamUnavailable):
-        build(provider).verify(token(key))
+    rejection(build(provider), token(key), UpstreamUnavailable)
 
 
 @pytest.mark.parametrize("algorithms", [[], ["HS256"], ["none"], ["RS256", "HS512"]])
 def test_unsafe_algorithm_configuration_is_refused(algorithms: list[str]) -> None:
+    fetch = Provider()
     with pytest.raises(ValueError, match="algorithms"):
-        JwksTokenVerifier(
-            issuer=ISSUER, audience=AUDIENCE, algorithms=algorithms, fetch_json=Provider()
-        )
+        JwksTokenVerifier(issuer=ISSUER, audience=AUDIENCE, algorithms=algorithms, fetch_json=fetch)
 
 
 def test_plain_http_issuer_is_refused_except_for_loopback() -> None:
+    fetch = Provider()
     with pytest.raises(ValueError, match="https"):
         JwksTokenVerifier(
-            issuer="http://idp.example",
-            audience=AUDIENCE,
-            algorithms=["RS256"],
-            fetch_json=Provider(),
+            issuer="http://idp.example", audience=AUDIENCE, algorithms=["RS256"], fetch_json=fetch
         )
     JwksTokenVerifier(
         issuer="http://localhost:9000",
