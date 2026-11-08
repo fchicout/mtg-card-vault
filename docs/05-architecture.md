@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.21
+**Docs set version:** 0.3.22
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -242,7 +242,7 @@ erDiagram
   }
 ```
 
-Constraints and indexes: `UNIQUE (user_id, card_id, condition, finish)` (`FR-VLT-06`); `INDEX (user_id, created_at DESC)` for default listing; trigram index on `cards.name` for case/accent-insensitive search (`FR-VLT-05`); `users.sub` unique (`FR-AUTH-04`). Money uses `NUMERIC(10,2)`; never floating point. Language is a property of the printing (`cards.lang`), not of the entry.
+Constraints and indexes: `UNIQUE (user_id, card_id, condition, finish)` (`FR-VLT-06`); `INDEX (user_id, created_at DESC)` for default listing; trigram index on `cards.name` for case/accent-insensitive search (`FR-VLT-05`); `users.sub` unique (`FR-AUTH-04`). **Users (migration 0002, issue #57):** `sub` up to 255, `display_name` up to 100, `email` up to 254 characters; provisioning is one atomic `INSERT ... ON CONFLICT (sub) DO UPDATE` that returns the row, writes nothing when nothing changed, rewrites `last_login_at` at most once per refresh window (one hour), and keeps the stored name/email when a token carries none; a test proves 16 parallel first calls create one row and another that the ORM models match the migrations. Money uses `NUMERIC(10,2)`; never floating point. Language is a property of the printing (`cards.lang`), not of the entry.
 
 ### 5.5 REST API catalogue (`/api/v1`)
 
