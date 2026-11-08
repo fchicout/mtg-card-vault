@@ -25,9 +25,18 @@ export function formatMoney(
   );
   const separator = (type: 'group' | 'decimal', fallback: string): string =>
     layout.find((part) => part.type === type)?.value ?? fallback;
-  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, separator('group', ','));
+  const grouped = group(whole, separator('group', ','));
   const first = layout.findIndex((part) => part.type === 'integer');
   const last = layout.map((part) => part.type).lastIndexOf('fraction');
   const text = (parts: Intl.NumberFormatPart[]): string => parts.map((p) => p.value).join('');
   return `${sign}${text(layout.slice(0, first))}${grouped}${separator('decimal', '.')}${cents}${text(layout.slice(last + 1))}`;
+}
+
+/** Digits in groups of three from the right (linear time, no regular expression to backtrack). */
+function group(digits: string, separator: string): string {
+  const parts: string[] = [];
+  for (let end = digits.length; end > 0; end -= 3) {
+    parts.unshift(digits.slice(Math.max(0, end - 3), end));
+  }
+  return parts.join(separator);
 }

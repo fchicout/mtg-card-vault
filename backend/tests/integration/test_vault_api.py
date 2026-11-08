@@ -467,7 +467,8 @@ def test_the_card_page_tells_the_owner_how_fresh_the_stored_prices_are(
     add(client, "alice", BOLT.id)
     url = f"/api/v1/catalog/cards/{BOLT.id}"
     mine = client.get(url, headers=headers("alice")).json()["collection"]
-    assert mine["prices_stale"] is False and mine["prices_updated_at"] is not None
+    assert mine["prices_stale"] is False
+    assert mine["prices_updated_at"] is not None
     assert client.get(url, headers=headers("bob")).json()["collection"] is None  # not theirs
     make_stale(migrated)
     stale = client.get(url, headers=headers("alice")).json()["collection"]
