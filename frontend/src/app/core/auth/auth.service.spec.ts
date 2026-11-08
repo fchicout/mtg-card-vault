@@ -124,6 +124,18 @@ describe('AuthService', () => {
     expect(manager.calls.filter((c) => c.startsWith('redirect'))).toHaveLength(1);
   });
 
+  it('restores again after a completed sign-in: only unfinished attempts are rate limited', async () => {
+    const manager = fakeManager(user());
+    const auth = service(manager);
+    sessionStorage.setItem('mtgvault.session', '1');
+    await auth.restore('/vault'); // the redirect leaves the page ...
+    await auth.completeSignIn('x'); // ... and the provider brings the user back
+    await auth.clear();
+    sessionStorage.setItem('mtgvault.session', '1');
+    await auth.restore('/vault'); // a quick reload restores again
+    expect(manager.calls.filter((c) => c.startsWith('redirect'))).toHaveLength(2);
+  });
+
   it('does not restore when nobody was signed in', async () => {
     const manager = fakeManager(user());
     await service(manager).restore('/');
