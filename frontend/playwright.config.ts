@@ -34,10 +34,30 @@ const projects = [
   { name: 'webkit', use: { ...devices['Desktop Safari'] } },
 ].filter((project) => wanted.includes(project.name));
 
+// The identity journeys change the shared OIDC test double (token lifetimes, faults), so they run
+// alone, serially and in Chromium only, after every other project has finished.
+const IDENTITY_SPEC = /identity-journeys\.spec\.ts$/;
+const regular = projects.map((project) => ({ ...project, testIgnore: IDENTITY_SPEC }));
+const identity = wanted.includes('chromium')
+  ? [
+      {
+        name: 'identity',
+        testMatch: IDENTITY_SPEC,
+        fullyParallel: false,
+        dependencies: regular.map((project) => project.name),
+        use: { ...devices['Desktop Chrome'] },
+      },
+    ]
+  : [];
+
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/support/global-setup.ts',
   fullyParallel: true,
+  // Sign-in redirects through the provider and back; Firefox in particular needs a few seconds.
+  expect: { timeout: 10_000 },
+  // A broken stack must fail fast instead of burning the whole job timeout.
+  maxFailures: process.env['CI'] ? 15 : 0,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
@@ -48,5 +68,5 @@ export default defineConfig({
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects,
+  projects: [...regular, ...identity],
 });

@@ -22,6 +22,8 @@ make docs-check                 # the documentation set is synchronized
 cp deploy/.env.example deploy/.env && docker compose -f deploy/compose.yaml up -d --build   # the HTTPS stack
 ```
 
+The stack signs users in against your own OpenID Connect provider: set `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID` and `OIDC_AUDIENCE` in `deploy/.env` after creating the client described in [`docs/05-architecture.md`](docs/05-architecture.md) section 7.7.
+
 ## Licence
 
 [MIT](LICENSE).

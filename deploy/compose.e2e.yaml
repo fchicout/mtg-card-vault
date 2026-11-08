@@ -3,13 +3,19 @@
 #   docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml up -d --build
 #
 # Adds a deterministic OIDC provider (backend/tests/support/oidc_double.py) that shares the API's
-# network namespace, so the issuer `http://localhost:9000` is the same for the API (which reads its
-# keys from it) and for the browser (the port is published on the loopback interface only).
-# Set OIDC_ISSUER_URL=http://localhost:9000 in deploy/.env.
+# network namespace, so the issuer `https://localhost:9000` is the same for the API (which reads its
+# keys from it) and for the browser (the port is published on the loopback interface only). It
+# serves HTTPS with a throw-away certificate (browsers refuse plain-http calls from an https page);
+# the API trusts exactly that certificate through SSL_CERT_FILE.
+# Set OIDC_ISSUER_URL=https://localhost:9000 in deploy/.env.
 services:
   api:
     ports:
       - "127.0.0.1:9000:9000"
+    environment:
+      SSL_CERT_FILE: /certs/oidc.pem
+    volumes:
+      - oidc-certs:/certs:ro
   oidc:
     image: mtgvault-api:local
     cap_drop:
@@ -22,11 +28,31 @@ services:
       - api
     volumes:
       - ../backend/tests/support/oidc_double.py:/double/oidc_double.py:ro
+      - oidc-certs:/certs
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import ssl, urllib.request as u; u.urlopen('https://localhost:9000/jwks.json', context=ssl._create_unverified_context())"
+      interval: 3s
+      timeout: 3s
+      retries: 20
     command:
       - python
       - /double/oidc_double.py
-      - --issuer=http://localhost:9000
+      - --issuer=https://localhost:9000
+      - --tls-dir=/certs
       - --host=0.0.0.0
       - --port=9000
       - --client-id=mtgvault-test
       - --redirect-uri=https://localhost:8443/callback
+
+volumes:
+  # A world-writable in-memory volume: the two containers run as different unprivileged users.
+  oidc-certs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: mode=1777

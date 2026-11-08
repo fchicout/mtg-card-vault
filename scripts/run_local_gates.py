@@ -123,7 +123,7 @@ def e2e() -> tuple[bool, str]:
         env_file = Path(tmp) / "e2e.env"
         env_file.write_text(f"POSTGRES_USER=mtgvault\nPOSTGRES_DB=mtgvault\n"
                             f"POSTGRES_PASSWORD={secrets.token_hex(16)}\nHTTP_PORT={port}\n"
-                            "OIDC_ISSUER_URL=http://localhost:9000\n")
+                            "OIDC_ISSUER_URL=https://localhost:9000\n")
         compose = ["docker", "compose", "-p", "mtgvault-gates", "-f", "deploy/compose.yaml", "-f", "deploy/compose.e2e.yaml", "--env-file", str(env_file)]
         try:
             ok, out = run([*compose, "up", "-d", "--build", "--wait", "--wait-timeout", "240"])

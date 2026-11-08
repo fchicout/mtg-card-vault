@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.24
+**Docs set version:** 0.3.27
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -445,6 +445,31 @@ Branch protection on `main` and `develop`: PR required, required checks = all `c
 5. Deployment to the homelab cluster is a different path (`ADR-015`); the images are the same.
 6. After any rollout run `python3 scripts/smoke_check.py https://<APP_HOST>` (or `make smoke URL=...`): HTTP redirects to HTTPS, `/healthz` and `/readyz` answer 200, the security headers of `NFR-SEC-06` and HSTS are present and no server version leaks. Exit code 1 means a check failed (issue #54).
 
+### 7.7 Identity provider guide (operator)
+The application signs users in against an OpenID Connect provider that you run (it is not part of the compose stack). Create one **public client** per environment and give the application its address.
+
+| At the provider | Value |
+|---|---|
+| Client type | Public (no secret) |
+| Grant / response | Authorization code, PKCE with `S256` enforced |
+| Redirect URI | `https://<APP_HOST>[:port]/callback` (exactly; one per environment) |
+| Scopes | `openid profile email offline_access` |
+| Refresh tokens | Enabled, with rotation |
+| Access token | Signed JWT (`RS256`), `aud` = the API audience, `sub` stable per user |
+| Audience | The client must be allowed to request the API audience; the SPA sends `audience=<API audience>` |
+| Claims | `name` or `preferred_username` and `email` are optional but give a friendlier profile |
+
+Authelia (tested with 4.39): set the client's `audience` list to the API audience, `access_token_signed_response_alg: RS256`, `public: true`, `require_pkce: true`, `pkce_challenge_method: S256`, `redirect_uris` and the four scopes; changes to its configuration need a restart of Authelia. Its portal has no OIDC end-session endpoint, which is why sign-out leaves through `<issuer>/logout?rd=...`.
+
+| Variable | Used by | Meaning |
+|---|---|---|
+| `OIDC_ISSUER_URL` | API, front end | Issuer URL (https; `http://localhost` only for tests); discovery and keys are read from it |
+| `OIDC_AUDIENCE` | API, front end | Audience of the access tokens (default `mtgvault-api`) |
+| `OIDC_CLIENT_ID` | front end | The environment's client id |
+| `CORS_ORIGINS` | API | Allowed browser origins (default: this stack's own origin) |
+
+Troubleshooting: *401 on every call* — the token's audience or issuer differs from `OIDC_AUDIENCE` / `OIDC_ISSUER_URL`, or the client was not allowed to request the audience (the provider answers `invalid_target`); *503 from the API* — the provider's keys cannot be fetched (network, DNS, TLS); *sign-in page says it could not be completed* — redirect URI mismatch, PKCE not enabled, or the token endpoint failed; *signed out every hour* — the refresh token lifetime or rotation setting at the provider; *browser blocks the token request* — `OIDC_ISSUER_URL` differs from the origin the browser uses (the CSP names exactly that origin); *clock skew* — keep the host clocks within a minute (60 s leeway).
+
 ### 7.5 Versioning and branching
 Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`) → back-merge to `develop`; `hotfix/*` from `main`. Conventional Commits drive the version bump (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; pre-1.0 rules apply). Commit scopes: `auth`, `vault`, `catalog`, `scan`, `pricing`, `api`, `ui`, `deploy`, `ci`, `docs`.
 
@@ -460,6 +485,9 @@ Enforced conventions (`scripts/check_commit_policy.py`):
 ## 8. Cross-cutting concepts
 
 ### 8.1 Authentication and authorization
+- **Pages, sign-out and CSP (issues #61, #62, #64):** `authGuard` protects the vault, catalogue, scan and account pages: a signed-in user passes, otherwise the guard first tries to restore the session through the provider and else sends the visitor to the sign-in page with the wanted route (only same-site paths are honoured); a failed or cancelled sign-in returns to that page with a retry. The header shows "Sign in" or the user's name (from `GET /api/v1/me`, falling back to the token claim, never an alert) with "Sign out". Sign-out revokes the refresh token (best effort), discards all tokens and opens `<issuer>/logout?rd=<origin>/` because the provider has no OIDC end-session endpoint. The front-end server adds the provider's origin, and only that, to `connect-src` (generated from `OIDC_ISSUER_URL` at container start); the API answers cross-origin requests only for `CORS_ORIGINS` (default: the stack's own origin), without credentials.
+- **Renewal (issue #63):** a timer renews the access token with the refresh token shortly before it ends (60 s before, or at 80 % of its life for short-lived tokens, never sooner than 1 s); renewals are single-flight, so a burst of requests causes one refresh call, and the new refresh token (rotation) replaces the old one in memory. A 401 for a request that carried a token renews once and repeats the request once; any renewal failure, including the provider answering HTTP 500 (observed upstream), ends the local session and starts the sign-in again, which returns to the current page; if that sign-in cannot complete the user lands on the retry page. The error-alert interceptor wraps the authentication one, so a 401 that renewal fixes raises no alert.
+- **SPA library and settings (issue #60):** the SPA uses `oidc-client-ts` (framework-agnostic, maintained, PKCE and refresh-token support) wrapped by `AuthService`; the user store is an in-memory storage, only the short-lived sign-in state (state, nonce, PKCE verifier) uses `sessionStorage` because it must survive the redirect; a reload therefore signs the user in again through the provider (its own session makes this quick, at most once per 10 s to avoid loops). The authorize request carries `audience=<API audience>`. The interceptor adds the bearer token to same-origin `/api/` calls only. Settings come from `/config.json`, written at container start from `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID` and `OIDC_AUDIENCE` (URL-safe characters only, https or loopback issuer), so one image serves every environment; without them the app runs signed-out.
 - SPA = public OIDC client, Authorization Code + PKCE (S256), tokens in memory, refresh token rotation (`FR-AUTH-01`, `FR-AUTH-03`); it requests the API audience explicitly and signs out by revoking the refresh token and visiting Authelia's logout page (`ADR-003`, `FR-AUTH-02`).
 - API = resource server. `TokenVerifier` port, implemented by `adapters/auth`: downloads discovery + JWKS from the issuer, caches keys, refreshes on unknown `kid` (rate-limited), enforces algorithm allow-list, `iss`, `aud`, `exp`, `nbf` (`FR-AUTH-05`). Authelia does issue JWT access tokens (`OQ-05`, `ADR-003`); token introspection stays a possible adapter behind the same port. Behaviour (issue #15): the whole `/api/v1` router depends on `current_principal` (401 `problem+json` with `WWW-Authenticate: Bearer`, plus `error="invalid_token"` when a token was presented; 403 for authenticated-but-forbidden; the validation reason is logged, never returned); keys are cached 10 minutes, an unknown `kid` refreshes at most once per 30 s, cached keys survive an identity-provider outage for up to 24 h and after that the API answers 503, not 401; only `/healthz` and `/readyz` are public, and `/api/v1/docs` plus `openapi.json` are served only when `API_DOCS_ENABLED=true`; the temporary `/hello` route is removed. **Claims (issue #56):** the verified claims become a `Principal` of subject, optional display name (`name`, else `preferred_username`; control characters stripped, 100 characters) and optional email (syntax-checked, lower-cased, 254 characters); every other claim is dropped at the boundary and a missing optional claim never fails authentication. The subject is the only identity key. The email is excluded from `repr`, so it cannot reach logs; the log redaction of email addresses still applies to free text. If the access token carries no name or email (it depends on the provider's token configuration), the profile simply has none and the UI falls back to a neutral label.
 - Authorization = ownership. The current user id comes only from the verified `sub` (`FR-VLT-07`); repositories require `user_id` in every query method (no unscoped access API exists).
@@ -499,7 +527,7 @@ In-memory TTL cache for catalogue searches (5 min). Cards cached in PostgreSQL f
 
 Quality gates are evaluated by `scripts/quality_gate.py` (`NFR-MNT-01`): coverage of new code ≥ 80 %, duplicated lines ≤ 3 % (computed locally with jscpd) and, from SonarQube's issue data, no open bugs, vulnerabilities or Blocker/Critical issues. `scripts/run_local_gates.py` runs every CI gate locally.
 
-**OIDC test double (issue #59):** `backend/tests/support/oidc_double.py` is a deterministic provider for tests only (discovery, JWKS, authorization code with PKCE and automatic login, token with refresh rotation, revocation, logout redirect, CORS; lifetimes and faults steered through `POST /__control`; `login_hint` picks the user or cancels the login). Unit tests run it in-process against the real verifier; the E2E stack adds it through the overlay `deploy/compose.e2e.yaml`, where it shares the API's network namespace so the issuer `http://localhost:9000` is the same for the API and the browser. It is never part of an image or of staging/production.
+**OIDC test double (issue #59):** `backend/tests/support/oidc_double.py` is a deterministic provider for tests only (discovery, JWKS, authorization code with PKCE and automatic login, token with refresh rotation, revocation, logout redirect, CORS; lifetimes and faults steered through `POST /__control`; `login_hint` picks the user or cancels the login). Unit tests run it in-process against the real verifier; the E2E stack adds it through the overlay `deploy/compose.e2e.yaml`, where it shares the API's network namespace so the issuer `https://localhost:9000` is the same for the API and the browser; it serves HTTPS with a throw-away certificate (browsers refuse plain-http calls from an https page, WebKit even for localhost) that the API trusts through `SSL_CERT_FILE`. It is never part of an image or of staging/production.
 
 **End-to-end harness (issue #12):** Playwright in `frontend/e2e` against a running stack (`deploy/compose.yaml`; in CI an ephemeral stack). Browsers: Chromium, Firefox and WebKit (`E2E_BROWSERS` narrows them). Helpers in `e2e/support`: `axe.ts` (`expectNoSeriousViolations`, WCAG 2.1 A/AA, proven to fail on a seeded violation), `scryfall.ts` (record/replay: fixtures in `e2e/fixtures/scryfall`, an unrecorded request is blocked and reported so the real service is never contacted; record one with `E2E_RECORD=1`), `fake-camera.ts` (Chromium only: `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream --use-file-for-fake-video-capture`; the fixture video is **generated** before each run, a dark scene with a card-shaped rectangle and a marker that moves every frame, 320 x 240 at 15 fps, so a test can prove that distinct frames reach `getUserMedia`). A failure keeps its trace, video and screenshot as CI artifacts; at most one retry.
 

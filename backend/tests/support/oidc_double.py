@@ -7,10 +7,12 @@ revocation and a logout redirect. Browsers may call it cross-origin (CORS is ans
 Runs in-process for pytest (``OidcDouble().start()``) or standalone for the compose stack::
 
     python tests/support/oidc_double.py --port 9000 --issuer http://localhost:9000
+    ... --issuer https://localhost:9000 --tls-dir /certs   (HTTPS with a self-signed certificate)
 
 Behaviour is steered through ``POST /__control`` (JSON), e.g. ``{"access_ttl": 3}``,
 ``{"token_status": 500}`` (every token request fails), ``{"revoke_all": true}``,
-``{"reset": true}``.
+``{"reset": true}``, ``{"next_login": "deny"}`` (the next authorize request uses this hint once).
+``GET /__state`` reports ``code_grants``, ``refresh_grants`` and ``token_requests``.
 ``login_hint=<sub>`` on the authorize request picks the user; ``login_hint=deny`` cancels the login.
 """
 
@@ -18,9 +20,12 @@ from __future__ import annotations
 
 import argparse
 import base64
+import datetime
 import hashlib
+import ipaddress
 import json
 import secrets
+import ssl
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -28,7 +33,10 @@ from typing import Any
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 import jwt
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 
 USERS: dict[str, dict[str, str]] = {
     "user-1": {"name": "Ada Lovelace", "email": "ada@example.org"},
@@ -36,6 +44,46 @@ USERS: dict[str, dict[str, str]] = {
     "user-3": {"name": "", "email": ""},  # a token without name or email
 }
 KID = "double-key-1"
+
+
+def write_self_signed_certificate(
+    directory: str, names: tuple[str, ...] = ("localhost",)
+) -> tuple[str, str]:
+    """Create ``oidc.pem`` (certificate) and ``oidc.key`` in ``directory``; returns both paths.
+
+    Browsers refuse to call a plain-http provider from an https page (mixed content, WebKit even
+    for localhost), so the E2E double serves HTTPS with a throw-away certificate that the test
+    browsers accept (ignoreHTTPSErrors) and the API trusts through ``SSL_CERT_FILE``.
+    """
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, names[0])])
+    now = datetime.datetime.now(datetime.UTC)
+    alt_names: list[x509.GeneralName] = [x509.DNSName(n) for n in names]
+    alt_names.append(x509.IPAddress(ipaddress.ip_address("127.0.0.1")))
+    certificate = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(subject)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - datetime.timedelta(minutes=5))
+        .not_valid_after(now + datetime.timedelta(days=2))
+        .add_extension(x509.SubjectAlternativeName(alt_names), critical=False)
+        .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+        .sign(key, hashes.SHA256())
+    )
+    cert_path, key_path = f"{directory}/oidc.pem", f"{directory}/oidc.key"
+    with open(key_path, "wb") as handle:
+        handle.write(
+            key.private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.PKCS8,
+                serialization.NoEncryption(),
+            )
+        )
+    with open(cert_path, "wb") as handle:
+        handle.write(certificate.public_bytes(serialization.Encoding.PEM))
+    return cert_path, key_path
 
 
 def _b64(data: bytes) -> str:
@@ -52,11 +100,17 @@ class OidcDouble:
         redirect_uris: tuple[str, ...] = (),
         port: int = 0,
         host: str = "127.0.0.1",
+        tls: tuple[str, str] | None = None,
     ) -> None:
         self.audience, self.client_id, self.redirect_uris = audience, client_id, redirect_uris
         self._key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         self._lock = threading.Lock()
         self._server = ThreadingHTTPServer((host, port), _make_handler(self))
+        if tls:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+            context.load_cert_chain(*tls)
+            self._server.socket = context.wrap_socket(self._server.socket, server_side=True)
         self.port = self._server.server_address[1]
         self.issuer = (issuer or f"http://127.0.0.1:{self.port}").rstrip("/")
         self.reset()
@@ -68,6 +122,9 @@ class OidcDouble:
             self.codes: dict[str, dict[str, Any]] = {}
             self.refresh_tokens: dict[str, dict[str, Any]] = {}
             self.token_requests = 0
+            self.code_grants = 0
+            self.refresh_grants = 0
+            self.next_login: str | None = None
             self.revoked: list[str] = []
 
     def control(self, change: dict[str, Any]) -> None:
@@ -77,6 +134,8 @@ class OidcDouble:
                     setattr(self, name, int(change[name]))
             if change.get("revoke_all"):
                 self.refresh_tokens.clear()
+            if "next_login" in change:
+                self.next_login = str(change["next_login"]) or None
         if change.get("reset"):
             self.reset()
 
@@ -107,9 +166,27 @@ class OidcDouble:
             claims["email"] = user["email"]
         return jwt.encode(claims, self._key, algorithm="RS256", headers={"kid": KID})
 
-    def _issue(self, sub: str, audience: str, *, with_refresh: bool = True) -> dict[str, Any]:
+    def id_token(self, sub: str, nonce: str | None = None) -> str:
+        """The OIDC identity token: clients validate its issuer, audience (client id) and nonce."""
+        now = int(time.time())
+        user = USERS.get(sub, {})
+        claims: dict[str, Any] = {
+            "iss": self.issuer, "aud": self.client_id, "sub": sub, "iat": now, "exp": now + 600,
+        }  # fmt: skip
+        if nonce:
+            claims["nonce"] = nonce
+        if user.get("name"):
+            claims["name"] = user["name"]
+        if user.get("email"):
+            claims["email"] = user["email"]
+        return jwt.encode(claims, self._key, algorithm="RS256", headers={"kid": KID})
+
+    def _issue(
+        self, sub: str, audience: str, *, nonce: str | None = None, with_refresh: bool = True
+    ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "access_token": self.access_token(sub, audience=audience),
+            "id_token": self.id_token(sub, nonce),
             "token_type": "bearer",
             "expires_in": self.access_ttl,
             "scope": "openid profile email offline_access",
@@ -151,7 +228,8 @@ class OidcDouble:
         state = query.get("state", "")
         if query.get("code_challenge_method") != "S256" or not query.get("code_challenge"):
             return self._error_redirect(redirect, "invalid_request", state)
-        hint = query.get("login_hint", "user-1")
+        hint = self.next_login or query.get("login_hint", "user-1")
+        self.next_login = None
         if hint == "deny":
             return self._error_redirect(redirect, "access_denied", state)
         audience = query.get("audience", self.audience)
@@ -164,6 +242,7 @@ class OidcDouble:
                 "challenge": query["code_challenge"],
                 "redirect": redirect,
                 "aud": audience,
+                "nonce": query.get("nonce"),
             }
         return 302, {"Location": f"{redirect}?{urlencode({'code': code, 'state': state})}"}, None
 
@@ -183,13 +262,23 @@ class OidcDouble:
                 )
                 if not ok or entry is None:
                     return 400, {"error": "invalid_grant"}
-                return 200, self._issue(entry["sub"], entry["aud"])
+                self.code_grants += 1
+                return 200, self._issue(entry["sub"], entry["aud"], nonce=entry.get("nonce"))
             if grant == "refresh_token":
                 entry = self.refresh_tokens.pop(form.get("refresh_token", ""), None)  # rotation
                 if entry is None or entry["exp"] < time.time():
                     return 400, {"error": "invalid_grant"}
+                self.refresh_grants += 1
                 return 200, self._issue(entry["sub"], entry["aud"])
             return 400, {"error": "unsupported_grant_type"}
+
+    def state(self) -> dict[str, int]:
+        with self._lock:
+            return {
+                "code_grants": self.code_grants,
+                "refresh_grants": self.refresh_grants,
+                "token_requests": self.token_requests,
+            }
 
     def revoke(self, form: dict[str, str]) -> None:
         with self._lock:
@@ -242,6 +331,8 @@ def _make_handler(provider: OidcDouble) -> type[BaseHTTPRequestHandler]:
             elif parts.path == "/authorize":
                 status, headers, body = provider.authorize(query)
                 self._send(status, body, headers)
+            elif parts.path == "/__state":
+                self._send(200, provider.state())
             elif parts.path == "/logout":
                 self._send(302, None, {"Location": query.get("rd", "/")})
             else:
@@ -275,10 +366,14 @@ def main() -> None:
     parser.add_argument("--audience", default="mtgvault-api")
     parser.add_argument("--client-id", default="mtgvault-test")
     parser.add_argument("--redirect-uri", action="append", default=[])
+    parser.add_argument(
+        "--tls-dir", help="serve HTTPS with a new self-signed certificate written here"
+    )
     args = parser.parse_args()
+    tls = write_self_signed_certificate(args.tls_dir) if args.tls_dir else None
     double = OidcDouble(
         args.issuer, audience=args.audience, client_id=args.client_id,
-        redirect_uris=tuple(args.redirect_uri), port=args.port, host=args.host,
+        redirect_uris=tuple(args.redirect_uri), port=args.port, host=args.host, tls=tls,
     )  # fmt: skip
     print(f"OIDC double for {double.issuer} on port {double.port}", flush=True)
     double._server.serve_forever()

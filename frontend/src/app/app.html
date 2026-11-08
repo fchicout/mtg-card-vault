@@ -6,6 +6,20 @@
       </a>
     </div>
     <div class="header-actions">
+      @if (auth.authenticated()) {
+        <span class="nav-link nav-text" data-testid="user-name">
+          <cds-icon shape="user" aria-hidden="true"></cds-icon>
+          {{ profile.displayName() ?? accountLabel }}
+        </span>
+        <button type="button" class="nav-link nav-text" data-testid="sign-out" (click)="signOut()">
+          <ng-container i18n="@@auth.signout">Sign out</ng-container>
+        </button>
+      } @else if (auth.configured) {
+        <button type="button" class="nav-link nav-text" data-testid="sign-in" (click)="signIn()">
+          <cds-icon shape="user" aria-hidden="true"></cds-icon>
+          <ng-container i18n="@@auth.signin">Sign in</ng-container>
+        </button>
+      }
       <button
         type="button"
         class="nav-link nav-text"

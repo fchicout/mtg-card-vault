@@ -85,6 +85,10 @@ services:
     build:
       context: ../frontend
     image: mtgvault-frontend:local
+    environment:
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:?set OIDC_ISSUER_URL in deploy/.env}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-mtgvault-local}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-mtgvault-api}
     depends_on:
       api:
         condition: service_healthy
