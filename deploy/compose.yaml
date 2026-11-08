@@ -3,7 +3,7 @@
 #   cp .env.example .env            # set POSTGRES_PASSWORD (and APP_HOST for a real domain)
 #   docker compose up -d --build    # database, API, front end and the HTTPS edge proxy
 #
-# Profiles:  (none) the application; `worker` adds the scheduled-jobs worker (idle until BL-44).
+# Services: database, API, scheduled-jobs worker (price refresh), front end and the HTTPS proxy.
 # Sign-in uses the homelab Authelia (https://auth.fchicout.dev), not a bundled identity provider.
 # Only the proxy publishes ports.
 name: mtgvault
@@ -14,6 +14,18 @@ x-hardening: &hardening
   security_opt:
     - no-new-privileges:true
   restart: unless-stopped
+
+x-app-environment: &app-environment
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mtgvault}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mtgvault}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:?set OIDC_ISSUER_URL in deploy/.env}
+  OIDC_AUDIENCE: ${OIDC_AUDIENCE:-mtgvault-api}
+  CORS_ORIGINS: ${CORS_ORIGINS:-https://${APP_HOST:-localhost}:${HTTPS_PORT:-8443}}
+  API_DOCS_ENABLED: ${API_DOCS_ENABLED:-false}
+  SCRYFALL_USER_AGENT: ${SCRYFALL_USER_AGENT:-MTGCardVault/0.3 (+https://github.com/fchicout/mtg-card-vault)}
+  SCRYFALL_BASE_URL: ${SCRYFALL_BASE_URL:-https://api.scryfall.com}
+  SCRYFALL_BREAKER_OPEN_SECONDS: ${SCRYFALL_BREAKER_OPEN_SECONDS:-30}
+  PRICE_STALE_AFTER_HOURS: ${PRICE_STALE_AFTER_HOURS:-24}
 
 services:
   db:
@@ -44,16 +56,7 @@ services:
     build:
       context: ../backend
     image: mtgvault-api:local
-    environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mtgvault}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mtgvault}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:?set OIDC_ISSUER_URL in deploy/.env}
-      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-mtgvault-api}
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://${APP_HOST:-localhost}:${HTTPS_PORT:-8443}}
-      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-false}
-      SCRYFALL_USER_AGENT: ${SCRYFALL_USER_AGENT:-MTGCardVault/0.3 (+https://github.com/fchicout/mtg-card-vault)}
-      SCRYFALL_BASE_URL: ${SCRYFALL_BASE_URL:-https://api.scryfall.com}
-      SCRYFALL_BREAKER_OPEN_SECONDS: ${SCRYFALL_BREAKER_OPEN_SECONDS:-30}
+    environment: *app-environment
     depends_on:
       db:
         condition: service_healthy
@@ -62,17 +65,18 @@ services:
       - /tmp
     networks: [backend, edge]
 
-  # Scheduled jobs (ADR-012). Idle until issue BL-44; start it with `--profile worker`.
+  # Scheduled jobs (ADR-012): refreshes the prices of every owned card at PRICE_REFRESH_CRON (UTC).
+  # `docker compose exec worker python -m mtgvault.worker --once` runs one refresh by hand.
   worker:
     <<: *hardening
-    profiles: ["worker"]
     build:
       context: ../backend
     image: mtgvault-api:local
     command: ["python", "-m", "mtgvault.worker"]
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mtgvault}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mtgvault}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      <<: *app-environment
+      PRICE_REFRESH_CRON: ${PRICE_REFRESH_CRON:-0 4 * * *}
+      PRICE_REFRESH_ON_START: ${PRICE_REFRESH_ON_START:-false}
     depends_on:
       db:
         condition: service_healthy
@@ -80,7 +84,12 @@ services:
     tmpfs:
       - /tmp
     healthcheck:
-      disable: true # no HTTP port; supervision is the restart policy
+      # The worker has no port: it touches a heartbeat file, and the check reads its age.
+      test: ["CMD", "python", "-m", "mtgvault.worker", "--check-alive"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
     networks: [backend, edge]
 
   frontend:
