@@ -71,8 +71,9 @@ def test_text_limits_and_emptiness() -> None:
     with pytest.raises(ValidationFailed) as rejected:
         build_query("x" * 101, NO_FILTERS)
     assert fields(rejected.value) == {"q"}
+    nine_words = " ".join(["a"] * 9)
     with pytest.raises(ValidationFailed):
-        build_query(" ".join(["a"] * 9), NO_FILTERS)
+        build_query(nine_words, NO_FILTERS)
     for nothing in (None, "", "   ", '"""'):
         with pytest.raises(ValidationFailed):
             build_query(nothing, NO_FILTERS)
