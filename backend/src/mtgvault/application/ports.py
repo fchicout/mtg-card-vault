@@ -6,7 +6,7 @@ from types import TracebackType
 from typing import Protocol, Self
 from uuid import UUID
 
-from mtgvault.domain.card import Card, Page
+from mtgvault.domain.card import Card, ResultPage
 from mtgvault.domain.identity import Principal
 from mtgvault.domain.user import User
 
@@ -66,13 +66,13 @@ class CardDataProvider(Protocol):
     source cannot answer. A search without matches is an empty page, not an error.
     """
 
-    def search(self, query: str, page: int) -> Page[Card]:
+    def search(self, query: str, page: int) -> ResultPage[Card]:
         """Unique cards matching a Scryfall-syntax ``query`` (built by the application)."""
         ...
 
     def get(self, card_id: UUID) -> Card: ...
 
-    def printings(self, oracle_id: UUID, page: int) -> Page[Card]:
+    def printings(self, oracle_id: UUID, page: int) -> ResultPage[Card]:
         """Every printing of a card, newest first."""
         ...
 

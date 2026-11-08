@@ -12,7 +12,7 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from uuid import UUID
 
-from mtgvault.domain.card import Card, CardFace, Page, Prices
+from mtgvault.domain.card import Card, CardFace, Prices, ResultPage
 
 FACE_SEPARATOR = " // "
 
@@ -110,10 +110,10 @@ def card_from_json(data: Mapping[str, Any]) -> Card:
     )
 
 
-def page_from_json(data: Mapping[str, Any], page: int) -> Page[Card]:
+def page_from_json(data: Mapping[str, Any], page: int) -> ResultPage[Card]:
     items = tuple(card_from_json(c) for c in data.get("data") or [])
     total = data.get("total_cards")
-    return Page(
+    return ResultPage(
         items=items,
         page=page,
         has_more=bool(data.get("has_more", False)),

@@ -7,7 +7,7 @@ from fastapi import HTTPException, Query
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
-from mtgvault.api.pagination import MAX_PAGE_SIZE, Page, PageQuery
+from mtgvault.api.pagination import MAX_PAGE_SIZE, PageQuery, ResultPage
 from mtgvault.domain.errors import (
     Conflict,
     DomainError,
@@ -61,8 +61,8 @@ def _app_with_error_routes() -> TestClient:
         return limit
 
     @app.get("/t/page")
-    def page(params: PageQuery) -> Page[int]:
-        return Page[int](items=[], page=params.page, page_size=params.page_size, total=0)
+    def page(params: PageQuery) -> ResultPage[int]:
+        return ResultPage[int](items=[], page=params.page, page_size=params.page_size, total=0)
 
     return TestClient(app, raise_server_exceptions=False)
 

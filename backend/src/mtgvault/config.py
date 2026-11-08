@@ -52,16 +52,9 @@ class Settings(BaseSettings):
     # The interactive API documentation is for development; production leaves it off.
     api_docs_enabled: bool = False
 
-    @field_validator("oidc_issuer_url")
+    @field_validator("oidc_issuer_url", "scryfall_base_url")
     @classmethod
-    def _issuer_is_https(cls, value: str) -> str:
-        if not is_acceptable_url(value):
-            raise ValueError("must be an https URL (http only for localhost)")
-        return value.rstrip("/")
-
-    @field_validator("scryfall_base_url")
-    @classmethod
-    def _scryfall_url_is_https(cls, value: str) -> str:
+    def _urls_are_https(cls, value: str) -> str:
         if not is_acceptable_url(value):
             raise ValueError("must be an https URL (http only for localhost)")
         return value.rstrip("/")
