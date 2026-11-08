@@ -6,9 +6,11 @@ from types import TracebackType
 from typing import Protocol, Self
 from uuid import UUID
 
+from mtgvault.application.vault_query import VaultQuery
 from mtgvault.domain.card import Card, ResultPage
 from mtgvault.domain.identity import Principal
 from mtgvault.domain.user import User
+from mtgvault.domain.vault import CardSnapshot, Condition, Finish, VaultEntry, VaultItem
 
 
 class TokenVerifier(Protocol):
@@ -44,6 +46,12 @@ class UnitOfWork(Protocol):
 
     @property
     def users(self) -> UserRepository: ...
+
+    @property
+    def cards(self) -> "CardRepository": ...
+
+    @property
+    def vault(self) -> "VaultRepository": ...
 
     def __enter__(self) -> Self: ...
 
@@ -87,3 +95,57 @@ class Cache(Protocol):
         stores nothing.
         """
         ...
+
+
+class CardRepository(Protocol):
+    """The shared snapshots of printings that someone owns (FR-DAT-02)."""
+
+    def upsert_snapshot(self, card: Card, now: datetime) -> None:
+        """Insert or refresh the printing; prices and data timestamps become ``now``."""
+        ...
+
+    def get(self, card_id: UUID) -> CardSnapshot | None: ...
+
+
+class VaultRepository(Protocol):
+    """A user's entries. EVERY method takes the user id first: there is no unscoped access."""
+
+    def add_or_merge(
+        self,
+        user_id: UUID,
+        card_id: UUID,
+        quantity: int,
+        condition: Condition,
+        finish: Finish,
+        now: datetime,
+    ) -> tuple[VaultEntry, bool]:
+        """Create the entry or add to the existing one; the flag says whether it was created.
+
+        Raises ``ValidationFailed`` when the merged quantity would exceed the cap.
+        """
+        ...
+
+    def get_item(self, user_id: UUID, entry_id: UUID) -> VaultItem | None: ...
+
+    def list_items(self, user_id: UUID, query: VaultQuery) -> tuple[list[VaultItem], int]:
+        """One page of the user's entries with their cards, and the total count."""
+        ...
+
+    def update(
+        self,
+        user_id: UUID,
+        entry_id: UUID,
+        quantity: int | None,
+        condition: Condition | None,
+        finish: Finish | None,
+        now: datetime,
+    ) -> tuple[VaultEntry, bool] | None:
+        """Change an entry; on a collision merge into the other entry (flag True).
+
+        Returns None when the entry does not exist for this user.
+        """
+        ...
+
+    def delete(self, user_id: UUID, entry_id: UUID) -> bool: ...
+
+    def count(self, user_id: UUID) -> int: ...
