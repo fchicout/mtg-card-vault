@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from mtgvault.application.catalog_query import CatalogFilters, build_query
+from mtgvault.application.catalog_query import CatalogFilters, build_printing_query, build_query
 from mtgvault.application.ports import Cache, CardDataProvider
 from mtgvault.domain.card import Card, ResultPage
 
@@ -17,6 +17,12 @@ class CatalogService:
         return self._cache.get_or_load(
             f"search|{page}|{query}", lambda: self._provider.search(query, page)
         )
+
+    def find_printing(self, set_code: str, number: str) -> tuple[Card, ...]:
+        """The printing with this set code and collector number (empty when there is none)."""
+        query = build_printing_query(set_code, number)
+        page = self._cache.get_or_load(f"printing|{query}", lambda: self._provider.search(query, 1))
+        return page.items
 
     def get(self, card_id: UUID) -> Card:
         return self._cache.get_or_load(f"card|{card_id}", lambda: self._provider.get(card_id))
