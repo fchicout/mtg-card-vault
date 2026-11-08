@@ -1,3 +1,6 @@
+// Registers Clarity's core global first: @clr/angular also creates window.CDS (without a version),
+// and Clarity's core fails to start when that happens before its own setup.
+import '@cds/core/icon/register.js';
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ClrMainContainerModule, ClrNavigationModule, ClrVerticalNavModule } from '@clr/angular';
@@ -11,7 +14,6 @@ import {
   sunIcon,
   userIcon,
 } from '@cds/core/icon';
-import '@cds/core/icon/register.js';
 
 import { AuthService } from './core/auth/auth.service';
 import { ProfileService } from './core/auth/profile.service';
