@@ -15,4 +15,4 @@ uv run python -m mtgvault.export_openapi openapi.json
 
 ## Skeleton status
 
-`GET /hello` is a **temporary, unauthenticated** route that exists only to validate the CI/CD harness (issue #1). It is removed when JWT validation lands (issue #15), because only `/healthz` and `/readyz` may be public (US-026).
+Every route under `/api/v1` requires a bearer JWT issued by the configured OIDC provider (issue #15, US-026); only `/healthz` and `/readyz` are public. The skeleton `/hello` route is gone. Required settings: `OIDC_ISSUER_URL`, `OIDC_AUDIENCE` (see docs/05 section 7.2).
