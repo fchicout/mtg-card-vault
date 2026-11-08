@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.23
+**Docs set version:** 0.3.24
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -498,6 +498,8 @@ In-memory TTL cache for catalogue searches (5 min). Cards cached in PostgreSQL f
 | OCR accuracy | 100-card reference image set measuring top-3 hit rate (`BO-02`) | pytest marker `accuracy` | Nightly / on-demand, not a PR gate. |
 
 Quality gates are evaluated by `scripts/quality_gate.py` (`NFR-MNT-01`): coverage of new code ≥ 80 %, duplicated lines ≤ 3 % (computed locally with jscpd) and, from SonarQube's issue data, no open bugs, vulnerabilities or Blocker/Critical issues. `scripts/run_local_gates.py` runs every CI gate locally.
+
+**OIDC test double (issue #59):** `backend/tests/support/oidc_double.py` is a deterministic provider for tests only (discovery, JWKS, authorization code with PKCE and automatic login, token with refresh rotation, revocation, logout redirect, CORS; lifetimes and faults steered through `POST /__control`; `login_hint` picks the user or cancels the login). Unit tests run it in-process against the real verifier; the E2E stack adds it through the overlay `deploy/compose.e2e.yaml`, where it shares the API's network namespace so the issuer `http://localhost:9000` is the same for the API and the browser. It is never part of an image or of staging/production.
 
 **End-to-end harness (issue #12):** Playwright in `frontend/e2e` against a running stack (`deploy/compose.yaml`; in CI an ephemeral stack). Browsers: Chromium, Firefox and WebKit (`E2E_BROWSERS` narrows them). Helpers in `e2e/support`: `axe.ts` (`expectNoSeriousViolations`, WCAG 2.1 A/AA, proven to fail on a seeded violation), `scryfall.ts` (record/replay: fixtures in `e2e/fixtures/scryfall`, an unrecorded request is blocked and reported so the real service is never contacted; record one with `E2E_RECORD=1`), `fake-camera.ts` (Chromium only: `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream --use-file-for-fake-video-capture`; the fixture video is **generated** before each run, a dark scene with a card-shaped rectangle and a marker that moves every frame, 320 x 240 at 15 fps, so a test can prove that distinct frames reach `getUserMedia`). A failure keeps its trace, video and screenshot as CI artifacts; at most one retry.
 

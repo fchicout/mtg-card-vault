@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.23
+**Docs set version:** 0.3.24
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.24 | 2026-11-08 | Issue #59: the OIDC test double and the E2E compose overlay documented. |
 | 0.3.23 | 2026-11-08 | Issue #58: `GET /api/v1/me` and user provisioning on first authenticated request. |
 | 0.3.22 | 2026-11-08 | Issue #57: users table (migration 0002) and the race-safe provisioning upsert documented. |
 | 0.3.21 | 2026-11-08 | Issue #56: principal model and claim mapping with data minimisation documented. |
