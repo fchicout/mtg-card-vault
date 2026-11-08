@@ -32,6 +32,43 @@
         "title": "HealthStatus",
         "type": "object"
       },
+      "Me": {
+        "description": "What the application knows about the caller: nothing beyond this.",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "Me",
+        "type": "object"
+      },
       "Problem": {
         "description": "The problem document returned for every error.",
         "properties": {
@@ -86,6 +123,13 @@
         "title": "Problem",
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "description": "OIDC access token (JWT) issued for this API's audience.",
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
@@ -96,6 +140,83 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/me": {
+      "get": {
+        "description": "Provisions the account on the first authenticated request, then returns the profile.",
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "The signed-in user's profile",
+        "tags": [
+          "account"
+        ]
+      }
+    },
     "/healthz": {
       "get": {
         "operationId": "getLiveness",
@@ -193,6 +314,10 @@
     {
       "description": "Liveness and readiness (public).",
       "name": "health"
+    },
+    {
+      "description": "The signed-in user (bearer token required).",
+      "name": "account"
     }
   ]
 }

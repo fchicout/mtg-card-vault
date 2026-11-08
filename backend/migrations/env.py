@@ -5,6 +5,7 @@ import os
 from alembic import context
 from sqlalchemy import create_engine, text
 
+from mtgvault.adapters.db import models  # noqa: F401  # registers the tables on the metadata
 from mtgvault.adapters.db.base import Base
 
 config = context.config

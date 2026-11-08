@@ -246,11 +246,11 @@ jobs:
             echo "APP_HOST=localhost"
             echo "HTTP_PORT=8080"
             echo "HTTPS_PORT=8443"
-            echo "OIDC_ISSUER_URL=https://auth.example.test"
+            echo "OIDC_ISSUER_URL=http://localhost:9000"
             echo "OIDC_AUDIENCE=mtgvault-api"
           } > deploy/.env
       - name: Start the stack and wait until every service is healthy
-        run: docker compose -f deploy/compose.yaml up -d --build --wait --wait-timeout 240
+        run: docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml up -d --build --wait --wait-timeout 240
       - name: Install Playwright with Chromium, Firefox and WebKit
         working-directory: frontend
         run: |
@@ -264,7 +264,7 @@ jobs:
         run: npm run e2e
       - name: Stack logs on failure
         if: failure()
-        run: docker compose -f deploy/compose.yaml logs --no-color --tail 200
+        run: docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml logs --no-color --tail 200
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -275,7 +275,7 @@ jobs:
           if-no-files-found: ignore
       - name: Tear down
         if: always()
-        run: docker compose -f deploy/compose.yaml down -v
+        run: docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml down -v
 
   # ------------------------------------------------------------------ security
   secret-scan:

@@ -21,6 +21,7 @@ test.describe('walking skeleton', () => {
 
   test('the API refuses an unauthenticated call with a problem document', async ({ request }) => {
     const response = await request.get('/api/v1/me');
-    expect([401, 404]).toContain(response.status());
+    expect(response.status()).toBe(401);
+    expect(response.headers()['www-authenticate']).toContain('Bearer');
   });
 });

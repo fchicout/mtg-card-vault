@@ -1,0 +1,32 @@
+# Test-only overlay for the end-to-end stack (issue #59). NEVER used in staging or production.
+#
+#   docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml up -d --build
+#
+# Adds a deterministic OIDC provider (backend/tests/support/oidc_double.py) that shares the API's
+# network namespace, so the issuer `http://localhost:9000` is the same for the API (which reads its
+# keys from it) and for the browser (the port is published on the loopback interface only).
+# Set OIDC_ISSUER_URL=http://localhost:9000 in deploy/.env.
+services:
+  api:
+    ports:
+      - "127.0.0.1:9000:9000"
+  oidc:
+    image: mtgvault-api:local
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    network_mode: "service:api"
+    depends_on:
+      - api
+    volumes:
+      - ../backend/tests/support/oidc_double.py:/double/oidc_double.py:ro
+    command:
+      - python
+      - /double/oidc_double.py
+      - --issuer=http://localhost:9000
+      - --host=0.0.0.0
+      - --port=9000
+      - --client-id=mtgvault-test
+      - --redirect-uri=https://localhost:8443/callback

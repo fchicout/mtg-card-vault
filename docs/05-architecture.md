@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.20
+**Docs set version:** 0.3.24
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -242,7 +242,7 @@ erDiagram
   }
 ```
 
-Constraints and indexes: `UNIQUE (user_id, card_id, condition, finish)` (`FR-VLT-06`); `INDEX (user_id, created_at DESC)` for default listing; trigram index on `cards.name` for case/accent-insensitive search (`FR-VLT-05`); `users.sub` unique (`FR-AUTH-04`). Money uses `NUMERIC(10,2)`; never floating point. Language is a property of the printing (`cards.lang`), not of the entry.
+Constraints and indexes: `UNIQUE (user_id, card_id, condition, finish)` (`FR-VLT-06`); `INDEX (user_id, created_at DESC)` for default listing; trigram index on `cards.name` for case/accent-insensitive search (`FR-VLT-05`); `users.sub` unique (`FR-AUTH-04`). **Users (migration 0002, issue #57):** `sub` up to 255, `display_name` up to 100, `email` up to 254 characters; provisioning is one atomic `INSERT ... ON CONFLICT (sub) DO UPDATE` that returns the row, writes nothing when nothing changed, rewrites `last_login_at` at most once per refresh window (one hour), and keeps the stored name/email when a token carries none; a test proves 16 parallel first calls create one row and another that the ORM models match the migrations. Money uses `NUMERIC(10,2)`; never floating point. Language is a property of the printing (`cards.lang`), not of the entry.
 
 ### 5.5 REST API catalogue (`/api/v1`)
 
@@ -250,7 +250,7 @@ All endpoints require a valid bearer JWT (`FR-AUTH-05`) unless marked *public*. 
 
 | Method & path | Purpose | Requirement |
 |---|---|---|
-| `GET /me` | Current user profile; provisions the user on first call. | FR-AUTH-04 |
+| `GET /me` | Current user profile (`id`, `display_name`, `email` only); provisions the user on first call, idempotently and race-safely; `last_login_at` is rewritten at most hourly. Implemented in issue #58. | FR-AUTH-04 |
 | `DELETE /me` | Delete my account and data. | FR-AUTH-08 |
 | `GET /vault/entries` | List/filter/sort/paginate my entries. | FR-VLT-02, FR-VLT-05 |
 | `POST /vault/entries` | Add (or merge into) an entry. | FR-VLT-01, FR-VLT-06 |
@@ -461,7 +461,7 @@ Enforced conventions (`scripts/check_commit_policy.py`):
 
 ### 8.1 Authentication and authorization
 - SPA = public OIDC client, Authorization Code + PKCE (S256), tokens in memory, refresh token rotation (`FR-AUTH-01`, `FR-AUTH-03`); it requests the API audience explicitly and signs out by revoking the refresh token and visiting Authelia's logout page (`ADR-003`, `FR-AUTH-02`).
-- API = resource server. `TokenVerifier` port, implemented by `adapters/auth`: downloads discovery + JWKS from the issuer, caches keys, refreshes on unknown `kid` (rate-limited), enforces algorithm allow-list, `iss`, `aud`, `exp`, `nbf` (`FR-AUTH-05`). Authelia does issue JWT access tokens (`OQ-05`, `ADR-003`); token introspection stays a possible adapter behind the same port. Behaviour (issue #15): the whole `/api/v1` router depends on `current_principal` (401 `problem+json` with `WWW-Authenticate: Bearer`, plus `error="invalid_token"` when a token was presented; 403 for authenticated-but-forbidden; the validation reason is logged, never returned); keys are cached 10 minutes, an unknown `kid` refreshes at most once per 30 s, cached keys survive an identity-provider outage for up to 24 h and after that the API answers 503, not 401; only `/healthz` and `/readyz` are public, and `/api/v1/docs` plus `openapi.json` are served only when `API_DOCS_ENABLED=true`; the temporary `/hello` route is removed.
+- API = resource server. `TokenVerifier` port, implemented by `adapters/auth`: downloads discovery + JWKS from the issuer, caches keys, refreshes on unknown `kid` (rate-limited), enforces algorithm allow-list, `iss`, `aud`, `exp`, `nbf` (`FR-AUTH-05`). Authelia does issue JWT access tokens (`OQ-05`, `ADR-003`); token introspection stays a possible adapter behind the same port. Behaviour (issue #15): the whole `/api/v1` router depends on `current_principal` (401 `problem+json` with `WWW-Authenticate: Bearer`, plus `error="invalid_token"` when a token was presented; 403 for authenticated-but-forbidden; the validation reason is logged, never returned); keys are cached 10 minutes, an unknown `kid` refreshes at most once per 30 s, cached keys survive an identity-provider outage for up to 24 h and after that the API answers 503, not 401; only `/healthz` and `/readyz` are public, and `/api/v1/docs` plus `openapi.json` are served only when `API_DOCS_ENABLED=true`; the temporary `/hello` route is removed. **Claims (issue #56):** the verified claims become a `Principal` of subject, optional display name (`name`, else `preferred_username`; control characters stripped, 100 characters) and optional email (syntax-checked, lower-cased, 254 characters); every other claim is dropped at the boundary and a missing optional claim never fails authentication. The subject is the only identity key. The email is excluded from `repr`, so it cannot reach logs; the log redaction of email addresses still applies to free text. If the access token carries no name or email (it depends on the provider's token configuration), the profile simply has none and the UI falls back to a neutral label.
 - Authorization = ownership. The current user id comes only from the verified `sub` (`FR-VLT-07`); repositories require `user_id` in every query method (no unscoped access API exists).
 - "Only the front end may call the API": enforced by (a) the token audience bound to the SPA's client, (b) CORS allow-list, (c) no cookie auth (so no CSRF surface). A token is the security boundary; network origin cannot be proven for non-browser clients (`NFR-SEC-01` limitation).
 
@@ -498,6 +498,8 @@ In-memory TTL cache for catalogue searches (5 min). Cards cached in PostgreSQL f
 | OCR accuracy | 100-card reference image set measuring top-3 hit rate (`BO-02`) | pytest marker `accuracy` | Nightly / on-demand, not a PR gate. |
 
 Quality gates are evaluated by `scripts/quality_gate.py` (`NFR-MNT-01`): coverage of new code ≥ 80 %, duplicated lines ≤ 3 % (computed locally with jscpd) and, from SonarQube's issue data, no open bugs, vulnerabilities or Blocker/Critical issues. `scripts/run_local_gates.py` runs every CI gate locally.
+
+**OIDC test double (issue #59):** `backend/tests/support/oidc_double.py` is a deterministic provider for tests only (discovery, JWKS, authorization code with PKCE and automatic login, token with refresh rotation, revocation, logout redirect, CORS; lifetimes and faults steered through `POST /__control`; `login_hint` picks the user or cancels the login). Unit tests run it in-process against the real verifier; the E2E stack adds it through the overlay `deploy/compose.e2e.yaml`, where it shares the API's network namespace so the issuer `http://localhost:9000` is the same for the API and the browser. It is never part of an image or of staging/production.
 
 **End-to-end harness (issue #12):** Playwright in `frontend/e2e` against a running stack (`deploy/compose.yaml`; in CI an ephemeral stack). Browsers: Chromium, Firefox and WebKit (`E2E_BROWSERS` narrows them). Helpers in `e2e/support`: `axe.ts` (`expectNoSeriousViolations`, WCAG 2.1 A/AA, proven to fail on a seeded violation), `scryfall.ts` (record/replay: fixtures in `e2e/fixtures/scryfall`, an unrecorded request is blocked and reported so the real service is never contacted; record one with `E2E_RECORD=1`), `fake-camera.ts` (Chromium only: `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream --use-file-for-fake-video-capture`; the fixture video is **generated** before each run, a dark scene with a card-shaped rectangle and a marker that moves every frame, 320 x 240 at 15 fps, so a test can prove that distinct frames reach `getUserMedia`). A failure keeps its trace, video and screenshot as CI artifacts; at most one retry.
 
