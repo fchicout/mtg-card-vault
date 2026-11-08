@@ -157,3 +157,16 @@ def test_logout_redirects_back(provider: OidcDouble) -> None:
         f"{provider.issuer}/logout", params={"rd": REDIRECT}, follow_redirects=False
     )
     assert response.headers["location"] == REDIRECT
+
+
+def test_state_counts_grants_and_next_login_applies_once(provider: OidcDouble) -> None:
+    tokens = sign_in(provider)
+    httpx.post(
+        f"{provider.issuer}/token",
+        data={"grant_type": "refresh_token", "refresh_token": tokens["refresh_token"]},
+    )
+    state = httpx.get(f"{provider.issuer}/__state").json()
+    assert (state["code_grants"], state["refresh_grants"]) == (1, 1)
+    httpx.post(f"{provider.issuer}/__control", json={"next_login": "deny"})
+    assert authorize(provider)["error"] == ["access_denied"]
+    assert "code" in authorize(provider)  # one-shot: the following login works again

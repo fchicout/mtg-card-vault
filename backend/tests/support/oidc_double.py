@@ -10,7 +10,8 @@ Runs in-process for pytest (``OidcDouble().start()``) or standalone for the comp
 
 Behaviour is steered through ``POST /__control`` (JSON), e.g. ``{"access_ttl": 3}``,
 ``{"token_status": 500}`` (every token request fails), ``{"revoke_all": true}``,
-``{"reset": true}``.
+``{"reset": true}``, ``{"next_login": "deny"}`` (the next authorize request uses this hint once).
+``GET /__state`` reports ``code_grants``, ``refresh_grants`` and ``token_requests``.
 ``login_hint=<sub>`` on the authorize request picks the user; ``login_hint=deny`` cancels the login.
 """
 
@@ -68,6 +69,9 @@ class OidcDouble:
             self.codes: dict[str, dict[str, Any]] = {}
             self.refresh_tokens: dict[str, dict[str, Any]] = {}
             self.token_requests = 0
+            self.code_grants = 0
+            self.refresh_grants = 0
+            self.next_login: str | None = None
             self.revoked: list[str] = []
 
     def control(self, change: dict[str, Any]) -> None:
@@ -77,6 +81,8 @@ class OidcDouble:
                     setattr(self, name, int(change[name]))
             if change.get("revoke_all"):
                 self.refresh_tokens.clear()
+            if "next_login" in change:
+                self.next_login = str(change["next_login"]) or None
         if change.get("reset"):
             self.reset()
 
@@ -151,7 +157,8 @@ class OidcDouble:
         state = query.get("state", "")
         if query.get("code_challenge_method") != "S256" or not query.get("code_challenge"):
             return self._error_redirect(redirect, "invalid_request", state)
-        hint = query.get("login_hint", "user-1")
+        hint = self.next_login or query.get("login_hint", "user-1")
+        self.next_login = None
         if hint == "deny":
             return self._error_redirect(redirect, "access_denied", state)
         audience = query.get("audience", self.audience)
@@ -183,13 +190,23 @@ class OidcDouble:
                 )
                 if not ok or entry is None:
                     return 400, {"error": "invalid_grant"}
+                self.code_grants += 1
                 return 200, self._issue(entry["sub"], entry["aud"])
             if grant == "refresh_token":
                 entry = self.refresh_tokens.pop(form.get("refresh_token", ""), None)  # rotation
                 if entry is None or entry["exp"] < time.time():
                     return 400, {"error": "invalid_grant"}
+                self.refresh_grants += 1
                 return 200, self._issue(entry["sub"], entry["aud"])
             return 400, {"error": "unsupported_grant_type"}
+
+    def state(self) -> dict[str, int]:
+        with self._lock:
+            return {
+                "code_grants": self.code_grants,
+                "refresh_grants": self.refresh_grants,
+                "token_requests": self.token_requests,
+            }
 
     def revoke(self, form: dict[str, str]) -> None:
         with self._lock:
@@ -242,6 +259,8 @@ def _make_handler(provider: OidcDouble) -> type[BaseHTTPRequestHandler]:
             elif parts.path == "/authorize":
                 status, headers, body = provider.authorize(query)
                 self._send(status, body, headers)
+            elif parts.path == "/__state":
+                self._send(200, provider.state())
             elif parts.path == "/logout":
                 self._send(302, None, {"Location": query.get("rd", "/")})
             else:
