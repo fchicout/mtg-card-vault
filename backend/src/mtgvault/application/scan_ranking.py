@@ -19,6 +19,7 @@ from mtgvault.domain.scan import CollectorInfo
 MAX_CANDIDATES = 5
 MIN_CONFIDENCE = 0.35
 _NAME_WEIGHT, _SET_WEIGHT, _NUMBER_WEIGHT = 0.6, 0.25, 0.15
+_BACK_FACE_FACTOR = 0.98
 
 
 @dataclass(frozen=True)
@@ -36,12 +37,16 @@ def _plain(text: str) -> str:
 
 
 def name_similarity(title: str | None, card_name: str) -> float:
-    """0..1 similarity of an OCR title with a card name (the first face of a double-faced card)."""
+    """0..1 similarity of an OCR title with a card name; any face of a double-faced card counts.
+
+    A match on a back face is a hair lower, so a card with that name on its front ranks first.
+    """
     if not title:
         return 0.0
     best = 0.0
-    for face in card_name.split(" // "):
-        best = max(best, fuzz.ratio(_plain(title), _plain(face)) / 100)
+    for index, face in enumerate(card_name.split(" // ")):
+        score = fuzz.ratio(_plain(title), _plain(face)) / 100
+        best = max(best, score * (_BACK_FACE_FACTOR if index else 1.0))
     return best
 
 

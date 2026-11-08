@@ -72,6 +72,14 @@ def test_double_faced_cards_match_on_either_face() -> None:
     assert rank("Insectile Aberration", NONE, [delver])[0].card is delver
 
 
+def test_a_front_face_match_outranks_the_same_name_on_a_back_face() -> None:
+    plain = make_card("Lightning Bolt", "m10", "146")
+    flip = make_card("Emeritus of Conflict // Lightning Bolt", "stx", "114")
+    for pool in ([flip, plain], [plain, flip]):
+        assert rank("LIGHTNING BOLT", NONE, pool)[0].card is plain
+    assert name_similarity("Lightning Bolt", flip.name) > 0.95  # still a good candidate
+
+
 def test_accents_and_case_do_not_matter() -> None:
     aether = make_card("Æther Vial", "mm2", "1")
     assert name_similarity("aether vial", "Æther Vial") == pytest.approx(1.0, abs=0.12)
