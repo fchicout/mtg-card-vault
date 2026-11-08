@@ -248,6 +248,7 @@ jobs:
             echo "HTTPS_PORT=8443"
             echo "OIDC_ISSUER_URL=http://localhost:9000"
             echo "OIDC_AUDIENCE=mtgvault-api"
+            echo "OIDC_CLIENT_ID=mtgvault-test"
           } > deploy/.env
       - name: Start the stack and wait until every service is healthy
         run: docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml up -d --build --wait --wait-timeout 240

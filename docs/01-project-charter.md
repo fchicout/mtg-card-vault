@@ -1,6 +1,6 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.3.24
+**Docs set version:** 0.3.25
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
 **Last updated:** 2026-11-07
