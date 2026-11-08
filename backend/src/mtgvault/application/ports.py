@@ -1,6 +1,7 @@
 """Ports: interfaces the application layer needs, implemented by adapters (ADR-006)."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from types import TracebackType
 from typing import Protocol, Self
@@ -149,3 +150,29 @@ class VaultRepository(Protocol):
     def delete(self, user_id: UUID, entry_id: UUID) -> bool: ...
 
     def count(self, user_id: UUID) -> int: ...
+
+
+class RateLimiter(Protocol):
+    """Limits how often one caller may do something expensive."""
+
+    def check(self, key: str) -> None:
+        """Count one use; raises ``RateLimited`` (with the seconds to wait) over the limit."""
+        ...
+
+
+@dataclass(frozen=True)
+class RecognizedText:
+    """Raw text of the two regions of a card, as the OCR engine read it."""
+
+    title: str
+    collector: str
+
+
+class TextRecognizer(Protocol):
+    """Reads a card's title and collector bands from an image (FR-SCN-03, ADR-004).
+
+    ``image`` is a validated JPEG, PNG or WebP of a camera frame in which the card fills the guide.
+    The image is processed in memory only. Raises ``ValidationFailed`` for undecodable data.
+    """
+
+    def read(self, image: bytes) -> RecognizedText: ...
