@@ -1,3 +1,7 @@
+# Changelog
+
+All notable changes, generated from Conventional Commits.
+
 ## [0.2.0] - 2026-11-08
 
 ### Bug fixes
