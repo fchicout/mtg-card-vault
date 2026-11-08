@@ -22,7 +22,7 @@ make commit-policy # your commits and branch name follow the policy
 pre-commit install # optional: docs-sync on commit, commit-message check on commit-msg
 ```
 
-SonarQube's own quality gate is never used; the project's gates are decided by `scripts/quality_gate.py` locally and in CI ([`ADR-011`](docs/05-architecture.md)).
+The gates are decided by `scripts/quality_gate.py` locally and in CI, and SonarQube's own quality gate must be OK as well (a change that adds a SonarQube issue of any severity does not merge until it is fixed or reviewed there) ([`ADR-011`](docs/05-architecture.md)).
 
 ## 5. Security and secrets
 The repository is public: never commit secrets, personal data or proprietary assets. Findings that cannot be fixed yet are accepted only through a time-boxed entry in `security/exceptions.yaml` (see `docs/05` section 8.2). Report vulnerabilities privately as described in [`SECURITY.md`](SECURITY.md).
