@@ -11,8 +11,8 @@ from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 from starlette.formparsers import MultiPartParser
 
-from mtgvault.adapters.ocr.upload import inspect_upload
 from mtgvault.api.catalog import CardSummary, card_summary
+from mtgvault.api.image_upload import inspect_upload
 from mtgvault.api.security import current_principal
 from mtgvault.application.ports import RateLimiter
 from mtgvault.application.scan_service import ScanResult, ScanService
@@ -64,7 +64,7 @@ def _dto(result: ScanResult) -> ScanResponse:
     operation_id="scanCard",
     summary="Recognise a card in one camera frame",
     dependencies=[Depends(_limited)],
-    # The endpoint reads the multipart form itself (to keep it in memory); declare it for the contract.
+    # The endpoint reads the form itself (to keep it in memory): declare the body for the contract.
     openapi_extra={
         "requestBody": {
             "required": True,

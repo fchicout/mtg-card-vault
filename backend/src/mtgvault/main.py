@@ -15,7 +15,7 @@ from mtgvault.adapters.auth.deny_all import DenyAllTokenVerifier
 from mtgvault.adapters.auth.jwks import JwksTokenVerifier, httpx_json_fetcher
 from mtgvault.adapters.cache import TtlCache
 from mtgvault.adapters.db.unit_of_work import SqlAlchemyUnitOfWork
-from mtgvault.adapters.ocr.upload import MAX_BYTES
+from mtgvault.adapters.ocr.tesseract import TesseractRecognizer, find_tesseract
 from mtgvault.adapters.rate_limit import SlidingWindowRateLimiter
 from mtgvault.adapters.resilience import CircuitBreaker
 from mtgvault.adapters.scryfall.client import ScryfallClient
@@ -23,6 +23,7 @@ from mtgvault.adapters.scryfall.provider import ScryfallCardProvider
 from mtgvault.adapters.sql_readiness import SqlReadinessProbe
 from mtgvault.api import health, v1
 from mtgvault.api.errors import PROBLEM_RESPONSES, install_error_handlers
+from mtgvault.api.image_upload import MAX_BYTES
 from mtgvault.api.limits import BodyLimitMiddleware
 from mtgvault.api.middleware import CorrelationIdMiddleware
 from mtgvault.application.catalog_service import CatalogService
@@ -76,6 +77,7 @@ def create_app(
     scan_rate_limiter = scan_rate_limiter or SlidingWindowRateLimiter(
         settings.scan_rate_per_minute if settings else 30
     )
+    text_recognizer = _build_recognizer(settings) if text_recognizer is None else text_recognizer
     docs_enabled = settings is None or settings.api_docs_enabled
 
     app = FastAPI(
@@ -188,6 +190,12 @@ class _NoCards:
 
     def printings(self, *_: object) -> ResultPage[Card]:
         raise UpstreamUnavailable(_NO_SOURCE)
+
+
+def _build_recognizer(settings: Settings | None) -> TextRecognizer | None:
+    """Tesseract when the real service runs and the engine is installed (the API image has it)."""
+    command = find_tesseract() if settings else None
+    return TesseractRecognizer(command) if command else None
 
 
 class _NoRecognizer:

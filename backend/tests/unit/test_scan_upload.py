@@ -8,7 +8,7 @@ import zlib
 import pytest
 from PIL import Image
 
-from mtgvault.adapters.ocr.upload import MAX_BYTES, inspect_upload, sniff
+from mtgvault.api.image_upload import MAX_BYTES, inspect_upload, sniff
 from mtgvault.domain.errors import PayloadTooLarge, UnsupportedMediaType, ValidationFailed
 
 
