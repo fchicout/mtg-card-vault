@@ -30,6 +30,28 @@
         "title": "AddEntry",
         "type": "object"
       },
+      "CandidateDto": {
+        "properties": {
+          "card": {
+            "$ref": "#/components/schemas/CardSummary"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "exact": {
+            "title": "Exact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "card",
+          "confidence",
+          "exact"
+        ],
+        "title": "CandidateDto",
+        "type": "object"
+      },
       "CardDetail": {
         "properties": {
           "collector_number": {
@@ -681,6 +703,59 @@
         "title": "Problem",
         "type": "object"
       },
+      "RecognizedTextDto": {
+        "properties": {
+          "collector": {
+            "title": "Collector",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "collector"
+        ],
+        "title": "RecognizedTextDto",
+        "type": "object"
+      },
+      "ScanResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateDto"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unreadable",
+                  "no_match"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "text": {
+            "$ref": "#/components/schemas/RecognizedTextDto"
+          }
+        },
+        "required": [
+          "text",
+          "candidates"
+        ],
+        "title": "ScanResponse",
+        "type": "object"
+      },
       "VaultItemDto": {
         "properties": {
           "available_finishes": {
@@ -804,7 +879,7 @@
     "description": "REST API of MTG Card Vault. Every versioned route needs an OIDC bearer token. Every error is an RFC 9457 `application/problem+json` document carrying a `correlation_id`, also returned in the `X-Request-ID` header.",
     "summary": "Private, priced inventory of a Magic: The Gathering collection.",
     "title": "MTG Card Vault API",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1263,6 +1338,108 @@
         "summary": "The signed-in user's profile",
         "tags": [
           "account"
+        ]
+      }
+    },
+    "/api/v1/scans": {
+      "post": {
+        "description": "Multipart form with one field, ``image``. At most 5 candidates, best first.",
+        "operationId": "scanCard",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "image": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "image"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "413": {
+            "description": "The image is larger than 2 MB"
+          },
+          "415": {
+            "description": "Not a JPEG, PNG or WebP image"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Recognise a card in one camera frame",
+        "tags": [
+          "scan"
         ]
       }
     },

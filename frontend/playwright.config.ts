@@ -37,7 +37,13 @@ const projects = [
 // The identity, outage and vault journeys change shared state (the test doubles, one user's vault),
 // so they run one file after the other, in Chromium only, after every other project has finished.
 // (Files of one project may run in parallel workers, so each file is its own project in a chain.)
-const SERIAL_SPECS = ['identity-journeys', 'catalogue-outage', 'vault-journeys', 'vault-privacy'];
+const SERIAL_SPECS = [
+  'identity-journeys',
+  'catalogue-outage',
+  'vault-journeys',
+  'vault-privacy',
+  'scan-journey',
+];
 const SERIAL_PATTERN = new RegExp(`(${SERIAL_SPECS.join('|')})\\.spec\\.ts$`);
 const regular = projects.map((project) => ({ ...project, testIgnore: SERIAL_PATTERN }));
 const serial = wanted.includes('chromium')
@@ -53,7 +59,8 @@ const serial = wanted.includes('chromium')
                 ? 'identity'
                 : SERIAL_SPECS[index - 1],
             ],
-      use: { ...devices['Desktop Chrome'] },
+      // Same browser (and fake camera) as the regular Chromium project.
+      use: projects.find((project) => project.name === 'chromium')?.use,
     }))
   : [];
 

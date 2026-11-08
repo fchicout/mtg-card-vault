@@ -61,3 +61,11 @@ class Unauthenticated(DomainError):
 
 class Forbidden(DomainError):
     """The caller is authenticated but not allowed to do this."""
+
+
+class PayloadTooLarge(DomainError):
+    """The request body is larger than this endpoint accepts (413)."""
+
+
+class UnsupportedMediaType(DomainError):
+    """The body is not one of the accepted file types (415)."""

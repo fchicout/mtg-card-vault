@@ -1,6 +1,6 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.3.34
+**Docs set version:** 0.3.35
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -209,7 +209,7 @@ Resolved questions become requirements, ADRs or assumptions, and the row is mark
 | ID | Question | Needed by | Status |
 |---|---|---|---|
 | OQ-01 | Which Angular version is the latest one officially supported by the current Clarity release? | M0 | Resolved 2026-11-07: Angular 22.2.x with Clarity 18.5.x (ADR-009). |
-| OQ-02 | Which OCR engine (Tesseract via `pytesseract`/`tesserocr`, EasyOCR, PaddleOCR) gives the best accuracy/footprint on the 100-card reference set? | M4 | Open |
+| OQ-02 | Which OCR engine (Tesseract via `pytesseract`/`tesserocr`, EasyOCR, PaddleOCR) gives the best accuracy/footprint on the 100-card reference set? | M4 | Resolved 2026-11-08: Tesseract 5 (ADR-004); EasyOCR and PaddleOCR rejected for footprint, RapidOCR not measured. Real-photo confirmation of the 90 % target is still open. |
 | OQ-03 | Which reverse proxy (Traefik or Caddy) fronts the stack and terminates TLS? | M0 | Resolved 2026-11-07: Caddy (ADR-016). |
 | OQ-04 | Which release automation fits gitflow (release-please, semantic-release, or `git-cliff` + manual tags)? | M0 | Resolved 2026-11-07: `git-cliff` with manual tags (ADR-010). |
 | OQ-05 | Can the Authelia OIDC client be configured to issue RS256-signed JWT access tokens with the API as audience? Else use introspection. | M1 | Resolved 2026-11-07: yes, with the SPA requesting the audience explicitly (ADR-003). |

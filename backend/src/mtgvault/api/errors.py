@@ -21,8 +21,10 @@ from mtgvault.domain.errors import (
     DomainError,
     Forbidden,
     NotFound,
+    PayloadTooLarge,
     RateLimited,
     Unauthenticated,
+    UnsupportedMediaType,
     UpstreamUnavailable,
     ValidationFailed,
 )
@@ -57,6 +59,8 @@ PROBLEM_RESPONSES: dict[int | str, dict[str, object]] = {
 _BY_DOMAIN_ERROR: list[tuple[type[DomainError], int, str]] = [
     (Unauthenticated, status.HTTP_401_UNAUTHORIZED, "unauthenticated"),
     (Forbidden, status.HTTP_403_FORBIDDEN, "forbidden"),
+    (PayloadTooLarge, status.HTTP_413_CONTENT_TOO_LARGE, "payload-too-large"),
+    (UnsupportedMediaType, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "unsupported-media-type"),
     (NotFound, status.HTTP_404_NOT_FOUND, "not-found"),
     (ValidationFailed, status.HTTP_422_UNPROCESSABLE_CONTENT, "validation-failed"),
     (Conflict, status.HTTP_409_CONFLICT, "conflict"),
