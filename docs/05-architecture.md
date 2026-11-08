@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.16
+**Docs set version:** 0.3.17
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -411,10 +411,9 @@ Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: ba
 
 | Workflow | Trigger | Jobs |
 |---|---|---|
-| `ci.yml` | PR to `develop`/`main`; push to `develop` or `main` | commit/branch policy; docs-sync; the jobs listed below. |
+| `ci.yml` | PR to `develop`/`main`; push to `develop` or `main` | commit/branch policy; docs-sync; the jobs listed below; on a push, the final `publish-images` job (all others green) builds the images and pushes them to GHCR tagged with the commit SHA; it never deploys (`ADR-015`). |
 | `codeql.yml` | PR and push to `develop`/`main`, weekly | CodeQL SAST for Python and TypeScript, results in the Security tab, alongside SonarQube (`NFR-SEC-04`). |
 | `security-nightly.yml` | every night | rescans `develop` and `main` (when it exists): full-history secret scan, dependency audits, images built from the branch; new CVEs appear without code changes. |
-| `publish-images.yml` | green `ci.yml` run on a push to `develop` or `main` | build the images and push them to GHCR tagged with the commit SHA; it never deploys (`ADR-015`). |
 | `release.yml` | tag `vX.Y.Z` (final releases only on `main`; pre-releases such as `v1.0.0-rc.1` anywhere) or a manual rehearsal | validates the tag, builds both images, scans them with Trivy (exceptions honoured), pushes multi-arch images (amd64, arm64 best effort) to GHCR as `X.Y.Z`, `X.Y` and `latest` (pre-releases: only `X.Y.Z`), writes the notes with `git-cliff`, creates the GitHub Release with the CycloneDX SBOMs attached. It never deploys. |
 | `dependabot` | weekly | PRs for Python, npm, Docker, Actions dependencies. |
 
@@ -621,7 +620,7 @@ Format: Status · Context · Decision · Consequences · Alternatives. Statuses:
 ### ADR-015 — Staging and production on the homelab cluster, deployed manually
 - **Status:** Accepted (amended 2026-11-07: automated deployment withdrawn)
 - **Context:** The project needs real environments: staging follows `develop`, production follows `main`, both on the operator's K3s cluster (`CON-10`) and reachable only over HTTPS (`CON-11`). The owner wants every release to be a deliberate, human-controlled act and no cluster credentials or cluster API exposure on GitHub.
-- **Decision:** The environment infrastructure (namespaces, database, TLS, secrets, access control) is managed outside this repository. CI (`publish-images.yml`) only builds images tagged with the immutable commit SHA and pushes them to GHCR; it never deploys. After the work is tested and done, the operator runs the infrastructure playbook locally with that SHA, then verifies the site over HTTPS (health endpoints answer and plain HTTP only redirects to HTTPS). No deployment credentials are stored in GitHub.
+- **Decision:** The environment infrastructure (namespaces, database, TLS, secrets, access control) is managed outside this repository. CI (the `publish-images` job of `ci.yml`, after every other job is green on a push to `develop` or `main`) only builds images tagged with the immutable commit SHA and pushes them to GHCR; it never deploys. After the work is tested and done, the operator runs the infrastructure playbook locally with that SHA, then verifies the site over HTTPS (health endpoints answer and plain HTTP only redirects to HTTPS). No deployment credentials are stored in GitHub.
 - **Consequences:** A release needs one manual command; there is no continuous deployment and no cluster API exposure. Image names and tags are the contract between this repository and the infrastructure.
 - **Alternatives:** Push from GitHub Actions with a restricted credential (rejected by the owner: exposes the cluster API and holds credentials in GitHub), pull-based deploys from the cluster (Rundeck), or a GitOps controller; revisit if releases become frequent.
 
