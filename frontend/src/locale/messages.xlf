@@ -137,9 +137,17 @@
         <source>Sign in required - MTG Card Vault</source>
       </segment>
     </unit>
-    <unit id="route.notfound">
+    <unit id="route.callback">
       <notes>
         <note category="location">src/app/app.routes.ts:38</note>
+      </notes>
+      <segment>
+        <source>Signing in - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.notfound">
+      <notes>
+        <note category="location">src/app/app.routes.ts:43</note>
       </notes>
       <segment>
         <source>Page not found - MTG Card Vault</source>
@@ -423,6 +431,14 @@
       </notes>
       <segment>
         <source>Your vault is empty</source>
+      </segment>
+    </unit>
+    <unit id="state.loading">
+      <notes>
+        <note category="location">src/app/shared/states/loading-state.ts:12</note>
+      </notes>
+      <segment>
+        <source>Loading…</source>
       </segment>
     </unit>
   </file>

@@ -34,6 +34,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/signin-required').then((m) => m.SigninRequiredPage),
   },
   {
+    path: 'callback',
+    title: $localize`:@@route.callback:Signing in - MTG Card Vault`,
+    loadComponent: () => import('./pages/callback').then((m) => m.CallbackPage),
+  },
+  {
     path: '**',
     title: $localize`:@@route.notfound:Page not found - MTG Card Vault`,
     loadComponent: () => import('./pages/not-found').then((m) => m.NotFoundPage),
