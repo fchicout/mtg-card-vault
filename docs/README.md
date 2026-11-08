@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.27
+**Docs set version:** 0.3.28
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.28 | 2026-11-08 | Issues #73-#79: the card model, the Scryfall adapter (client rules, backoff, circuit breaker, mapper, cache) and the Scryfall test double documented; new settings. |
 | 0.3.27 | 2026-11-08 | Issues #63, #65, #66: session renewal behaviour, the operator guide for the identity provider (7.7) and the identity journeys documented. |
 | 0.3.26 | 2026-11-08 | Issues #61, #62, #64: route guard, sign-in page, user menu, sign-out and the CSP/CORS rules for the identity provider documented. |
 | 0.3.25 | 2026-11-08 | Issue #60: SPA sign-in (library choice, storage rules, run-time settings) documented. |
