@@ -1,5 +1,8 @@
 # Developer shortcuts. The real gates live in scripts/ and .github/workflows/ci.yml.
-.PHONY: docs-check docs-coverage gates commit-policy next-version changelog-preview
+.PHONY: smoke docs-check docs-coverage gates commit-policy next-version changelog-preview
+
+smoke: ## Post-deploy smoke check: make smoke URL=https://staging.mtg.fchicout.dev
+	python3 scripts/smoke_check.py "$(URL)"
 
 docs-check: ## Documentation set is synchronized (also run by the pre-commit hook)
 	python3 scripts/check_docs_sync.py

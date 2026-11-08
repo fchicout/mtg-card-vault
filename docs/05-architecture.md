@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.18
+**Docs set version:** 0.3.19
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -443,6 +443,7 @@ Branch protection on `main` and `develop`: PR required, required checks = all `c
 3. Open `https://<APP_HOST>[:port]/`. Development uses `https://localhost:8443`; trust the proxy's local CA once with `docker compose cp proxy:/data/caddy/pki/authorities/local/root.crt .` and import that file into your browser or system store. Plain HTTP only redirects.
 4. Upgrade: pull or build the new version and run `up -d` again; migrations run on start. Back up as in section 7.2a. Only the proxy publishes ports; the database is unreachable from outside the compose network.
 5. Deployment to the homelab cluster is a different path (`ADR-015`); the images are the same.
+6. After any rollout run `python3 scripts/smoke_check.py https://<APP_HOST>` (or `make smoke URL=...`): HTTP redirects to HTTPS, `/healthz` and `/readyz` answer 200, the security headers of `NFR-SEC-06` and HSTS are present and no server version leaks. Exit code 1 means a check failed (issue #54).
 
 ### 7.5 Versioning and branching
 Gitflow: `feature/*` → `develop` → `release/x.y.z` → `main` (tag `vx.y.z`) → back-merge to `develop`; `hotfix/*` from `main`. Conventional Commits drive the version bump (`feat` → minor, `fix` → patch, `!`/`BREAKING CHANGE` → major; pre-1.0 rules apply). Commit scopes: `auth`, `vault`, `catalog`, `scan`, `pricing`, `api`, `ui`, `deploy`, `ci`, `docs`.
