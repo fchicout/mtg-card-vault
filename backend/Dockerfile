@@ -17,8 +17,11 @@ RUN uv sync --frozen --no-dev --no-editable
 FROM python:3.14-slim@sha256:af8a5aa14780025dbfbcfbc81bd8a91ebd87711dd5b0f48ed71090949dd7cb1d
 # Pick up OS security fixes published after the base image was built (NFR-SEC-05), then drop the
 # apt lists. The runtime never installs packages: drop pip (and its vendored msgpack/urllib3) too.
+# Tesseract (English data only) is the OCR engine of the scanner (ADR-004); it runs as the same
+# non-root user, reads the image from stdin and writes nothing to disk.
 RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/* \
     && python -m pip uninstall -y pip \
     && useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin app

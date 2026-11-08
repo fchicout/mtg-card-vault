@@ -25,6 +25,7 @@ def test_expected_operations_are_present() -> None:
         "/api/v1/catalog/cards/{card_id}/printings",
         "/api/v1/vault/entries",
         "/api/v1/vault/entries/{entry_id}",
+        "/api/v1/scans",
     }
     me = paths["/api/v1/me"]["get"]
     assert me["operationId"] == "getMe"

@@ -1,0 +1,53 @@
+name: Scan accuracy nightly
+
+# Card recognition quality and speed (issue #127, BO-02): the reference set is rebuilt from real
+# Scryfall images, degraded in three levels (good, normal, hard) and read by the engine in use.
+# Budgets guard against regressions on the "good" level; the other levels are reported only.
+# Simulated degradation is not a camera: add real photos to backend/tests/accuracy (see its README).
+on:
+  schedule:
+    - cron: "41 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  accuracy:
+    name: accuracy
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen
+      - name: Install the OCR engine
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+      - name: Download the reference set (card images are fetched politely, one by one)
+        run: uv run python -m tests.accuracy.reference_set build
+      - name: Measure accuracy and latency
+        run: |
+          uv run python -m tests.accuracy.harness --engine tesseract --min-top3 0.0 | tee accuracy.json
+          uv run python -m tests.accuracy.harness --engine tesseract --levels good \
+            --min-top3 0.85 --max-p90-ms 2000
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "### Scan accuracy"
+            echo '```json'
+            cat accuracy.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: scan-accuracy
+          path: backend/accuracy.json
+          if-no-files-found: ignore

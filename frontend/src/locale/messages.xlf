@@ -179,7 +179,7 @@
     </unit>
     <unit id="auth.account">
       <notes>
-        <note category="location">src/app/app.ts:53</note>
+        <note category="location">src/app/app.ts:55</note>
       </notes>
       <segment>
         <source>Account</source>
@@ -859,26 +859,234 @@
     </unit>
     <unit id="page.scan.title">
       <notes>
-        <note category="location">src/app/pages/scan.ts:11,12</note>
+        <note category="location">src/app/pages/scan.ts:100,101</note>
       </notes>
       <segment>
         <source>Scan</source>
       </segment>
     </unit>
-    <unit id="page.scan.text">
+    <unit id="page.scan.intro">
       <notes>
-        <note category="location">src/app/pages/scan.ts:14,16</note>
+        <note category="location">src/app/pages/scan.ts:102,106</note>
       </notes>
       <segment>
-        <source>Adding cards with your camera arrives with the scanning feature.</source>
+        <source> Hold the card inside the outline, with the title and the bottom line in view and good light. The picture is sent for reading and then discarded; nothing is saved until you confirm. </source>
       </segment>
     </unit>
-    <unit id="page.scan.empty">
+    <unit id="scan.start">
       <notes>
-        <note category="location">src/app/pages/scan.ts:20</note>
+        <note category="location">src/app/pages/scan.ts:123,124</note>
       </notes>
       <segment>
-        <source>The scanner is not available yet</source>
+        <source> Start camera </source>
+      </segment>
+    </unit>
+    <unit id="scan.search">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:125,129</note>
+      </notes>
+      <segment>
+        <source>Search by name</source>
+      </segment>
+    </unit>
+    <unit id="scan.reading">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:143,144</note>
+      </notes>
+      <segment>
+        <source>Reading the card...</source>
+      </segment>
+    </unit>
+    <unit id="scan.capture">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:145,146</note>
+      </notes>
+      <segment>
+        <source>Scan this card</source>
+      </segment>
+    </unit>
+    <unit id="scan.stop">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:155,156</note>
+      </notes>
+      <segment>
+        <source> Stop camera </source>
+      </segment>
+    </unit>
+    <unit id="scan.candidates">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:162,163</note>
+      </notes>
+      <segment>
+        <source>Is it one of these?</source>
+      </segment>
+    </unit>
+    <unit id="scan.read">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:164</note>
+      </notes>
+      <segment>
+        <source>We read:</source>
+      </segment>
+    </unit>
+    <unit id="scan.exact">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:181,182</note>
+      </notes>
+      <segment>
+        <source>Exact match</source>
+      </segment>
+    </unit>
+    <unit id="scan.choose">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:193,194</note>
+      </notes>
+      <segment>
+        <source> This one </source>
+      </segment>
+    </unit>
+    <unit id="scan.noMatch.text">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:201,203</note>
+      </notes>
+      <segment>
+        <source>Try again with more light and the whole card in the outline, or search for it by name.</source>
+      </segment>
+    </unit>
+    <unit id="scan.again">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:214,215</note>
+      </notes>
+      <segment>
+        <source> Scan again </source>
+      </segment>
+    </unit>
+    <unit id="scan.manual">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:222,224</note>
+      </notes>
+      <segment>
+        <source>Search by name</source>
+      </segment>
+    </unit>
+    <unit id="scan.confirmTitle">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:234,235</note>
+      </notes>
+      <segment>
+        <source>Add to vault</source>
+      </segment>
+    </unit>
+    <unit id="scan.addSubmit">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:266</note>
+      </notes>
+      <segment>
+        <source>Add</source>
+      </segment>
+    </unit>
+    <unit id="scan.loadFailed">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:335</note>
+      </notes>
+      <segment>
+        <source>That card could not be loaded. Try again.</source>
+      </segment>
+    </unit>
+    <unit id="scan.added">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:360</note>
+      </notes>
+      <segment>
+        <source>Added <ph id="0" equiv="name" disp="card.name"/>. You now own <ph id="1" equiv="quantity" disp="entry.quantity"/> of this printing.</source>
+      </segment>
+    </unit>
+    <unit id="scan.unreadable">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:375</note>
+      </notes>
+      <segment>
+        <source>We could not read the card</source>
+      </segment>
+    </unit>
+    <unit id="scan.noMatchHeading">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:376</note>
+      </notes>
+      <segment>
+        <source>We did not find a matching card</source>
+      </segment>
+    </unit>
+    <unit id="scan.addFailed">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:385</note>
+      </notes>
+      <segment>
+        <source>The card could not be added. Try again.</source>
+      </segment>
+    </unit>
+    <unit id="scan.denied">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:399</note>
+      </notes>
+      <segment>
+        <source>The camera is blocked. Allow it for this site in your browser, or search by name instead.</source>
+      </segment>
+    </unit>
+    <unit id="scan.missing">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:401</note>
+      </notes>
+      <segment>
+        <source>No camera was found on this device. You can search by name instead.</source>
+      </segment>
+    </unit>
+    <unit id="scan.unsupported">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:403</note>
+      </notes>
+      <segment>
+        <source>This browser cannot use the camera here. You can search by name instead.</source>
+      </segment>
+    </unit>
+    <unit id="scan.cameraFailed">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:405</note>
+      </notes>
+      <segment>
+        <source>The camera could not be started. Try again.</source>
+      </segment>
+    </unit>
+    <unit id="scan.badImage">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:415</note>
+      </notes>
+      <segment>
+        <source>That picture could not be used. Try again.</source>
+      </segment>
+    </unit>
+    <unit id="scan.rate">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:417</note>
+      </notes>
+      <segment>
+        <source>You are scanning very fast. Wait a moment and try again.</source>
+      </segment>
+    </unit>
+    <unit id="scan.unavailable">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:419</note>
+      </notes>
+      <segment>
+        <source>The scanner is temporarily unavailable. You can search by name instead.</source>
+      </segment>
+    </unit>
+    <unit id="scan.failed">
+      <notes>
+        <note category="location">src/app/pages/scan.ts:421</note>
+      </notes>
+      <segment>
+        <source>The card could not be scanned. Try again.</source>
       </segment>
     </unit>
     <unit id="page.signin.title">

@@ -15,21 +15,29 @@ from mtgvault.adapters.auth.deny_all import DenyAllTokenVerifier
 from mtgvault.adapters.auth.jwks import JwksTokenVerifier, httpx_json_fetcher
 from mtgvault.adapters.cache import TtlCache
 from mtgvault.adapters.db.unit_of_work import SqlAlchemyUnitOfWork
+from mtgvault.adapters.ocr.tesseract import TesseractRecognizer, find_tesseract
+from mtgvault.adapters.rate_limit import SlidingWindowRateLimiter
 from mtgvault.adapters.resilience import CircuitBreaker
 from mtgvault.adapters.scryfall.client import ScryfallClient
 from mtgvault.adapters.scryfall.provider import ScryfallCardProvider
 from mtgvault.adapters.sql_readiness import SqlReadinessProbe
 from mtgvault.api import health, v1
 from mtgvault.api.errors import PROBLEM_RESPONSES, install_error_handlers
+from mtgvault.api.image_upload import MAX_BYTES
+from mtgvault.api.limits import BodyLimitMiddleware
 from mtgvault.api.middleware import CorrelationIdMiddleware
 from mtgvault.application.catalog_service import CatalogService
 from mtgvault.application.ports import (
     Cache,
     CardDataProvider,
+    RateLimiter,
     ReadinessProbe,
+    RecognizedText,
+    TextRecognizer,
     TokenVerifier,
     UnitOfWork,
 )
+from mtgvault.application.scan_service import ScanService
 from mtgvault.application.user_service import UserService
 from mtgvault.application.vault_service import VaultService
 from mtgvault.config import Settings, load_settings
@@ -46,6 +54,8 @@ def create_app(
     token_verifier: TokenVerifier | None = None,
     card_provider: CardDataProvider | None = None,
     cache: Cache | None = None,
+    text_recognizer: TextRecognizer | None = None,
+    scan_rate_limiter: RateLimiter | None = None,
 ) -> FastAPI:
     """Build the application. Collaborators can be injected (tests, OpenAPI export).
 
@@ -64,6 +74,8 @@ def create_app(
     token_verifier = _build_verifier(settings) if token_verifier is None else token_verifier
     card_provider = _build_card_provider(settings) if card_provider is None else card_provider
     cache = _build_cache(settings) if cache is None else cache
+    scan_rate_limiter = scan_rate_limiter or _build_rate_limiter(settings)
+    text_recognizer = _build_recognizer(settings) if text_recognizer is None else text_recognizer
     docs_enabled = settings is None or settings.api_docs_enabled
 
     app = FastAPI(
@@ -92,14 +104,20 @@ def create_app(
     app.state.catalog_cache = cache
     catalog = CatalogService(card_provider or _NoCards(), cache)
     app.state.catalog_service = catalog
+    app.state.scan_rate_limiter = scan_rate_limiter
+    app.state.scan_service = ScanService(text_recognizer or _NoRecognizer(), catalog)
     app.state.vault_service = VaultService(
         unit_of_work_factory or _no_database,
         catalog,
-        stale_after=timedelta(hours=settings.price_stale_after_hours if settings else 24),
+        stale_after=_stale_after(settings),
     )
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
     app.add_middleware(CorrelationIdMiddleware)
+    # Whole body at most the image limit plus a little for the multipart envelope.
+    app.add_middleware(
+        BodyLimitMiddleware, path_prefix="/api/v1/scans", max_bytes=MAX_BYTES + 16 * 1024
+    )
     _add_cors(app, settings)
     install_error_handlers(app)
     app.include_router(health.router)
@@ -170,3 +188,24 @@ class _NoCards:
 
     def printings(self, *_: object) -> ResultPage[Card]:
         raise UpstreamUnavailable(_NO_SOURCE)
+
+
+def _build_rate_limiter(settings: Settings | None) -> RateLimiter:
+    return SlidingWindowRateLimiter(settings.scan_rate_per_minute if settings else 30)
+
+
+def _stale_after(settings: Settings | None) -> timedelta:
+    return timedelta(hours=settings.price_stale_after_hours if settings else 24)
+
+
+def _build_recognizer(settings: Settings | None) -> TextRecognizer | None:
+    """Tesseract when the real service runs and the engine is installed (the API image has it)."""
+    command = find_tesseract() if settings else None
+    return TesseractRecognizer(command) if command else None
+
+
+class _NoRecognizer:
+    """Stands in when no OCR engine is configured (tests that do not scan)."""
+
+    def read(self, *_: object) -> RecognizedText:
+        raise UpstreamUnavailable("Card recognition is not available.")
