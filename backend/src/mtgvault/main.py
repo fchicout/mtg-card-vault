@@ -4,8 +4,6 @@ Run with: ``uvicorn mtgvault.main:create_app --factory``
 """
 
 from collections.abc import Callable
-from typing import NoReturn
-from uuid import UUID
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -152,14 +150,11 @@ def _no_database() -> UnitOfWork:
 class _NoCards:
     """Stands in when no card source is configured (tests that do not touch the catalogue)."""
 
-    def _fail(self) -> NoReturn:
+    def search(self, *_: object) -> ResultPage[Card]:
         raise UpstreamUnavailable("No card data source is configured.")
 
-    def search(self, query: str, page: int) -> ResultPage[Card]:
-        self._fail()
+    def get(self, *_: object) -> Card:
+        raise UpstreamUnavailable("No card data source is configured.")
 
-    def get(self, card_id: UUID) -> Card:
-        self._fail()
-
-    def printings(self, oracle_id: UUID, page: int) -> ResultPage[Card]:
-        self._fail()
+    def printings(self, *_: object) -> ResultPage[Card]:
+        raise UpstreamUnavailable("No card data source is configured.")
