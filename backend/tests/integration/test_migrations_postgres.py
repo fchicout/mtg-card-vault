@@ -28,17 +28,17 @@ def versions(engine: Engine) -> list[str]:
 def test_upgrade_then_downgrade_round_trip(database_url: str, engine: Engine) -> None:
     config = alembic_config(database_url, BACKEND_DIR)
     command.upgrade(config, "head")
-    assert versions(engine) == ["0001"]
+    assert versions(engine) == ["0002"]
     command.downgrade(config, "base")
     assert versions(engine) == []
     command.upgrade(config, "head")  # and up again: the chain is repeatable
-    assert versions(engine) == ["0001"]
+    assert versions(engine) == ["0002"]
 
 
 def test_upgrade_to_head_is_idempotent(database_url: str, engine: Engine) -> None:
     upgrade_to_head(database_url, BACKEND_DIR)
     upgrade_to_head(database_url, BACKEND_DIR)
-    assert versions(engine) == ["0001"]
+    assert versions(engine) == ["0002"]
 
 
 def test_changes_in_db_session_are_rolled_back_between_tests(
@@ -88,7 +88,7 @@ def test_concurrent_migrations_do_not_race(database_url: str, engine: Engine) ->
     ]
     results = [(p.wait(timeout=120), p.stderr.read() if p.stderr else "") for p in processes]
     assert [code for code, _ in results] == [0, 0, 0, 0], results
-    assert versions(engine) == ["0001"]
+    assert versions(engine) == ["0002"]
 
 
 def test_api_container_entry_uses_the_real_engine(database_url: str) -> None:
