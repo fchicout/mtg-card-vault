@@ -96,6 +96,10 @@ class SqlAlchemyCardRepository:
             statement = statement.where(VaultEntryRow.card_id > after)
         return list(self._session.scalars(statement.limit(limit)))
 
+    def prices_of(self, card_ids: Sequence[UUID]) -> dict[UUID, Prices]:
+        rows = self._session.scalars(select(CardRow).where(CardRow.scryfall_id.in_(card_ids)))
+        return {row.scryfall_id: snapshot_from_row(row).card.prices for row in rows}
+
     def get(self, card_id: UUID) -> CardSnapshot | None:
         row = self._session.get(CardRow, card_id)
         return None if row is None else snapshot_from_row(row)

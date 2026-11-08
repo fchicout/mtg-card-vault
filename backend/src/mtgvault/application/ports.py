@@ -8,7 +8,7 @@ from typing import Protocol, Self
 from uuid import UUID
 
 from mtgvault.application.vault_query import VaultQuery
-from mtgvault.domain.card import Card, LookupResult, ResultPage
+from mtgvault.domain.card import Card, LookupResult, Prices, ResultPage
 from mtgvault.domain.identity import Principal
 from mtgvault.domain.user import User
 from mtgvault.domain.vault import (
@@ -122,6 +122,10 @@ class CardRepository(Protocol):
 
     def owned_ids(self, after: UUID | None, limit: int) -> list[UUID]:
         """Ids of printings owned by at least one user, ascending, ``limit`` after ``after``."""
+        ...
+
+    def prices_of(self, card_ids: Sequence[UUID]) -> dict[UUID, Prices]:
+        """The stored prices of the cards that exist locally (unknown ids are left out)."""
         ...
 
     def get(self, card_id: UUID) -> CardSnapshot | None: ...
