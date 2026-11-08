@@ -59,7 +59,8 @@ const serial = wanted.includes('chromium')
                 ? 'identity'
                 : SERIAL_SPECS[index - 1],
             ],
-      use: { ...devices['Desktop Chrome'] },
+      // Same browser (and fake camera) as the regular Chromium project.
+      use: projects.find((project) => project.name === 'chromium')?.use,
     }))
   : [];
 
