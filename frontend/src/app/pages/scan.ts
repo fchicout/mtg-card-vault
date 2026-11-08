@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  effect,
   ElementRef,
   inject,
   signal,
@@ -261,7 +262,7 @@ export class ScanPage {
   private readonly api = inject(Api);
   private readonly camera = inject(CameraService);
   private readonly video = viewChild<ElementRef<HTMLVideoElement>>('video');
-  private stream: MediaStream | null = null;
+  private readonly stream = signal<MediaStream | null>(null);
 
   protected readonly phase = signal<Phase>('idle');
   protected readonly problem = signal<string | null>(null);
@@ -277,6 +278,14 @@ export class ScanPage {
   constructor() {
     // The camera light must go off as soon as the page is left.
     inject(DestroyRef).onDestroy(() => this.release());
+    // The <video> exists only after the render that follows `phase = live`: attach the stream then.
+    effect(() => {
+      const element = this.video()?.nativeElement;
+      const stream = this.stream();
+      if (element) {
+        element.srcObject = stream;
+      }
+    });
   }
 
   protected async start(): Promise<void> {
@@ -284,21 +293,12 @@ export class ScanPage {
     this.added.set(null);
     this.ready.set(false);
     try {
-      this.stream = await this.camera.open();
+      this.stream.set(await this.camera.open());
     } catch (error) {
       this.problem.set(this.cameraMessage(error));
       return;
     }
     this.phase.set('live');
-    // The <video> exists after the next render; attach the stream then.
-    queueMicrotask(() => this.attach());
-  }
-
-  private attach(): void {
-    const element = this.video()?.nativeElement;
-    if (element && this.stream) {
-      element.srcObject = this.stream;
-    }
   }
 
   protected stop(): void {
@@ -313,8 +313,8 @@ export class ScanPage {
   }
 
   private release(): void {
-    this.camera.close(this.stream);
-    this.stream = null;
+    this.camera.close(this.stream());
+    this.stream.set(null);
     this.ready.set(false);
   }
 

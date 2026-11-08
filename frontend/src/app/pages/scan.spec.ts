@@ -81,6 +81,14 @@ describe('ScanPage', () => {
     answers = { scan: found, added: { quantity: 1, condition: 'NM', finish: 'nonfoil' } };
   });
 
+  it('shows the camera stream in the preview', async () => {
+    const stream = { id: 'live' } as unknown as MediaStream;
+    camera.open.mockResolvedValue(stream);
+    const f = render();
+    await click(f, '[data-testid="start-camera"]');
+    expect((q(f, 'video') as HTMLVideoElement).srcObject).toBe(stream);
+  });
+
   it('does not offer the capture before the preview has a size', async () => {
     const f = render();
     await click(f, '[data-testid="start-camera"]');
