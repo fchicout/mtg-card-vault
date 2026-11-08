@@ -326,7 +326,8 @@ export class CataloguePage {
     event.preventDefault();
     const data = new FormData(event.target as HTMLFormElement);
     const text = (name: string): string | undefined => {
-      const value = String(data.get(name) ?? '').trim();
+      const raw = data.get(name);
+      const value = typeof raw === 'string' ? raw.trim() : '';
       return value === '' ? undefined : value;
     };
     const colors = data.getAll('colors').map(String).join('');
