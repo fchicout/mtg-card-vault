@@ -4,11 +4,12 @@ import base64
 import hashlib
 import time
 from collections.abc import Iterator
+from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
 import pytest
-from tests.support.oidc_double import OidcDouble
+from tests.support.oidc_double import OidcDouble, write_self_signed_certificate
 
 from mtgvault.adapters.auth.jwks import JwksTokenVerifier, httpx_json_fetcher
 from mtgvault.domain.errors import Unauthenticated
@@ -170,3 +171,14 @@ def test_state_counts_grants_and_next_login_applies_once(provider: OidcDouble) -
     httpx.post(f"{provider.issuer}/__control", json={"next_login": "deny"})
     assert authorize(provider)["error"] == ["access_denied"]
     assert "code" in authorize(provider)  # one-shot: the following login works again
+
+
+def test_the_double_can_serve_https_with_a_generated_certificate(tmp_path: Path) -> None:
+    cert, key = write_self_signed_certificate(str(tmp_path))
+    secure = OidcDouble("https://localhost:0", tls=(cert, key)).start()
+    try:
+        response = httpx.get(f"https://localhost:{secure.port}/jwks.json", verify=cert)
+        assert response.status_code == 200
+        assert response.json()["keys"][0]["kid"]
+    finally:
+        secure.stop()
