@@ -108,7 +108,7 @@ export class AuthService {
     }
     const user = await this.manager.signinRedirectCallback(callbackUrl);
     this.adopt(user);
-    this.mark(true);
+    this.markSignedIn();
     const target = (user.state as SignInState | undefined)?.returnUrl;
     return target?.startsWith('/') && !target.startsWith('//') ? target : '/';
   }
@@ -214,7 +214,7 @@ export class AuthService {
   async clear(): Promise<void> {
     this.cancelTimer();
     this.current.set(null);
-    this.mark(false);
+    this.unmarkSignedIn();
     await this.manager?.removeUser();
   }
 
@@ -222,15 +222,15 @@ export class AuthService {
     return this.read(SESSION_MARKER) === '1';
   }
 
-  private mark(signedIn: boolean): void {
-    if (signedIn) {
-      this.write(SESSION_MARKER, '1');
-    } else {
-      try {
-        sessionStorage.removeItem(SESSION_MARKER);
-      } catch {
-        // Storage can be blocked; nothing to remove then.
-      }
+  private markSignedIn(): void {
+    this.write(SESSION_MARKER, '1');
+  }
+
+  private unmarkSignedIn(): void {
+    try {
+      sessionStorage.removeItem(SESSION_MARKER);
+    } catch {
+      // Storage can be blocked; nothing to remove then.
     }
   }
 

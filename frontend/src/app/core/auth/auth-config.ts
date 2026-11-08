@@ -12,6 +12,18 @@ export const AUTH_CONFIG = new InjectionToken<{ value: AuthConfig | null }>('AUT
   factory: () => ({ value: null }),
 });
 
+/** Linear-time trimming (a regular expression here would backtrack). */
+function withoutTrailingSlashes(value: string | null): string | null {
+  if (value === null) {
+    return null;
+  }
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') {
+    end -= 1;
+  }
+  return value.slice(0, end);
+}
+
 function text(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
 }
@@ -22,7 +34,7 @@ export function parseAuthConfig(raw: unknown): AuthConfig | null {
     return null;
   }
   const record = raw as Record<string, unknown>;
-  const issuer = text(record['issuer'])?.replace(/\/+$/, '') ?? null;
+  const issuer = withoutTrailingSlashes(text(record['issuer']));
   const clientId = text(record['clientId']);
   const audience = text(record['audience']);
   if (!issuer || !clientId || !audience) {
