@@ -249,11 +249,23 @@ def fetch_optional_number(url: str, token: str, get: HttpGet, extract: Callable[
     return extract(body)
 
 
-def fetch_server_gate_status(host: str, key: str, token: str, get: HttpGet) -> str | None:
-    """SonarQube's own gate status. Shown for information; it never influences the verdict."""
+def fetch_server_gate(host: str, key: str, token: str, get: HttpGet) -> tuple[str | None, list[str]]:
+    """SonarQube's own gate: its status and the conditions in error. Information only."""
     query = urllib.parse.urlencode({"projectKey": key})
     status, body = get(f"{host}/api/qualitygates/project_status?{query}", token)
-    return str(body["projectStatus"]["status"]) if status == 200 else None
+    if status != 200:
+        return None, []
+    project = body["projectStatus"]
+    failing = [
+        f"{c.get('metricKey', '?')} is {c.get('actualValue', '?')} (needs {c.get('comparator', '?')} {c.get('errorThreshold', '?')})"
+        for c in project.get("conditions", []) if c.get("status") == "ERROR"
+    ]
+    return str(project["status"]), failing
+
+
+def fetch_server_gate_status(host: str, key: str, token: str, get: HttpGet) -> str | None:
+    """SonarQube's own gate status. Shown for information; it never influences the verdict."""
+    return fetch_server_gate(host, key, token, get)[0]
 
 
 def sonar_conditions(counts: IssueCounts, maintainability_rating: float | None) -> list[Condition]:
@@ -353,10 +365,12 @@ def cmd_sonar(args: argparse.Namespace) -> int:
     if verdict(conditions):
         for issue_line in fetch_blocking_issues(host, args.project, token, sonar_get):
             print(f"ISSUE    {issue_line}")
-    server = fetch_server_gate_status(host, args.project, token, sonar_get)
+    server, server_failures = fetch_server_gate(host, args.project, token, sonar_get)
     print("INFO     SonarQube's own gate: "
           + (f"{server} (informational only, never used for the verdict)" if server
              else "not readable with this token (never used for the verdict)"))
+    for failure in server_failures:
+        print(f"INFO       its condition in error: {failure}")
     return verdict(conditions)
 
 
