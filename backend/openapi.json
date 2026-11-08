@@ -54,6 +54,17 @@
       },
       "CardDetail": {
         "properties": {
+          "collection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OwnedPrices"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set when the caller owns this printing"
+          },
           "collector_number": {
             "title": "Collector Number",
             "type": "string"
@@ -475,6 +486,32 @@
           "id"
         ],
         "title": "Me",
+        "type": "object"
+      },
+      "OwnedPrices": {
+        "description": "How fresh the prices stored for the caller's own copy of this printing are (FR-PRC-05).",
+        "properties": {
+          "prices_stale": {
+            "title": "Prices Stale",
+            "type": "boolean"
+          },
+          "prices_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prices Updated At"
+          }
+        },
+        "required": [
+          "prices_stale"
+        ],
+        "title": "OwnedPrices",
         "type": "object"
       },
       "PricesDto": {

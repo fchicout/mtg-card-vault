@@ -17,6 +17,7 @@ from mtgvault.adapters.db.models import CardRow, VaultEntryRow
 from mtgvault.application.vault_query import VaultQuery
 from mtgvault.domain.vault import (
     MAX_QUANTITY,
+    CardSnapshot,
     Condition,
     Finish,
     VaultEntry,
@@ -250,6 +251,16 @@ class SqlAlchemyVaultRepository:
             )
         )
         return result.rowcount > 0  # type: ignore[attr-defined,no-any-return]
+
+    def owned_snapshot(self, user_id: UUID, card_id: UUID) -> CardSnapshot | None:
+        statement = (
+            select(CardRow)
+            .join(VaultEntryRow, VaultEntryRow.card_id == CardRow.scryfall_id)
+            .where(VaultEntryRow.user_id == user_id, CardRow.scryfall_id == card_id)
+            .limit(1)
+        )
+        row = self._session.scalars(statement).first()
+        return None if row is None else snapshot_from_row(row)
 
     def stale_card_ids(self, user_id: UUID, before: datetime, limit: int) -> list[UUID]:
         stamp = CardRow.prices_updated_at

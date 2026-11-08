@@ -459,3 +459,22 @@ def test_only_the_callers_stale_cards_are_refreshed(
     make_stale(migrated)
     entries(client, "alice")
     assert provider.lookup_calls == [(BOLT.id,)]
+
+
+def test_the_card_page_tells_the_owner_how_fresh_the_stored_prices_are(
+    client: TestClient, migrated: Engine
+) -> None:
+    add(client, "alice", BOLT.id)
+    url = f"/api/v1/catalog/cards/{BOLT.id}"
+    mine = client.get(url, headers=headers("alice")).json()["collection"]
+    assert mine["prices_stale"] is False and mine["prices_updated_at"] is not None
+    assert client.get(url, headers=headers("bob")).json()["collection"] is None  # not theirs
+    make_stale(migrated)
+    stale = client.get(url, headers=headers("alice")).json()["collection"]
+    assert stale["prices_stale"] is True  # what was stored when the page was asked for
+    assert (
+        client.get(f"/api/v1/catalog/cards/{LOTUS.id}", headers=headers("alice")).json()[
+            "collection"
+        ]
+        is None
+    )

@@ -19,6 +19,7 @@ export type { FieldProblem } from './models/field-problem';
 export type { Finish } from './models/finish';
 export type { HealthStatus } from './models/health-status';
 export type { Me } from './models/me';
+export type { OwnedPrices } from './models/owned-prices';
 export type { PricesDto } from './models/prices-dto';
 export type { Printing } from './models/printing';
 export type { PrintingPage } from './models/printing-page';

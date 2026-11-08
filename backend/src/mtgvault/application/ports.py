@@ -48,6 +48,10 @@ class UserRepository(Protocol):
         """
         ...
 
+    def id_of(self, subject: str) -> UUID | None:
+        """The id of the user with this token subject, or None when they were never provisioned."""
+        ...
+
 
 class UnitOfWork(Protocol):
     """One transaction around a use case. Leaving the block without ``commit`` rolls back."""
@@ -173,6 +177,10 @@ class VaultRepository(Protocol):
     def delete(self, user_id: UUID, entry_id: UUID) -> bool: ...
 
     def count(self, user_id: UUID) -> int: ...
+
+    def owned_snapshot(self, user_id: UUID, card_id: UUID) -> CardSnapshot | None:
+        """The stored copy of the printing when THIS user owns it, otherwise None."""
+        ...
 
     def stale_card_ids(self, user_id: UUID, before: datetime, limit: int) -> list[UUID]:
         """Distinct printings the user owns whose prices were last refreshed before ``before``

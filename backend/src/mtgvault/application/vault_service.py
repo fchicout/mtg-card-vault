@@ -146,6 +146,19 @@ class VaultService:
         updated = snapshot.prices_updated_at
         return updated is None or self._clock() - updated >= self._stale_after
 
+    def owned_prices(self, subject: str, card_id: UUID) -> CardSnapshot | None:
+        """The stored copy of a printing the user owns (its price freshness), else None.
+
+        An extra on the card page: when the database cannot answer, the page still works.
+        """
+        try:
+            with self._uow() as unit:
+                user_id = unit.users.id_of(subject)
+                return None if user_id is None else unit.vault.owned_snapshot(user_id, card_id)
+        except Exception:
+            _log.warning("could not read the stored prices", exc_info=True)
+            return None
+
     def refresh_stale_prices(self, user_id: UUID) -> None:
         """Refresh, in this process, the user's printings whose prices are stale (FR-PRC-05).
 

@@ -323,7 +323,7 @@
     </unit>
     <unit id="detail.back">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:72,74</note>
+        <note category="location">src/app/pages/card-detail.ts:77,79</note>
       </notes>
       <segment>
         <source>Back to the catalogue</source>
@@ -331,7 +331,7 @@
     </unit>
     <unit id="detail.set">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:102</note>
+        <note category="location">src/app/pages/card-detail.ts:107</note>
       </notes>
       <segment>
         <source>Set</source>
@@ -339,7 +339,7 @@
     </unit>
     <unit id="detail.number">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:103,104</note>
+        <note category="location">src/app/pages/card-detail.ts:108,109</note>
       </notes>
       <segment>
         <source>Collector number</source>
@@ -347,7 +347,7 @@
     </unit>
     <unit id="detail.rarity">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:105,106</note>
+        <note category="location">src/app/pages/card-detail.ts:110,111</note>
       </notes>
       <segment>
         <source>Rarity</source>
@@ -355,7 +355,7 @@
     </unit>
     <unit id="detail.finishes">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:107,108</note>
+        <note category="location">src/app/pages/card-detail.ts:112,113</note>
       </notes>
       <segment>
         <source>Finishes</source>
@@ -363,7 +363,7 @@
     </unit>
     <unit id="detail.prices">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:110,111</note>
+        <note category="location">src/app/pages/card-detail.ts:115,116</note>
       </notes>
       <segment>
         <source>Prices</source>
@@ -371,15 +371,47 @@
     </unit>
     <unit id="detail.noPrices">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:113,114</note>
+        <note category="location">src/app/pages/card-detail.ts:118,119</note>
       </notes>
       <segment>
         <source> No price is known for this printing. </source>
       </segment>
     </unit>
+    <unit id="detail.storedPrices">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:136,138</note>
+      </notes>
+      <segment>
+        <source>Prices stored for your collection were updated</source>
+      </segment>
+    </unit>
+    <unit id="detail.neverUpdated">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:141,143</note>
+      </notes>
+      <segment>
+        <source>Prices stored for your collection have not been updated yet.</source>
+      </segment>
+    </unit>
+    <unit id="detail.stale">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:146,148</note>
+      </notes>
+      <segment>
+        <source>outdated</source>
+      </segment>
+    </unit>
+    <unit id="detail.priceSource">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:152,154</note>
+      </notes>
+      <segment>
+        <source> Prices come from Scryfall and are for information only. </source>
+      </segment>
+    </unit>
     <unit id="detail.add">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:135,136</note>
+        <note category="location">src/app/pages/card-detail.ts:162,163</note>
       </notes>
       <segment>
         <source> Add to vault </source>
@@ -387,7 +419,7 @@
     </unit>
     <unit id="detail.toVault">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:142,144</note>
+        <note category="location">src/app/pages/card-detail.ts:169,171</note>
       </notes>
       <segment>
         <source>Open my vault</source>
@@ -395,7 +427,7 @@
     </unit>
     <unit id="detail.printings">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:152,153</note>
+        <note category="location">src/app/pages/card-detail.ts:179,180</note>
       </notes>
       <segment>
         <source>Printings</source>
@@ -403,7 +435,7 @@
     </unit>
     <unit id="detail.colSet">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:163</note>
+        <note category="location">src/app/pages/card-detail.ts:190</note>
       </notes>
       <segment>
         <source>Set</source>
@@ -411,7 +443,7 @@
     </unit>
     <unit id="detail.colNumber">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:163,164</note>
+        <note category="location">src/app/pages/card-detail.ts:190,191</note>
       </notes>
       <segment>
         <source>Number</source>
@@ -419,7 +451,7 @@
     </unit>
     <unit id="detail.colLang">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:164,165</note>
+        <note category="location">src/app/pages/card-detail.ts:191,192</note>
       </notes>
       <segment>
         <source>Language</source>
@@ -427,7 +459,7 @@
     </unit>
     <unit id="detail.colFinishes">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:165,166</note>
+        <note category="location">src/app/pages/card-detail.ts:192,193</note>
       </notes>
       <segment>
         <source>Finishes</source>
@@ -435,7 +467,7 @@
     </unit>
     <unit id="detail.colRarity">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:166,167</note>
+        <note category="location">src/app/pages/card-detail.ts:193,194</note>
       </notes>
       <segment>
         <source>Rarity</source>
@@ -443,7 +475,7 @@
     </unit>
     <unit id="detail.colAction">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:167,168</note>
+        <note category="location">src/app/pages/card-detail.ts:194,195</note>
       </notes>
       <segment>
         <source>Select</source>
@@ -451,7 +483,7 @@
     </unit>
     <unit id="detail.current">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:180,181</note>
+        <note category="location">src/app/pages/card-detail.ts:207,208</note>
       </notes>
       <segment>
         <source>Shown</source>
@@ -459,7 +491,7 @@
     </unit>
     <unit id="detail.select">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:188,189</note>
+        <note category="location">src/app/pages/card-detail.ts:215,216</note>
       </notes>
       <segment>
         <source>Select</source>
@@ -467,7 +499,7 @@
     </unit>
     <unit id="detail.prev">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:208,209</note>
+        <note category="location">src/app/pages/card-detail.ts:235,236</note>
       </notes>
       <segment>
         <source> Previous page </source>
@@ -475,7 +507,7 @@
     </unit>
     <unit id="detail.next">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:218,219</note>
+        <note category="location">src/app/pages/card-detail.ts:245,246</note>
       </notes>
       <segment>
         <source> Next page </source>
@@ -483,7 +515,7 @@
     </unit>
     <unit id="detail.addTitle">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:231,232</note>
+        <note category="location">src/app/pages/card-detail.ts:258,259</note>
       </notes>
       <segment>
         <source>Add to vault</source>
@@ -491,7 +523,7 @@
     </unit>
     <unit id="detail.noPrintings">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:257</note>
+        <note category="location">src/app/pages/card-detail.ts:286</note>
       </notes>
       <segment>
         <source>No printings found</source>
@@ -499,7 +531,7 @@
     </unit>
     <unit id="detail.addSubmit">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:268</note>
+        <note category="location">src/app/pages/card-detail.ts:297</note>
       </notes>
       <segment>
         <source>Add</source>
@@ -507,7 +539,7 @@
     </unit>
     <unit id="detail.added">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:337</note>
+        <note category="location">src/app/pages/card-detail.ts:393</note>
       </notes>
       <segment>
         <source>Added. You now own <ph id="0" equiv="quantity" disp="entry.quantity"/> of this printing (<ph id="1" equiv="condition" disp="entry.condition"/>, <ph id="2" equiv="finish" disp="entry.finish"/>).</source>
@@ -515,7 +547,7 @@
     </unit>
     <unit id="price.usd">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:376</note>
+        <note category="location">src/app/pages/card-detail.ts:432</note>
       </notes>
       <segment>
         <source>USD</source>
@@ -523,7 +555,7 @@
     </unit>
     <unit id="price.usdFoil">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:377</note>
+        <note category="location">src/app/pages/card-detail.ts:433</note>
       </notes>
       <segment>
         <source>USD foil</source>
@@ -531,7 +563,7 @@
     </unit>
     <unit id="price.usdEtched">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:378</note>
+        <note category="location">src/app/pages/card-detail.ts:434</note>
       </notes>
       <segment>
         <source>USD etched</source>
@@ -539,7 +571,7 @@
     </unit>
     <unit id="price.eur">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:379</note>
+        <note category="location">src/app/pages/card-detail.ts:435</note>
       </notes>
       <segment>
         <source>EUR</source>
@@ -547,7 +579,7 @@
     </unit>
     <unit id="price.eurFoil">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:380</note>
+        <note category="location">src/app/pages/card-detail.ts:436</note>
       </notes>
       <segment>
         <source>EUR foil</source>
@@ -555,7 +587,7 @@
     </unit>
     <unit id="price.eurEtched">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:381</note>
+        <note category="location">src/app/pages/card-detail.ts:437</note>
       </notes>
       <segment>
         <source>EUR etched</source>
@@ -563,7 +595,7 @@
     </unit>
     <unit id="detail.notFound">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:392</note>
+        <note category="location">src/app/pages/card-detail.ts:448</note>
       </notes>
       <segment>
         <source>We could not find this card.</source>
@@ -571,7 +603,7 @@
     </unit>
     <unit id="detail.unavailable">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:394</note>
+        <note category="location">src/app/pages/card-detail.ts:450</note>
       </notes>
       <segment>
         <source>The catalogue is temporarily unavailable. Please try again in a moment.</source>
@@ -579,7 +611,7 @@
     </unit>
     <unit id="detail.busy">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:396</note>
+        <note category="location">src/app/pages/card-detail.ts:452</note>
       </notes>
       <segment>
         <source>The catalogue is busy right now. Wait a moment and try again.</source>
@@ -587,7 +619,7 @@
     </unit>
     <unit id="detail.failed">
       <notes>
-        <note category="location">src/app/pages/card-detail.ts:398</note>
+        <note category="location">src/app/pages/card-detail.ts:454</note>
       </notes>
       <segment>
         <source>The card could not be loaded. Try again.</source>
@@ -859,7 +891,7 @@
     </unit>
     <unit id="page.scan.title">
       <notes>
-        <note category="location">src/app/pages/scan.ts:100,101</note>
+        <note category="location">src/app/pages/scan.ts:101,102</note>
       </notes>
       <segment>
         <source>Scan</source>
@@ -867,7 +899,7 @@
     </unit>
     <unit id="page.scan.intro">
       <notes>
-        <note category="location">src/app/pages/scan.ts:102,106</note>
+        <note category="location">src/app/pages/scan.ts:103,107</note>
       </notes>
       <segment>
         <source> Hold the card inside the outline, with the title and the bottom line in view and good light. The picture is sent for reading and then discarded; nothing is saved until you confirm. </source>
@@ -875,7 +907,7 @@
     </unit>
     <unit id="scan.start">
       <notes>
-        <note category="location">src/app/pages/scan.ts:123,124</note>
+        <note category="location">src/app/pages/scan.ts:124,125</note>
       </notes>
       <segment>
         <source> Start camera </source>
@@ -883,7 +915,7 @@
     </unit>
     <unit id="scan.search">
       <notes>
-        <note category="location">src/app/pages/scan.ts:125,129</note>
+        <note category="location">src/app/pages/scan.ts:126,130</note>
       </notes>
       <segment>
         <source>Search by name</source>
@@ -891,7 +923,7 @@
     </unit>
     <unit id="scan.reading">
       <notes>
-        <note category="location">src/app/pages/scan.ts:143,144</note>
+        <note category="location">src/app/pages/scan.ts:151,152</note>
       </notes>
       <segment>
         <source>Reading the card...</source>
@@ -899,7 +931,7 @@
     </unit>
     <unit id="scan.capture">
       <notes>
-        <note category="location">src/app/pages/scan.ts:145,146</note>
+        <note category="location">src/app/pages/scan.ts:153,154</note>
       </notes>
       <segment>
         <source>Scan this card</source>
@@ -907,7 +939,7 @@
     </unit>
     <unit id="scan.stop">
       <notes>
-        <note category="location">src/app/pages/scan.ts:155,156</note>
+        <note category="location">src/app/pages/scan.ts:163,164</note>
       </notes>
       <segment>
         <source> Stop camera </source>
@@ -915,7 +947,7 @@
     </unit>
     <unit id="scan.candidates">
       <notes>
-        <note category="location">src/app/pages/scan.ts:162,163</note>
+        <note category="location">src/app/pages/scan.ts:170,171</note>
       </notes>
       <segment>
         <source>Is it one of these?</source>
@@ -923,7 +955,7 @@
     </unit>
     <unit id="scan.read">
       <notes>
-        <note category="location">src/app/pages/scan.ts:164</note>
+        <note category="location">src/app/pages/scan.ts:172</note>
       </notes>
       <segment>
         <source>We read:</source>
@@ -931,7 +963,7 @@
     </unit>
     <unit id="scan.exact">
       <notes>
-        <note category="location">src/app/pages/scan.ts:181,182</note>
+        <note category="location">src/app/pages/scan.ts:189,190</note>
       </notes>
       <segment>
         <source>Exact match</source>
@@ -939,7 +971,7 @@
     </unit>
     <unit id="scan.choose">
       <notes>
-        <note category="location">src/app/pages/scan.ts:193,194</note>
+        <note category="location">src/app/pages/scan.ts:201,202</note>
       </notes>
       <segment>
         <source> This one </source>
@@ -947,7 +979,7 @@
     </unit>
     <unit id="scan.noMatch.text">
       <notes>
-        <note category="location">src/app/pages/scan.ts:201,203</note>
+        <note category="location">src/app/pages/scan.ts:209,211</note>
       </notes>
       <segment>
         <source>Try again with more light and the whole card in the outline, or search for it by name.</source>
@@ -955,7 +987,7 @@
     </unit>
     <unit id="scan.again">
       <notes>
-        <note category="location">src/app/pages/scan.ts:214,215</note>
+        <note category="location">src/app/pages/scan.ts:222,223</note>
       </notes>
       <segment>
         <source> Scan again </source>
@@ -963,7 +995,7 @@
     </unit>
     <unit id="scan.manual">
       <notes>
-        <note category="location">src/app/pages/scan.ts:222,224</note>
+        <note category="location">src/app/pages/scan.ts:230,232</note>
       </notes>
       <segment>
         <source>Search by name</source>
@@ -971,7 +1003,7 @@
     </unit>
     <unit id="scan.confirmTitle">
       <notes>
-        <note category="location">src/app/pages/scan.ts:234,235</note>
+        <note category="location">src/app/pages/scan.ts:242,243</note>
       </notes>
       <segment>
         <source>Add to vault</source>
@@ -979,7 +1011,7 @@
     </unit>
     <unit id="scan.addSubmit">
       <notes>
-        <note category="location">src/app/pages/scan.ts:266</note>
+        <note category="location">src/app/pages/scan.ts:276</note>
       </notes>
       <segment>
         <source>Add</source>
@@ -987,7 +1019,7 @@
     </unit>
     <unit id="scan.loadFailed">
       <notes>
-        <note category="location">src/app/pages/scan.ts:335</note>
+        <note category="location">src/app/pages/scan.ts:346</note>
       </notes>
       <segment>
         <source>That card could not be loaded. Try again.</source>
@@ -995,7 +1027,7 @@
     </unit>
     <unit id="scan.added">
       <notes>
-        <note category="location">src/app/pages/scan.ts:360</note>
+        <note category="location">src/app/pages/scan.ts:371</note>
       </notes>
       <segment>
         <source>Added <ph id="0" equiv="name" disp="card.name"/>. You now own <ph id="1" equiv="quantity" disp="entry.quantity"/> of this printing.</source>
@@ -1003,7 +1035,7 @@
     </unit>
     <unit id="scan.unreadable">
       <notes>
-        <note category="location">src/app/pages/scan.ts:375</note>
+        <note category="location">src/app/pages/scan.ts:386</note>
       </notes>
       <segment>
         <source>We could not read the card</source>
@@ -1011,7 +1043,7 @@
     </unit>
     <unit id="scan.noMatchHeading">
       <notes>
-        <note category="location">src/app/pages/scan.ts:376</note>
+        <note category="location">src/app/pages/scan.ts:387</note>
       </notes>
       <segment>
         <source>We did not find a matching card</source>
@@ -1019,7 +1051,7 @@
     </unit>
     <unit id="scan.addFailed">
       <notes>
-        <note category="location">src/app/pages/scan.ts:385</note>
+        <note category="location">src/app/pages/scan.ts:396</note>
       </notes>
       <segment>
         <source>The card could not be added. Try again.</source>
@@ -1027,7 +1059,7 @@
     </unit>
     <unit id="scan.denied">
       <notes>
-        <note category="location">src/app/pages/scan.ts:399</note>
+        <note category="location">src/app/pages/scan.ts:410</note>
       </notes>
       <segment>
         <source>The camera is blocked. Allow it for this site in your browser, or search by name instead.</source>
@@ -1035,7 +1067,7 @@
     </unit>
     <unit id="scan.missing">
       <notes>
-        <note category="location">src/app/pages/scan.ts:401</note>
+        <note category="location">src/app/pages/scan.ts:412</note>
       </notes>
       <segment>
         <source>No camera was found on this device. You can search by name instead.</source>
@@ -1043,7 +1075,7 @@
     </unit>
     <unit id="scan.unsupported">
       <notes>
-        <note category="location">src/app/pages/scan.ts:403</note>
+        <note category="location">src/app/pages/scan.ts:414</note>
       </notes>
       <segment>
         <source>This browser cannot use the camera here. You can search by name instead.</source>
@@ -1051,7 +1083,7 @@
     </unit>
     <unit id="scan.cameraFailed">
       <notes>
-        <note category="location">src/app/pages/scan.ts:405</note>
+        <note category="location">src/app/pages/scan.ts:416</note>
       </notes>
       <segment>
         <source>The camera could not be started. Try again.</source>
@@ -1059,7 +1091,7 @@
     </unit>
     <unit id="scan.badImage">
       <notes>
-        <note category="location">src/app/pages/scan.ts:415</note>
+        <note category="location">src/app/pages/scan.ts:426</note>
       </notes>
       <segment>
         <source>That picture could not be used. Try again.</source>
@@ -1067,7 +1099,7 @@
     </unit>
     <unit id="scan.rate">
       <notes>
-        <note category="location">src/app/pages/scan.ts:417</note>
+        <note category="location">src/app/pages/scan.ts:428</note>
       </notes>
       <segment>
         <source>You are scanning very fast. Wait a moment and try again.</source>
@@ -1075,7 +1107,7 @@
     </unit>
     <unit id="scan.unavailable">
       <notes>
-        <note category="location">src/app/pages/scan.ts:419</note>
+        <note category="location">src/app/pages/scan.ts:430</note>
       </notes>
       <segment>
         <source>The scanner is temporarily unavailable. You can search by name instead.</source>
@@ -1083,7 +1115,7 @@
     </unit>
     <unit id="scan.failed">
       <notes>
-        <note category="location">src/app/pages/scan.ts:421</note>
+        <note category="location">src/app/pages/scan.ts:432</note>
       </notes>
       <segment>
         <source>The card could not be scanned. Try again.</source>
@@ -1155,7 +1187,7 @@
     </unit>
     <unit id="page.vault.title">
       <notes>
-        <note category="location">src/app/pages/vault.ts:97,99</note>
+        <note category="location">src/app/pages/vault.ts:111,113</note>
       </notes>
       <segment>
         <source>Vault</source>
@@ -1163,7 +1195,7 @@
     </unit>
     <unit id="vault.q">
       <notes>
-        <note category="location">src/app/pages/vault.ts:105,106</note>
+        <note category="location">src/app/pages/vault.ts:121,122</note>
       </notes>
       <segment>
         <source>Card name</source>
@@ -1171,7 +1203,7 @@
     </unit>
     <unit id="vault.set">
       <notes>
-        <note category="location">src/app/pages/vault.ts:117,119</note>
+        <note category="location">src/app/pages/vault.ts:133,135</note>
       </notes>
       <segment>
         <source>Set code</source>
@@ -1179,7 +1211,7 @@
     </unit>
     <unit id="vault.type">
       <notes>
-        <note category="location">src/app/pages/vault.ts:129,131</note>
+        <note category="location">src/app/pages/vault.ts:145,147</note>
       </notes>
       <segment>
         <source>Type</source>
@@ -1187,7 +1219,7 @@
     </unit>
     <unit id="vault.rarity">
       <notes>
-        <note category="location">src/app/pages/vault.ts:140,141</note>
+        <note category="location">src/app/pages/vault.ts:156,157</note>
       </notes>
       <segment>
         <source>Rarity</source>
@@ -1195,7 +1227,7 @@
     </unit>
     <unit id="vault.anyRarity">
       <notes>
-        <note category="location">src/app/pages/vault.ts:142,143</note>
+        <note category="location">src/app/pages/vault.ts:158,159</note>
       </notes>
       <segment>
         <source>Any</source>
@@ -1203,7 +1235,7 @@
     </unit>
     <unit id="vault.colors">
       <notes>
-        <note category="location">src/app/pages/vault.ts:149,150</note>
+        <note category="location">src/app/pages/vault.ts:165,166</note>
       </notes>
       <segment>
         <source>Colours</source>
@@ -1211,7 +1243,7 @@
     </unit>
     <unit id="vault.pageSize">
       <notes>
-        <note category="location">src/app/pages/vault.ts:164,165</note>
+        <note category="location">src/app/pages/vault.ts:180,181</note>
       </notes>
       <segment>
         <source>Per page</source>
@@ -1219,7 +1251,7 @@
     </unit>
     <unit id="vault.search">
       <notes>
-        <note category="location">src/app/pages/vault.ts:173,174</note>
+        <note category="location">src/app/pages/vault.ts:189,190</note>
       </notes>
       <segment>
         <source> Search </source>
@@ -1227,7 +1259,7 @@
     </unit>
     <unit id="vault.clear">
       <notes>
-        <note category="location">src/app/pages/vault.ts:183,184</note>
+        <note category="location">src/app/pages/vault.ts:199,200</note>
       </notes>
       <segment>
         <source> Clear </source>
@@ -1235,7 +1267,7 @@
     </unit>
     <unit id="vault.emptyText">
       <notes>
-        <note category="location">src/app/pages/vault.ts:197,198</note>
+        <note category="location">src/app/pages/vault.ts:213,214</note>
       </notes>
       <segment>
         <source>Cards you add will appear here.</source>
@@ -1243,7 +1275,7 @@
     </unit>
     <unit id="vault.scan">
       <notes>
-        <note category="location">src/app/pages/vault.ts:204,206</note>
+        <note category="location">src/app/pages/vault.ts:220,222</note>
       </notes>
       <segment>
         <source>Scan a card</source>
@@ -1251,7 +1283,7 @@
     </unit>
     <unit id="vault.browse">
       <notes>
-        <note category="location">src/app/pages/vault.ts:211,213</note>
+        <note category="location">src/app/pages/vault.ts:227,229</note>
       </notes>
       <segment>
         <source>Search the catalogue</source>
@@ -1259,7 +1291,7 @@
     </unit>
     <unit id="vault.noMatchText">
       <notes>
-        <note category="location">src/app/pages/vault.ts:218,220</note>
+        <note category="location">src/app/pages/vault.ts:234,236</note>
       </notes>
       <segment>
         <source>Try other words or clear the filters.</source>
@@ -1267,7 +1299,7 @@
     </unit>
     <unit id="vault.total">
       <notes>
-        <note category="location">src/app/pages/vault.ts:223</note>
+        <note category="location">src/app/pages/vault.ts:239</note>
       </notes>
       <segment>
         <source>Entries:</source>
@@ -1275,7 +1307,7 @@
     </unit>
     <unit id="vault.colImage">
       <notes>
-        <note category="location">src/app/pages/vault.ts:228,229</note>
+        <note category="location">src/app/pages/vault.ts:244,245</note>
       </notes>
       <segment>
         <source>Image</source>
@@ -1283,7 +1315,7 @@
     </unit>
     <unit id="vault.colName">
       <notes>
-        <note category="location">src/app/pages/vault.ts:237,238</note>
+        <note category="location">src/app/pages/vault.ts:253,254</note>
       </notes>
       <segment>
         <source> Name </source>
@@ -1291,7 +1323,7 @@
     </unit>
     <unit id="vault.colSet">
       <notes>
-        <note category="location">src/app/pages/vault.ts:248,249</note>
+        <note category="location">src/app/pages/vault.ts:264,265</note>
       </notes>
       <segment>
         <source> Set </source>
@@ -1299,7 +1331,7 @@
     </unit>
     <unit id="vault.colNumber">
       <notes>
-        <note category="location">src/app/pages/vault.ts:251,252</note>
+        <note category="location">src/app/pages/vault.ts:267,268</note>
       </notes>
       <segment>
         <source>Number</source>
@@ -1307,7 +1339,7 @@
     </unit>
     <unit id="vault.colFinish">
       <notes>
-        <note category="location">src/app/pages/vault.ts:252,253</note>
+        <note category="location">src/app/pages/vault.ts:268,269</note>
       </notes>
       <segment>
         <source>Finish</source>
@@ -1315,7 +1347,7 @@
     </unit>
     <unit id="vault.colCondition">
       <notes>
-        <note category="location">src/app/pages/vault.ts:253,254</note>
+        <note category="location">src/app/pages/vault.ts:269,270</note>
       </notes>
       <segment>
         <source>Condition</source>
@@ -1323,7 +1355,7 @@
     </unit>
     <unit id="vault.colQuantity">
       <notes>
-        <note category="location">src/app/pages/vault.ts:262,263</note>
+        <note category="location">src/app/pages/vault.ts:278,279</note>
       </notes>
       <segment>
         <source> Quantity </source>
@@ -1331,31 +1363,31 @@
     </unit>
     <unit id="vault.colPrice">
       <notes>
-        <note category="location">src/app/pages/vault.ts:273,274</note>
+        <note category="location">src/app/pages/vault.ts:289,290</note>
       </notes>
       <segment>
         <source> Unit price </source>
       </segment>
     </unit>
+    <unit id="vault.colValue">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:292,293</note>
+      </notes>
+      <segment>
+        <source>Value</source>
+      </segment>
+    </unit>
     <unit id="vault.colActions">
       <notes>
-        <note category="location">src/app/pages/vault.ts:276,277</note>
+        <note category="location">src/app/pages/vault.ts:293,294</note>
       </notes>
       <segment>
         <source>Actions</source>
       </segment>
     </unit>
-    <unit id="vault.noPrice">
-      <notes>
-        <note category="location">src/app/pages/vault.ts:307,308</note>
-      </notes>
-      <segment>
-        <source>unknown</source>
-      </segment>
-    </unit>
     <unit id="vault.stale">
       <notes>
-        <note category="location">src/app/pages/vault.ts:314,315</note>
+        <note category="location">src/app/pages/vault.ts:334,335</note>
       </notes>
       <segment>
         <source>outdated</source>
@@ -1363,7 +1395,7 @@
     </unit>
     <unit id="vault.edit">
       <notes>
-        <note category="location">src/app/pages/vault.ts:325,326</note>
+        <note category="location">src/app/pages/vault.ts:357,358</note>
       </notes>
       <segment>
         <source>Edit</source>
@@ -1371,7 +1403,7 @@
     </unit>
     <unit id="vault.remove">
       <notes>
-        <note category="location">src/app/pages/vault.ts:334,335</note>
+        <note category="location">src/app/pages/vault.ts:366,367</note>
       </notes>
       <segment>
         <source>Remove</source>
@@ -1379,7 +1411,7 @@
     </unit>
     <unit id="vault.pages">
       <notes>
-        <note category="location">src/app/pages/vault.ts:342</note>
+        <note category="location">src/app/pages/vault.ts:374</note>
       </notes>
       <segment>
         <source>Pages</source>
@@ -1387,7 +1419,7 @@
     </unit>
     <unit id="vault.prev">
       <notes>
-        <note category="location">src/app/pages/vault.ts:351,352</note>
+        <note category="location">src/app/pages/vault.ts:383,384</note>
       </notes>
       <segment>
         <source> Previous page </source>
@@ -1395,7 +1427,7 @@
     </unit>
     <unit id="vault.next">
       <notes>
-        <note category="location">src/app/pages/vault.ts:362,363</note>
+        <note category="location">src/app/pages/vault.ts:394,395</note>
       </notes>
       <segment>
         <source> Next page </source>
@@ -1403,7 +1435,7 @@
     </unit>
     <unit id="vault.editTitle">
       <notes>
-        <note category="location">src/app/pages/vault.ts:375,376</note>
+        <note category="location">src/app/pages/vault.ts:407,408</note>
       </notes>
       <segment>
         <source>Edit entry</source>
@@ -1411,7 +1443,7 @@
     </unit>
     <unit id="vault.removeTitle">
       <notes>
-        <note category="location">src/app/pages/vault.ts:400,401</note>
+        <note category="location">src/app/pages/vault.ts:432,433</note>
       </notes>
       <segment>
         <source>Remove entry</source>
@@ -1419,7 +1451,7 @@
     </unit>
     <unit id="vault.removeAsk">
       <notes>
-        <note category="location">src/app/pages/vault.ts:404,405</note>
+        <note category="location">src/app/pages/vault.ts:436,437</note>
       </notes>
       <segment>
         <source>Remove</source>
@@ -1427,7 +1459,7 @@
     </unit>
     <unit id="entry.cancel">
       <notes>
-        <note category="location">src/app/pages/vault.ts:417,418</note>
+        <note category="location">src/app/pages/vault.ts:449,450</note>
         <note category="location">src/app/shared/vault/entry-form.ts:106,107</note>
       </notes>
       <segment>
@@ -1436,7 +1468,7 @@
     </unit>
     <unit id="vault.removeConfirm">
       <notes>
-        <note category="location">src/app/pages/vault.ts:427,429</note>
+        <note category="location">src/app/pages/vault.ts:459,461</note>
       </notes>
       <segment>
         <source> Remove </source>
@@ -1444,7 +1476,7 @@
     </unit>
     <unit id="page.vault.empty">
       <notes>
-        <note category="location">src/app/pages/vault.ts:451</note>
+        <note category="location">src/app/pages/vault.ts:485</note>
       </notes>
       <segment>
         <source>Your vault is empty</source>
@@ -1452,7 +1484,7 @@
     </unit>
     <unit id="vault.noMatches">
       <notes>
-        <note category="location">src/app/pages/vault.ts:452</note>
+        <note category="location">src/app/pages/vault.ts:486</note>
       </notes>
       <segment>
         <source>No entries match</source>
@@ -1460,15 +1492,39 @@
     </unit>
     <unit id="vault.save">
       <notes>
-        <note category="location">src/app/pages/vault.ts:453</note>
+        <note category="location">src/app/pages/vault.ts:487</note>
       </notes>
       <segment>
         <source>Save</source>
       </segment>
     </unit>
+    <unit id="vault.noPrice">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:488</note>
+      </notes>
+      <segment>
+        <source>no price</source>
+      </segment>
+    </unit>
+    <unit id="vault.staleSince">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:603</note>
+      </notes>
+      <segment>
+        <source>Prices may be out of date. Last updated <ph id="0" equiv="date" disp="when"/>.</source>
+      </segment>
+    </unit>
+    <unit id="vault.staleNever">
+      <notes>
+        <note category="location">src/app/pages/vault.ts:604</note>
+      </notes>
+      <segment>
+        <source>Prices may be out of date. They have not been updated yet.</source>
+      </segment>
+    </unit>
     <unit id="vault.saved">
       <notes>
-        <note category="location">src/app/pages/vault.ts:615</note>
+        <note category="location">src/app/pages/vault.ts:682</note>
       </notes>
       <segment>
         <source>Saved.</source>
@@ -1476,7 +1532,7 @@
     </unit>
     <unit id="vault.merged">
       <notes>
-        <note category="location">src/app/pages/vault.ts:616</note>
+        <note category="location">src/app/pages/vault.ts:683</note>
       </notes>
       <segment>
         <source>Merged with an existing entry: you now own <ph id="0" equiv="quantity" disp="saved.quantity"/> of this card in <ph id="1" equiv="condition" disp="saved.condition"/>, <ph id="2" equiv="finish" disp="saved.finish"/>.</source>
@@ -1484,7 +1540,7 @@
     </unit>
     <unit id="vault.gone">
       <notes>
-        <note category="location">src/app/pages/vault.ts:624</note>
+        <note category="location">src/app/pages/vault.ts:692</note>
       </notes>
       <segment>
         <source>That entry no longer exists. The list was refreshed.</source>
@@ -1492,7 +1548,7 @@
     </unit>
     <unit id="vault.removed">
       <notes>
-        <note category="location">src/app/pages/vault.ts:641</note>
+        <note category="location">src/app/pages/vault.ts:710</note>
       </notes>
       <segment>
         <source>The entry was removed.</source>
@@ -1500,7 +1556,7 @@
     </unit>
     <unit id="vault.alreadyGone">
       <notes>
-        <note category="location">src/app/pages/vault.ts:645</note>
+        <note category="location">src/app/pages/vault.ts:714</note>
       </notes>
       <segment>
         <source>That entry was not found (it may already be removed). The list was refreshed.</source>
@@ -1508,7 +1564,7 @@
     </unit>
     <unit id="vault.invalid">
       <notes>
-        <note category="location">src/app/pages/vault.ts:675</note>
+        <note category="location">src/app/pages/vault.ts:745</note>
       </notes>
       <segment>
         <source>That request is not valid. Check the filters.</source>
@@ -1516,7 +1572,7 @@
     </unit>
     <unit id="vault.failed">
       <notes>
-        <note category="location">src/app/pages/vault.ts:676</note>
+        <note category="location">src/app/pages/vault.ts:746</note>
       </notes>
       <segment>
         <source>Your vault could not be loaded. Try again.</source>
@@ -1608,6 +1664,78 @@
       </notes>
       <segment>
         <source>Use a whole number from 1 to 9999.</source>
+      </segment>
+    </unit>
+    <unit id="summary.title">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:54,55</note>
+      </notes>
+      <segment>
+        <source>Collection value</source>
+      </segment>
+    </unit>
+    <unit id="summary.cards">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:60,61</note>
+      </notes>
+      <segment>
+        <source>Cards</source>
+      </segment>
+    </unit>
+    <unit id="summary.entries">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:64,65</note>
+      </notes>
+      <segment>
+        <source>Entries</source>
+      </segment>
+    </unit>
+    <unit id="summary.valueUsd">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:68,69</note>
+      </notes>
+      <segment>
+        <source>Value (USD)</source>
+      </segment>
+    </unit>
+    <unit id="summary.valueEur">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:72,73</note>
+      </notes>
+      <segment>
+        <source>Value (EUR)</source>
+      </segment>
+    </unit>
+    <unit id="summary.lowerBound">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:78,80</note>
+      </notes>
+      <segment>
+        <source>These values are a lower bound: entries without a price are not counted.</source>
+      </segment>
+    </unit>
+    <unit id="summary.unpricedUsd">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:106</note>
+      </notes>
+      <segment>
+        <source>Entries without a USD price</source>
+      </segment>
+    </unit>
+    <unit id="summary.unpricedEur">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:107</note>
+      </notes>
+      <segment>
+        <source>Entries without a EUR price</source>
+      </segment>
+    </unit>
+    <unit id="summary.failed">
+      <notes>
+        <note category="location">src/app/shared/vault/summary.ts:127</note>
+      </notes>
+      <segment>
+        <source>The collection value could not be loaded. Try again.</source>
       </segment>
     </unit>
   </file>

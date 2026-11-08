@@ -1,7 +1,7 @@
 """PostgreSQL user repository: one atomic upsert keyed by the token subject (ADR-005)."""
 
 from datetime import datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
@@ -26,6 +26,9 @@ def _to_user(row: UserRow) -> User:
 class SqlAlchemyUserRepository:
     def __init__(self, session: Session) -> None:
         self._session = session
+
+    def id_of(self, subject: str) -> UUID | None:
+        return self._session.scalar(select(UserRow.id).where(UserRow.sub == subject))
 
     def provision(self, principal: Principal, now: datetime, refresh_after: timedelta) -> User:
         base = insert(UserRow).values(
