@@ -385,3 +385,77 @@ def test_the_summary_needs_a_token_and_an_empty_vault_is_zeros(client: TestClien
     assert client.get("/api/v1/vault/summary").status_code == 401
     body = client.get("/api/v1/vault/summary", headers=headers("bob")).json()
     assert (body["total_cards"], body["entries"], body["value_usd"]) == (0, 0, "0.00")
+
+
+# ---------------------------------------------------------------------------- lazy refresh (#141)
+def make_stale(migrated: Engine) -> None:
+    old = datetime.now(UTC) - timedelta(hours=30)
+    with migrated.begin() as connection:
+        connection.execute(text("UPDATE cards SET prices_updated_at = :t, usd = 0.01"), {"t": old})
+
+
+def stored_usd(migrated: Engine) -> object:
+    with migrated.connect() as connection:
+        return connection.execute(text("SELECT usd FROM cards")).scalar_one()
+
+
+def test_listing_stale_entries_refreshes_them_after_the_response(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    make_stale(migrated)
+    body = entries(client, "alice")  # the answer is what was stored when it was asked
+    assert body["items"][0]["prices_stale"] is True  # type: ignore[index]
+    assert body["items"][0]["unit_price"] == "0.01"  # type: ignore[index]
+    assert provider.lookup_calls == [(BOLT.id,)]
+    assert stored_usd(migrated) == Decimal("1.50")  # refreshed afterwards
+    assert entries(client, "alice")["items"][0]["prices_stale"] is False  # type: ignore[index]
+    assert len(provider.lookup_calls) == 1  # fresh prices cause no further refresh
+
+
+def test_the_summary_and_the_card_page_refresh_stale_prices_too(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    make_stale(migrated)
+    assert (
+        client.get("/api/v1/vault/summary", headers=headers("alice")).json()["value_usd"] == "0.01"
+    )
+    assert stored_usd(migrated) == Decimal("1.50")
+    make_stale(migrated)
+    assert (
+        client.get(f"/api/v1/catalog/cards/{BOLT.id}", headers=headers("alice")).status_code == 200
+    )
+    assert stored_usd(migrated) == Decimal("1.50")
+    assert len(provider.lookup_calls) == 2
+
+
+def test_an_unowned_card_page_does_not_trigger_a_refresh(
+    client: TestClient, provider: FakeCardProvider
+) -> None:
+    assert (
+        client.get(f"/api/v1/catalog/cards/{LOTUS.id}", headers=headers("alice")).status_code == 200
+    )
+    assert provider.lookup_calls == []
+
+
+def test_a_source_outage_never_changes_the_answer(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    make_stale(migrated)
+    provider.fail = True
+    response = client.get("/api/v1/vault/entries", headers=headers("alice"))
+    assert response.status_code == 200
+    assert response.json()["items"][0]["unit_price"] == "0.01"
+    assert stored_usd(migrated) == Decimal("0.01")  # nothing was lost
+
+
+def test_only_the_callers_stale_cards_are_refreshed(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    add(client, "bob", LOTUS.id)
+    make_stale(migrated)
+    entries(client, "alice")
+    assert provider.lookup_calls == [(BOLT.id,)]

@@ -4,7 +4,7 @@ Run with: ``uvicorn mtgvault.main:create_app --factory``
 """
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,6 +27,7 @@ from mtgvault.api.image_upload import MAX_BYTES
 from mtgvault.api.limits import BodyLimitMiddleware
 from mtgvault.api.middleware import CorrelationIdMiddleware
 from mtgvault.application.catalog_service import CatalogService
+from mtgvault.application.lazy_refresh import LazyPriceRefresher
 from mtgvault.application.ports import (
     Cache,
     CardDataProvider,
@@ -37,6 +38,7 @@ from mtgvault.application.ports import (
     TokenVerifier,
     UnitOfWork,
 )
+from mtgvault.application.price_refresh import PriceRefresher
 from mtgvault.application.scan_service import ScanService
 from mtgvault.application.user_service import UserService
 from mtgvault.application.vault_service import VaultService
@@ -110,6 +112,11 @@ def create_app(
         unit_of_work_factory or _no_database,
         catalog,
         stale_after=_stale_after(settings),
+        lazy=LazyPriceRefresher(
+            PriceRefresher(
+                unit_of_work_factory or _no_database, card_provider or _NoCards(), _utc_now
+            )
+        ),
     )
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
@@ -191,6 +198,10 @@ class _NoCards:
 
     def lookup(self, *_: object) -> LookupResult:
         raise UpstreamUnavailable(_NO_SOURCE)
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 def _build_rate_limiter(settings: Settings | None) -> RateLimiter:

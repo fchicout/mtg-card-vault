@@ -4,12 +4,13 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from pydantic import BaseModel
 
-from mtgvault.api.dependencies import get_catalog_service
+from mtgvault.api.dependencies import get_catalog_service, get_vault_service
 from mtgvault.application.catalog_query import CatalogFilters, parse_colors
 from mtgvault.application.catalog_service import CatalogService
+from mtgvault.application.vault_service import VaultService
 from mtgvault.domain.card import Card, CardFace, Prices, ResultPage
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
@@ -173,8 +174,15 @@ def search_cards(  # one parameter per documented query field
 
 
 @router.get("/cards/{card_id}", operation_id="getCard", summary="One printing in detail")
-def get_card(card_id: UUID, service: Service) -> CardDetail:
-    return _detail(service.get(card_id))
+def get_card(
+    card_id: UUID,
+    service: Service,
+    vault: Annotated[VaultService, Depends(get_vault_service)],
+    background: BackgroundTasks,
+) -> CardDetail:
+    detail = _detail(service.get(card_id))
+    background.add_task(vault.refresh_card_if_stale, card_id)  # after the response (FR-PRC-05)
+    return detail
 
 
 @router.get(

@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
 from pydantic import BaseModel, ConfigDict
 
 from mtgvault.api.catalog import CardSummary, card_summary
@@ -119,6 +119,7 @@ def add_entry(body: AddEntry, owner: Owner, service: Service, response: Response
 def list_entries(  # one parameter per documented query field
     owner: Owner,
     service: Service,
+    background: BackgroundTasks,
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
     q: Annotated[str | None, Query(max_length=100, description="Part of the card name")] = None,
@@ -134,6 +135,7 @@ def list_entries(  # one parameter per documented query field
         type_text=type, sort=sort, direction=dir,
     )  # fmt: skip
     items, total = service.list(owner.id, query)
+    background.add_task(service.refresh_stale_prices, owner.id)  # after the response (FR-PRC-05)
     return VaultPage(
         items=[_dto(i, service) for i in items], page=page, page_size=page_size, total=total
     )
@@ -161,8 +163,10 @@ def remove_entry(entry_id: UUID, owner: Owner, service: Service) -> None:
     operation_id="getVaultSummary",
     summary="Totals and value of the caller's whole collection",
 )
-def get_summary(owner: Owner, service: Service) -> VaultSummaryDto:
-    return _summary_dto(service.summary(owner.id))
+def get_summary(owner: Owner, service: Service, background: BackgroundTasks) -> VaultSummaryDto:
+    summary = _summary_dto(service.summary(owner.id))
+    background.add_task(service.refresh_stale_prices, owner.id)  # after the response (FR-PRC-05)
+    return summary
 
 
 def _summary_dto(summary: VaultSummary) -> VaultSummaryDto:

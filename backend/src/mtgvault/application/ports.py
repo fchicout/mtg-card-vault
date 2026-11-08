@@ -174,6 +174,11 @@ class VaultRepository(Protocol):
 
     def count(self, user_id: UUID) -> int: ...
 
+    def stale_card_ids(self, user_id: UUID, before: datetime, limit: int) -> list[UUID]:
+        """Distinct printings the user owns whose prices were last refreshed before ``before``
+        (never refreshed counts as stale), oldest first."""
+        ...
+
     def summary(self, user_id: UUID) -> VaultSummary:
         """Totals of ALL the user's entries, aggregated in SQL (never loading the entries)."""
         ...

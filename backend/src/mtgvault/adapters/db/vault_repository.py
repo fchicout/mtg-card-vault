@@ -251,6 +251,19 @@ class SqlAlchemyVaultRepository:
         )
         return result.rowcount > 0  # type: ignore[attr-defined,no-any-return]
 
+    def stale_card_ids(self, user_id: UUID, before: datetime, limit: int) -> list[UUID]:
+        stamp = CardRow.prices_updated_at
+        statement = (
+            select(CardRow.scryfall_id)
+            .join(VaultEntryRow, VaultEntryRow.card_id == CardRow.scryfall_id)
+            .where(VaultEntryRow.user_id == user_id)
+            .where((stamp.is_(None)) | (stamp < before))
+            .group_by(CardRow.scryfall_id, stamp)
+            .order_by(stamp.asc().nulls_first(), CardRow.scryfall_id)
+            .limit(limit)
+        )
+        return list(self._session.scalars(statement))
+
     # ------------------------------------------------------------------ summary
     def summary(self, user_id: UUID) -> VaultSummary:
         usd, eur = _unit_price_column("usd"), _unit_price_column("eur")

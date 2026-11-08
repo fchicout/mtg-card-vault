@@ -1,10 +1,12 @@
 """Vault use cases (US-005..US-011, UC-03..UC-06). The user id always comes from the token."""
 
+import logging
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from mtgvault.application.catalog_service import CatalogService
+from mtgvault.application.lazy_refresh import MAX_PER_REQUEST, LazyPriceRefresher
 from mtgvault.application.ports import UnitOfWork
 from mtgvault.application.vault_query import VaultQuery
 from mtgvault.domain.card import Card
@@ -25,6 +27,7 @@ from mtgvault.domain.vault import (
     validate_quantity,
 )
 
+_log = logging.getLogger("mtgvault.pricing")
 DEFAULT_STALE_AFTER = timedelta(hours=24)
 _NO_ENTRY = "No such entry."
 
@@ -40,11 +43,13 @@ class VaultService:
         catalog: CatalogService,
         clock: Callable[[], datetime] = _utc_now,
         stale_after: timedelta = DEFAULT_STALE_AFTER,
+        lazy: LazyPriceRefresher | None = None,
     ) -> None:
         self._uow = unit_of_work_factory
         self._catalog = catalog
         self._clock = clock
         self._stale_after = stale_after
+        self._lazy = lazy
 
     # ------------------------------------------------------------------ add
     def add(
@@ -140,3 +145,33 @@ class VaultService:
         """Prices older than the threshold, or never refreshed, are shown as stale (FR-DAT-03)."""
         updated = snapshot.prices_updated_at
         return updated is None or self._clock() - updated >= self._stale_after
+
+    def refresh_stale_prices(self, user_id: UUID) -> None:
+        """Refresh, in this process, the user's printings whose prices are stale (FR-PRC-05).
+
+        Best effort and meant for a background task: it talks to the data source, may take a while
+        and never raises.
+        """
+        if self._lazy is None:
+            return
+        try:
+            with self._uow() as unit:
+                ids = unit.vault.stale_card_ids(
+                    user_id, self._clock() - self._stale_after, MAX_PER_REQUEST
+                )
+            if ids:
+                self._lazy.refresh_now(ids)
+        except Exception:
+            _log.exception("could not look for stale prices")
+
+    def refresh_card_if_stale(self, card_id: UUID) -> None:
+        """Refresh one printing when we hold a snapshot of it and its prices are stale."""
+        if self._lazy is None:
+            return
+        try:
+            with self._uow() as unit:
+                snapshot = unit.cards.get(card_id)
+            if snapshot is not None and self.prices_stale(snapshot):
+                self._lazy.refresh_now([card_id])
+        except Exception:
+            _log.exception("could not look for stale prices")
