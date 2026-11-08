@@ -34,9 +34,9 @@ const projects = [
   { name: 'webkit', use: { ...devices['Desktop Safari'] } },
 ].filter((project) => wanted.includes(project.name));
 
-// The identity journeys change the shared OIDC test double (token lifetimes, faults), so they run
+// The identity and outage journeys change the shared test doubles (token lifetimes, faults), so they run
 // alone, serially and in Chromium only, after every other project has finished.
-const IDENTITY_SPEC = /identity-journeys\.spec\.ts$/;
+const IDENTITY_SPEC = /(identity-journeys|catalogue-outage)\.spec\.ts$/;
 const regular = projects.map((project) => ({ ...project, testIgnore: IDENTITY_SPEC }));
 const identity = wanted.includes('chromium')
   ? [
