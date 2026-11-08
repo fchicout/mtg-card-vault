@@ -17,6 +17,7 @@ import argparse
 import json
 import re
 import statistics
+import sys
 import time
 import unicodedata
 from collections.abc import Callable
@@ -49,14 +50,22 @@ def load_names() -> list[str]:
 
 # ---------------------------------------------------------------------------- engines
 def tesseract_engine() -> Recognizer:
-    import pytesseract
+    """The adapter that ships (src/mtgvault/adapters/ocr/tesseract.py), region by region."""
+    from mtgvault.adapters.ocr.tesseract import (
+        COLLECTOR_ARGS,
+        TITLE_ARGS,
+        TesseractRecognizer,
+        find_tesseract,
+    )
+
+    command = find_tesseract()
+    if command is None:
+        raise SystemExit("tesseract is not installed")
+    recognizer = TesseractRecognizer(command)
 
     def read(regions: Regions) -> tuple[str, str]:
-        title = pytesseract.image_to_string(regions.title, config="--psm 7 --oem 1")
-        collector = pytesseract.image_to_string(
-            regions.collector,
-            config="--psm 6 --oem 1 -c tessedit_char_whitelist=0123456789/ABCDEFGHIJKLMNOPQRSTUVWXYZ•·-",
-        )
+        title = recognizer._recognise(regions.title, TITLE_ARGS)
+        collector = recognizer._recognise(regions.collector, COLLECTOR_ARGS)
         return title, collector
 
     return read
@@ -157,8 +166,29 @@ def main() -> None:
     parser.add_argument("--levels", nargs="+", default=list(LEVELS), choices=list(LEVELS))
     parser.add_argument("--limit", type=int)
     parser.add_argument("--binarize", action="store_true")
+    parser.add_argument(
+        "--min-top3", type=float, help="fail when top-3 accuracy of any level is below this"
+    )
+    parser.add_argument("--max-p90-ms", type=int, help="fail when the p90 latency exceeds this")
     args = parser.parse_args()
-    print(json.dumps(run(args.engine, args.levels, args.limit, args.binarize)))
+    report = run(args.engine, args.levels, args.limit, args.binarize)
+    print(json.dumps(report))
+    failures = budget_failures(report, args.levels, args.min_top3, args.max_p90_ms)
+    for failure in failures:
+        print(f"BUDGET EXCEEDED: {failure}", file=sys.stderr)
+    sys.exit(1 if failures else 0)
+
+
+def budget_failures(
+    report: dict[str, Any], levels: list[str], min_top3: float | None, max_p90_ms: int | None
+) -> list[str]:
+    failures = []
+    for level in levels:
+        if min_top3 is not None and report[level]["top3"] < min_top3:
+            failures.append(f"{level} top-3 {report[level]['top3']} < {min_top3}")
+        if max_p90_ms is not None and report[level]["p90_ms"] > max_p90_ms:
+            failures.append(f"{level} p90 {report[level]['p90_ms']} ms > {max_p90_ms} ms")
+    return failures
 
 
 if __name__ == "__main__":
