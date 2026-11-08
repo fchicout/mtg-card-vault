@@ -49,6 +49,10 @@ interface Filters {
       flex-wrap: wrap;
       gap: 0.75rem 1.5rem;
       align-items: flex-end;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0 1.5rem;
+      border-radius: 3px;
+      border: 1px solid var(--clr-global-borders-color, #b3b3b3);
     }
     .colors {
       display: flex;
@@ -61,22 +65,37 @@ interface Filters {
     .card-grid {
       list-style: none;
       padding: 0;
+      margin: 0 0 1rem;
       display: grid;
       gap: 1rem;
-      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
     }
     .card-grid a {
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+      height: 100%;
+      padding: 0.75rem;
       text-decoration: none;
+      color: inherit;
+      border-radius: 3px;
+      border: 1px solid var(--clr-global-borders-color, #b3b3b3);
+    }
+    .card-grid a:hover,
+    .card-grid a:focus-visible {
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+    }
+    .card-grid strong {
+      color: var(--clr-link-color, inherit);
     }
     .card-grid img {
       width: 100%;
-      max-width: 146px;
+      max-width: 180px;
       height: auto;
+      align-self: center;
       aspect-ratio: 488 / 680;
       object-fit: contain;
+      margin-bottom: 0.25rem;
     }
     .no-image {
       display: flex;
@@ -85,6 +104,7 @@ interface Filters {
       width: 146px;
       aspect-ratio: 488 / 680;
       border: 1px dashed currentcolor;
+      align-self: center;
     }
     .meta {
       font-size: 0.75rem;
