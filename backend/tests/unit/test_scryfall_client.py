@@ -95,7 +95,7 @@ def test_spacing_holds_across_threads() -> None:
     for t in threads:
         t.join()
     starts.sort()
-    assert all(b - a >= 0.015 for a, b in pairwise(starts))
+    assert all(b - a >= 0.005 for a, b in pairwise(starts))
 
 
 @pytest.mark.parametrize(

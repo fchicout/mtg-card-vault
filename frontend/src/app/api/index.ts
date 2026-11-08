@@ -8,6 +8,7 @@ export type { StrictHttpResponse } from './strict-http-response';
 export { Api } from './api';
 
 export type { AddEntry } from './models/add-entry';
+export type { CandidateDto } from './models/candidate-dto';
 export type { CardDetail } from './models/card-detail';
 export type { CardFaceDto } from './models/card-face-dto';
 export type { CardPage } from './models/card-page';
@@ -22,6 +23,8 @@ export type { PricesDto } from './models/prices-dto';
 export type { Printing } from './models/printing';
 export type { PrintingPage } from './models/printing-page';
 export type { Problem } from './models/problem';
+export type { RecognizedTextDto } from './models/recognized-text-dto';
+export type { ScanResponse } from './models/scan-response';
 export type { VaultItemDto } from './models/vault-item-dto';
 export type { VaultPage } from './models/vault-page';
 
@@ -33,6 +36,8 @@ export type { GetCardPrintings$Params as GetCardPrintings$Params } from './fn/ca
 export { getCardPrintings as getCardPrintings } from './fn/catalog/get-card-printings';
 export type { GetMe$Params as GetMe$Params } from './fn/account/get-me';
 export { getMe as getMe } from './fn/account/get-me';
+export type { ScanCard$Params as ScanCard$Params } from './fn/scan/scan-card';
+export { scanCard as scanCard } from './fn/scan/scan-card';
 export type { ListVaultEntries$Params as ListVaultEntries$Params } from './fn/vault/list-vault-entries';
 export { listVaultEntries as listVaultEntries } from './fn/vault/list-vault-entries';
 export type { AddVaultEntry$Params as AddVaultEntry$Params } from './fn/vault/add-vault-entry';

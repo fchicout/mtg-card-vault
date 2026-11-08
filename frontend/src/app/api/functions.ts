@@ -9,6 +9,8 @@ export type { GetCardPrintings$Params as GetCardPrintings$Params } from './fn/ca
 export { getCardPrintings as getCardPrintings } from './fn/catalog/get-card-printings';
 export type { GetMe$Params as GetMe$Params } from './fn/account/get-me';
 export { getMe as getMe } from './fn/account/get-me';
+export type { ScanCard$Params as ScanCard$Params } from './fn/scan/scan-card';
+export { scanCard as scanCard } from './fn/scan/scan-card';
 export type { ListVaultEntries$Params as ListVaultEntries$Params } from './fn/vault/list-vault-entries';
 export { listVaultEntries as listVaultEntries } from './fn/vault/list-vault-entries';
 export type { AddVaultEntry$Params as AddVaultEntry$Params } from './fn/vault/add-vault-entry';
