@@ -16,6 +16,7 @@ services:
     environment:
       SSL_CERT_FILE: /certs/oidc.pem
       SCRYFALL_BASE_URL: http://localhost:9100
+      SCRYFALL_BREAKER_OPEN_SECONDS: "3"
     volumes:
       - oidc-certs:/certs:ro
   oidc:

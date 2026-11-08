@@ -117,7 +117,7 @@ def _build_card_provider(settings: Settings | None) -> CardDataProvider | None:
         ScryfallClient(
             base_url=settings.scryfall_base_url,
             user_agent=settings.scryfall_user_agent,
-            breaker=CircuitBreaker("scryfall"),
+            breaker=CircuitBreaker("scryfall", open_seconds=settings.scryfall_breaker_open_seconds),
         )
     )
 

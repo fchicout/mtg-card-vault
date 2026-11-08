@@ -53,6 +53,7 @@ services:
       API_DOCS_ENABLED: ${API_DOCS_ENABLED:-false}
       SCRYFALL_USER_AGENT: ${SCRYFALL_USER_AGENT:-MTGCardVault/0.3 (+https://github.com/fchicout/mtg-card-vault)}
       SCRYFALL_BASE_URL: ${SCRYFALL_BASE_URL:-https://api.scryfall.com}
+      SCRYFALL_BREAKER_OPEN_SECONDS: ${SCRYFALL_BREAKER_OPEN_SECONDS:-30}
     depends_on:
       db:
         condition: service_healthy

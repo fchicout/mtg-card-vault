@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.30
+**Docs set version:** 0.3.31
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.31 | 2026-11-08 | Issues #84-#87: catalogue pages and journeys documented; session restore may repeat after a completed sign-in; new setting SCRYFALL_BREAKER_OPEN_SECONDS. |
 | 0.3.30 | 2026-11-08 | Issues #80-#83: catalogue search, filters, detail and printings endpoints; US-012 lists the set of the shown printing (the source gives no set count); query-parameter problems name the parameter. |
 | 0.3.29 | 2026-11-08 | Commit scopes `scryfall` and `resilience` added to the policy. |
 | 0.3.28 | 2026-11-08 | Issues #73-#79: the card model, the Scryfall adapter (client rules, backoff, circuit breaker, mapper, cache) and the Scryfall test double documented; new settings. |

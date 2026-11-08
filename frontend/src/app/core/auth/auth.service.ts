@@ -109,6 +109,7 @@ export class AuthService {
     const user = await this.manager.signinRedirectCallback(callbackUrl);
     this.adopt(user);
     this.markSignedIn();
+    this.forget(RESTORE_ATTEMPT); // a completed sign-in ends any restore attempt: reloads may restore again
     const target = (user.state as SignInState | undefined)?.returnUrl;
     return target?.startsWith('/') && !target.startsWith('//') ? target : '/';
   }
@@ -227,8 +228,12 @@ export class AuthService {
   }
 
   private unmarkSignedIn(): void {
+    this.forget(SESSION_MARKER);
+  }
+
+  private forget(key: string): void {
     try {
-      sessionStorage.removeItem(SESSION_MARKER);
+      sessionStorage.removeItem(key);
     } catch {
       // Storage can be blocked; nothing to remove then.
     }

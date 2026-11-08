@@ -23,6 +23,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/catalogue').then((m) => m.CataloguePage),
   },
   {
+    path: 'catalogue/:id',
+    canActivate: [authGuard],
+    title: $localize`:@@route.card:Card - MTG Card Vault`,
+    loadComponent: () => import('./pages/card-detail').then((m) => m.CardDetailPage),
+  },
+  {
     path: 'scan',
     canActivate: [authGuard],
     title: $localize`:@@route.scan:Scan - MTG Card Vault`,

@@ -129,9 +129,17 @@
         <source>Catalogue - MTG Card Vault</source>
       </segment>
     </unit>
-    <unit id="route.scan">
+    <unit id="route.card">
       <notes>
         <note category="location">src/app/app.routes.ts:28</note>
+      </notes>
+      <segment>
+        <source>Card - MTG Card Vault</source>
+      </segment>
+    </unit>
+    <unit id="route.scan">
+      <notes>
+        <note category="location">src/app/app.routes.ts:34</note>
       </notes>
       <segment>
         <source>Scan - MTG Card Vault</source>
@@ -139,7 +147,7 @@
     </unit>
     <unit id="route.account">
       <notes>
-        <note category="location">src/app/app.routes.ts:34</note>
+        <note category="location">src/app/app.routes.ts:40</note>
       </notes>
       <segment>
         <source>Account - MTG Card Vault</source>
@@ -147,7 +155,7 @@
     </unit>
     <unit id="route.signin">
       <notes>
-        <note category="location">src/app/app.routes.ts:39</note>
+        <note category="location">src/app/app.routes.ts:45</note>
       </notes>
       <segment>
         <source>Sign in required - MTG Card Vault</source>
@@ -155,7 +163,7 @@
     </unit>
     <unit id="route.callback">
       <notes>
-        <note category="location">src/app/app.routes.ts:44</note>
+        <note category="location">src/app/app.routes.ts:50</note>
       </notes>
       <segment>
         <source>Signing in - MTG Card Vault</source>
@@ -163,7 +171,7 @@
     </unit>
     <unit id="route.notfound">
       <notes>
-        <note category="location">src/app/app.routes.ts:49</note>
+        <note category="location">src/app/app.routes.ts:55</note>
       </notes>
       <segment>
         <source>Page not found - MTG Card Vault</source>
@@ -313,28 +321,468 @@
         <source>Your account</source>
       </segment>
     </unit>
+    <unit id="detail.back">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:68,70</note>
+      </notes>
+      <segment>
+        <source>Back to the catalogue</source>
+      </segment>
+    </unit>
+    <unit id="detail.set">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:98</note>
+      </notes>
+      <segment>
+        <source>Set</source>
+      </segment>
+    </unit>
+    <unit id="detail.number">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:99,100</note>
+      </notes>
+      <segment>
+        <source>Collector number</source>
+      </segment>
+    </unit>
+    <unit id="detail.rarity">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:101,102</note>
+      </notes>
+      <segment>
+        <source>Rarity</source>
+      </segment>
+    </unit>
+    <unit id="detail.finishes">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:103,104</note>
+      </notes>
+      <segment>
+        <source>Finishes</source>
+      </segment>
+    </unit>
+    <unit id="detail.prices">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:106,107</note>
+      </notes>
+      <segment>
+        <source>Prices</source>
+      </segment>
+    </unit>
+    <unit id="detail.noPrices">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:109,110</note>
+      </notes>
+      <segment>
+        <source> No price is known for this printing. </source>
+      </segment>
+    </unit>
+    <unit id="detail.add">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:132,133</note>
+      </notes>
+      <segment>
+        <source> Add to vault </source>
+      </segment>
+    </unit>
+    <unit id="detail.addHint">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:135,136</note>
+      </notes>
+      <segment>
+        <source> Adding cards arrives with the vault feature. </source>
+      </segment>
+    </unit>
+    <unit id="detail.printings">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:142,143</note>
+      </notes>
+      <segment>
+        <source>Printings</source>
+      </segment>
+    </unit>
+    <unit id="detail.colSet">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:153</note>
+      </notes>
+      <segment>
+        <source>Set</source>
+      </segment>
+    </unit>
+    <unit id="detail.colNumber">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:153,154</note>
+      </notes>
+      <segment>
+        <source>Number</source>
+      </segment>
+    </unit>
+    <unit id="detail.colLang">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:154,155</note>
+      </notes>
+      <segment>
+        <source>Language</source>
+      </segment>
+    </unit>
+    <unit id="detail.colFinishes">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:155,156</note>
+      </notes>
+      <segment>
+        <source>Finishes</source>
+      </segment>
+    </unit>
+    <unit id="detail.colRarity">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:156,157</note>
+      </notes>
+      <segment>
+        <source>Rarity</source>
+      </segment>
+    </unit>
+    <unit id="detail.colAction">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:157,158</note>
+      </notes>
+      <segment>
+        <source>Select</source>
+      </segment>
+    </unit>
+    <unit id="detail.current">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:170,171</note>
+      </notes>
+      <segment>
+        <source>Shown</source>
+      </segment>
+    </unit>
+    <unit id="detail.select">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:178,179</note>
+      </notes>
+      <segment>
+        <source>Select</source>
+      </segment>
+    </unit>
+    <unit id="detail.prev">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:198,199</note>
+      </notes>
+      <segment>
+        <source> Previous page </source>
+      </segment>
+    </unit>
+    <unit id="detail.next">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:208,209</note>
+      </notes>
+      <segment>
+        <source> Next page </source>
+      </segment>
+    </unit>
+    <unit id="detail.noPrintings">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:224</note>
+      </notes>
+      <segment>
+        <source>No printings found</source>
+      </segment>
+    </unit>
+    <unit id="price.usd">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:293</note>
+      </notes>
+      <segment>
+        <source>USD</source>
+      </segment>
+    </unit>
+    <unit id="price.usdFoil">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:294</note>
+      </notes>
+      <segment>
+        <source>USD foil</source>
+      </segment>
+    </unit>
+    <unit id="price.usdEtched">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:295</note>
+      </notes>
+      <segment>
+        <source>USD etched</source>
+      </segment>
+    </unit>
+    <unit id="price.eur">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:296</note>
+      </notes>
+      <segment>
+        <source>EUR</source>
+      </segment>
+    </unit>
+    <unit id="price.eurFoil">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:297</note>
+      </notes>
+      <segment>
+        <source>EUR foil</source>
+      </segment>
+    </unit>
+    <unit id="price.eurEtched">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:298</note>
+      </notes>
+      <segment>
+        <source>EUR etched</source>
+      </segment>
+    </unit>
+    <unit id="detail.notFound">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:309</note>
+      </notes>
+      <segment>
+        <source>We could not find this card.</source>
+      </segment>
+    </unit>
+    <unit id="detail.unavailable">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:311</note>
+      </notes>
+      <segment>
+        <source>The catalogue is temporarily unavailable. Please try again in a moment.</source>
+      </segment>
+    </unit>
+    <unit id="detail.busy">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:313</note>
+      </notes>
+      <segment>
+        <source>The catalogue is busy right now. Wait a moment and try again.</source>
+      </segment>
+    </unit>
+    <unit id="detail.failed">
+      <notes>
+        <note category="location">src/app/pages/card-detail.ts:315</note>
+      </notes>
+      <segment>
+        <source>The card could not be loaded. Try again.</source>
+      </segment>
+    </unit>
+    <unit id="color.white">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:21</note>
+      </notes>
+      <segment>
+        <source>White</source>
+      </segment>
+    </unit>
+    <unit id="color.blue">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:22</note>
+      </notes>
+      <segment>
+        <source>Blue</source>
+      </segment>
+    </unit>
+    <unit id="color.black">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:23</note>
+      </notes>
+      <segment>
+        <source>Black</source>
+      </segment>
+    </unit>
+    <unit id="color.red">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:24</note>
+      </notes>
+      <segment>
+        <source>Red</source>
+      </segment>
+    </unit>
+    <unit id="color.green">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:25</note>
+      </notes>
+      <segment>
+        <source>Green</source>
+      </segment>
+    </unit>
+    <unit id="color.colourless">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:26</note>
+      </notes>
+      <segment>
+        <source>Colourless</source>
+      </segment>
+    </unit>
     <unit id="page.catalogue.title">
       <notes>
-        <note category="location">src/app/pages/catalogue.ts:11,12</note>
+        <note category="location">src/app/pages/catalogue.ts:101,103</note>
       </notes>
       <segment>
         <source>Catalogue</source>
       </segment>
     </unit>
-    <unit id="page.catalogue.text">
+    <unit id="catalogue.q">
       <notes>
-        <note category="location">src/app/pages/catalogue.ts:14,16</note>
+        <note category="location">src/app/pages/catalogue.ts:105,107</note>
       </notes>
       <segment>
-        <source>Searching Scryfall cards arrives with the catalogue feature.</source>
+        <source>Card name</source>
       </segment>
     </unit>
-    <unit id="page.catalogue.empty">
+    <unit id="catalogue.set">
       <notes>
-        <note category="location">src/app/pages/catalogue.ts:20</note>
+        <note category="location">src/app/pages/catalogue.ts:117,119</note>
       </notes>
       <segment>
-        <source>Nothing to search yet</source>
+        <source>Set code</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.type">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:129,131</note>
+      </notes>
+      <segment>
+        <source>Type</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.rarity">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:140,141</note>
+      </notes>
+      <segment>
+        <source>Rarity</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.anyRarity">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:142,143</note>
+      </notes>
+      <segment>
+        <source>Any</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.colors">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:149,150</note>
+      </notes>
+      <segment>
+        <source>Colours</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.search">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:170,172</note>
+      </notes>
+      <segment>
+        <source> Search </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.clear">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:180,181</note>
+      </notes>
+      <segment>
+        <source> Clear </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.noneText">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:195,196</note>
+      </notes>
+      <segment>
+        <source> Try another spelling, fewer words or other filters. </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.noImage">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:206,208</note>
+      </notes>
+      <segment>
+        <source>No image</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.pages">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:215</note>
+      </notes>
+      <segment>
+        <source>Pages</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.prev">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:224,225</note>
+      </notes>
+      <segment>
+        <source> Previous page </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.next">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:235,236</note>
+      </notes>
+      <segment>
+        <source> Next page </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.startText">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:242,243</note>
+      </notes>
+      <segment>
+        <source> Search all Magic: The Gathering cards by name, then narrow them with filters. </source>
+      </segment>
+    </unit>
+    <unit id="catalogue.none">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:263</note>
+      </notes>
+      <segment>
+        <source>No cards found</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.start">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:264</note>
+      </notes>
+      <segment>
+        <source>Find a card</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.unavailable">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:358</note>
+      </notes>
+      <segment>
+        <source>The catalogue is temporarily unavailable. Please try again in a moment.</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.busy">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:360</note>
+      </notes>
+      <segment>
+        <source>The catalogue is busy right now. Wait a moment and try again.</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.invalid">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:362</note>
+      </notes>
+      <segment>
+        <source>That search is not valid. Check the words and filters.</source>
+      </segment>
+    </unit>
+    <unit id="catalogue.failed">
+      <notes>
+        <note category="location">src/app/pages/catalogue.ts:364</note>
+      </notes>
+      <segment>
+        <source>The search could not be completed. Try again.</source>
       </segment>
     </unit>
     <unit id="page.home.title">
@@ -495,6 +943,14 @@
       </notes>
       <segment>
         <source>Your vault is empty</source>
+      </segment>
+    </unit>
+    <unit id="state.retry">
+      <notes>
+        <note category="location">src/app/shared/states/error-state.ts:15,16</note>
+      </notes>
+      <segment>
+        <source>Try again</source>
       </segment>
     </unit>
     <unit id="state.loading">
