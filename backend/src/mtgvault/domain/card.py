@@ -56,7 +56,7 @@ class Card:
 
 
 @dataclass(frozen=True)
-class Page[T]:
+class ResultPage[T]:
     """One page of a larger result. ``total`` is None when the source does not say."""
 
     items: tuple[T, ...]

@@ -60,31 +60,10 @@ def create_app(
         unit_of_work_factory = unit_of_work_factory or (
             lambda: SqlAlchemyUnitOfWork(session_factory)
         )
-    if token_verifier is None:
-        token_verifier = (
-            JwksTokenVerifier(
-                issuer=settings.oidc_issuer_url,
-                audience=settings.oidc_audience,
-                algorithms=settings.oidc_algorithms,
-                fetch_json=httpx_json_fetcher(),
-            )
-            if settings
-            else DenyAllTokenVerifier()
-        )
-    if settings and card_provider is None:
-        # ONE client: its request spacing and circuit breaker are process-wide (FR-DAT-01).
-        card_provider = ScryfallCardProvider(
-            ScryfallClient(
-                base_url=settings.scryfall_base_url,
-                user_agent=settings.scryfall_user_agent,
-                breaker=CircuitBreaker("scryfall"),
-            )
-        )
-    if cache is None:
-        cache = TtlCache(
-            settings.catalog_cache_ttl_seconds if settings else 300,
-            settings.catalog_cache_max_entries if settings else 500,
-        )
+    # `is None`, not `or`: an injected empty cache is falsy (it defines __len__) but must be kept.
+    token_verifier = _build_verifier(settings) if token_verifier is None else token_verifier
+    card_provider = _build_card_provider(settings) if card_provider is None else card_provider
+    cache = _build_cache(settings) if cache is None else cache
     docs_enabled = settings is None or settings.api_docs_enabled
 
     app = FastAPI(
@@ -114,21 +93,56 @@ def create_app(
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
     app.add_middleware(CorrelationIdMiddleware)
-    if settings and settings.cors_origin_list:
-        # Outermost, so a preflight is answered before authentication. No cookies, no wildcard.
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=settings.cors_origin_list,
-            allow_credentials=False,
-            allow_methods=["GET", "POST", "PATCH", "DELETE"],
-            allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-            expose_headers=["X-Request-ID", "Retry-After"],
-            max_age=600,
-        )
+    _add_cors(app, settings)
     install_error_handlers(app)
     app.include_router(health.router)
     app.include_router(v1.router)
     return app
+
+
+def _build_verifier(settings: Settings | None) -> TokenVerifier:
+    if settings is None:
+        return DenyAllTokenVerifier()
+    return JwksTokenVerifier(
+        issuer=settings.oidc_issuer_url,
+        audience=settings.oidc_audience,
+        algorithms=settings.oidc_algorithms,
+        fetch_json=httpx_json_fetcher(),
+    )
+
+
+def _build_card_provider(settings: Settings | None) -> CardDataProvider | None:
+    if settings is None:
+        return None
+    # ONE client: its request spacing and circuit breaker are process-wide (FR-DAT-01).
+    return ScryfallCardProvider(
+        ScryfallClient(
+            base_url=settings.scryfall_base_url,
+            user_agent=settings.scryfall_user_agent,
+            breaker=CircuitBreaker("scryfall"),
+        )
+    )
+
+
+def _build_cache(settings: Settings | None) -> Cache:
+    if settings is None:
+        return TtlCache(300, 500)
+    return TtlCache(settings.catalog_cache_ttl_seconds, settings.catalog_cache_max_entries)
+
+
+def _add_cors(app: FastAPI, settings: Settings | None) -> None:
+    if settings is None or not settings.cors_origin_list:
+        return
+    # Outermost, so a preflight is answered before authentication. No cookies, no wildcard.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+        expose_headers=["X-Request-ID", "Retry-After"],
+        max_age=600,
+    )
 
 
 def _no_database() -> UnitOfWork:

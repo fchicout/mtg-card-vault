@@ -6,7 +6,7 @@ from uuid import UUID
 
 from mtgvault.adapters.scryfall.client import ScryfallClient
 from mtgvault.adapters.scryfall.mapper import card_from_json, page_from_json
-from mtgvault.domain.card import Card, Page
+from mtgvault.domain.card import Card, ResultPage
 from mtgvault.domain.errors import NotFound, UpstreamUnavailable
 
 _UNREADABLE = "The data source sent an unexpected answer."
@@ -16,7 +16,7 @@ class ScryfallCardProvider:
     def __init__(self, client: ScryfallClient) -> None:
         self._client = client
 
-    def search(self, query: str, page: int) -> Page[Card]:
+    def search(self, query: str, page: int) -> ResultPage[Card]:
         params: dict[str, str | int] = {
             "q": query,
             "unique": "cards",
@@ -26,7 +26,7 @@ class ScryfallCardProvider:
         try:
             document = self._client.get_json("/cards/search", params)
         except NotFound:  # Scryfall answers 404 when nothing matches
-            return Page(items=(), page=page, has_more=False, total=0)
+            return ResultPage(items=(), page=page, has_more=False, total=0)
         return self._page(document, page)
 
     def get(self, card_id: UUID) -> Card:
@@ -36,7 +36,7 @@ class ScryfallCardProvider:
         except (KeyError, ValueError, TypeError) as error:
             raise UpstreamUnavailable(_UNREADABLE) from error
 
-    def printings(self, oracle_id: UUID, page: int) -> Page[Card]:
+    def printings(self, oracle_id: UUID, page: int) -> ResultPage[Card]:
         params: dict[str, str | int] = {
             "q": f"oracleid:{oracle_id}",
             "unique": "prints",
@@ -48,11 +48,11 @@ class ScryfallCardProvider:
         try:
             document = self._client.get_json("/cards/search", params)
         except NotFound:
-            return Page(items=(), page=page, has_more=False, total=0)
+            return ResultPage(items=(), page=page, has_more=False, total=0)
         return self._page(document, page)
 
     @staticmethod
-    def _page(document: dict[str, object], page: int) -> Page[Card]:
+    def _page(document: dict[str, object], page: int) -> ResultPage[Card]:
         try:
             return page_from_json(document, page)
         except (KeyError, ValueError, TypeError) as error:

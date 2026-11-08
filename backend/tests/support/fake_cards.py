@@ -4,7 +4,7 @@ import re
 from decimal import Decimal
 from uuid import UUID, uuid5
 
-from mtgvault.domain.card import Card, Page, Prices
+from mtgvault.domain.card import Card, Prices, ResultPage
 from mtgvault.domain.errors import NotFound, UpstreamUnavailable
 
 NAMESPACE = UUID("00000000-0000-0000-0000-00000000c0de")
@@ -72,12 +72,12 @@ class FakeCardProvider:
         if self.fail:
             raise UpstreamUnavailable("down")
 
-    def _page(self, found: list[Card], page: int) -> Page[Card]:
+    def _page(self, found: list[Card], page: int) -> ResultPage[Card]:
         start = (page - 1) * PAGE_SIZE
         chunk = found[start : start + PAGE_SIZE]
-        return Page(tuple(chunk), page, start + PAGE_SIZE < len(found), len(found))
+        return ResultPage(tuple(chunk), page, start + PAGE_SIZE < len(found), len(found))
 
-    def search(self, query: str, page: int) -> Page[Card]:
+    def search(self, query: str, page: int) -> ResultPage[Card]:
         self._check()
         self.search_calls.append((query, page))
         seen: set[UUID | None] = set()
@@ -96,7 +96,7 @@ class FakeCardProvider:
                 return card
         raise NotFound("No such card.")
 
-    def printings(self, oracle_id: UUID, page: int) -> Page[Card]:
+    def printings(self, oracle_id: UUID, page: int) -> ResultPage[Card]:
         self._check()
         self.printings_calls.append((oracle_id, page))
         return self._page([c for c in self.cards if c.oracle_id == oracle_id], page)

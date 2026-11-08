@@ -168,7 +168,7 @@ class ScryfallClient:
         return self._rng() * min(self._max_delay, self._base_delay * (1 << (attempt - 1)))
 
     @staticmethod
-    def _final_error(status: int, retry_after: float | None) -> Exception:
+    def _final_error(status: int, retry_after: float | None) -> RateLimited | UpstreamUnavailable:
         if status == 429:
             seconds = int(retry_after) + 1 if retry_after is not None else None
             return RateLimited(

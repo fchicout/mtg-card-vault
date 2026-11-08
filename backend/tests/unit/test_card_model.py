@@ -6,7 +6,7 @@ import pytest
 from tests.support.fake_cards import FakeCardProvider, make_card
 
 from mtgvault.application.ports import CardDataProvider
-from mtgvault.domain.card import Page, Prices
+from mtgvault.domain.card import Prices, ResultPage
 from mtgvault.domain.errors import NotFound, UpstreamUnavailable
 
 
@@ -19,7 +19,7 @@ def test_cards_are_immutable_and_prices_are_decimals() -> None:
 
 
 def test_page_carries_its_position() -> None:
-    page = Page(items=(1, 2), page=1, has_more=True, total=5)
+    page = ResultPage(items=(1, 2), page=1, has_more=True, total=5)
     assert (page.page, page.has_more, page.total) == (1, True, 5)
 
 

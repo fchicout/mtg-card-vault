@@ -43,9 +43,10 @@ def test_search_maps_a_real_list_response(double: ScryfallDouble) -> None:
         "Lightning Bolt",
     ]
     assert page.total == 2
-    assert not page.has_more
+    assert page.has_more is False
     plain = page.items[1]
-    assert plain.image_normal and plain.image_normal.startswith("https://cards.scryfall.io/")
+    assert plain.image_normal is not None
+    assert plain.image_normal.startswith("https://cards.scryfall.io/")
     assert plain.prices.usd is not None
     assert "foil" in plain.finishes
 
@@ -66,8 +67,10 @@ def test_get_maps_transform_and_split_layouts(double: ScryfallDouble) -> None:
     transform = p.get(UUID(ids["transform"]))
     assert transform.name == "Delver of Secrets // Insectile Aberration"
     assert len(transform.faces) == 2
-    assert transform.image_normal and transform.faces[0].image_normal
-    assert transform.mana_cost and "{U}" in transform.mana_cost
+    assert transform.image_normal is not None
+    assert transform.faces[0].image_normal is not None
+    assert transform.mana_cost is not None
+    assert "{U}" in transform.mana_cost
     split = p.get(UUID(ids["split"]))
     assert split.name == "Fire // Ice"
     assert len(split.faces) == 2
@@ -100,8 +103,10 @@ def test_printings_lists_every_printing_of_a_card(double: ScryfallDouble) -> Non
 
 
 def test_unknown_cards_raise_not_found(double: ScryfallDouble) -> None:
+    source = provider(double)
+    missing = UUID("00000000-0000-4000-8000-000000000000")
     with pytest.raises(NotFound):
-        provider(double).get(UUID("00000000-0000-4000-8000-000000000000"))
+        source.get(missing)
 
 
 def test_requests_carry_the_required_headers_and_are_spaced(double: ScryfallDouble) -> None:
