@@ -86,8 +86,8 @@ def build(provider: Provider, clock: Clock | None = None, **kwargs: Any) -> Jwks
 def test_a_valid_token_yields_the_principal(key: rsa.RSAPrivateKey) -> None:
     principal = build(Provider(("k1", key))).verify(token(key))
     assert principal.subject == "user-1"
-    assert principal.claims["name"] == "Ada"
-    assert "Ada" not in repr(principal)  # claims never reach logs through repr
+    assert principal.display_name == "Ada"
+    assert not hasattr(principal, "claims")  # everything else is dropped at the boundary
 
 
 @pytest.mark.parametrize(

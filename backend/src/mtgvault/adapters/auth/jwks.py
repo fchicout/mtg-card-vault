@@ -22,7 +22,7 @@ import jwt
 
 from mtgvault.config import ASYMMETRIC_ALGORITHMS, is_acceptable_url
 from mtgvault.domain.errors import Unauthenticated, UpstreamUnavailable
-from mtgvault.domain.identity import Principal
+from mtgvault.domain.identity import Principal, principal_from_claims
 
 _log = logging.getLogger("mtgvault.auth")
 _GENERIC = "The access token is invalid or expired."
@@ -110,10 +110,10 @@ class JwksTokenVerifier:
             )
         except jwt.PyJWTError as error:
             raise self._reject(type(error).__name__) from error
-        subject = claims.get("sub")
-        if not isinstance(subject, str) or not subject.strip():
-            raise self._reject("empty subject")
-        return Principal(subject=subject, claims=claims)
+        try:
+            return principal_from_claims(claims)
+        except ValueError:
+            raise self._reject("empty subject") from None
 
     # ------------------------------------------------------------------ keys
     def _key_for(self, kid: object) -> jwt.PyJWK:
