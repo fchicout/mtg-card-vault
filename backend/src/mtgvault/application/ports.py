@@ -1,6 +1,6 @@
 """Ports: interfaces the application layer needs, implemented by adapters (ADR-006)."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from types import TracebackType
@@ -8,7 +8,7 @@ from typing import Protocol, Self
 from uuid import UUID
 
 from mtgvault.application.vault_query import VaultQuery
-from mtgvault.domain.card import Card, ResultPage
+from mtgvault.domain.card import Card, LookupResult, ResultPage
 from mtgvault.domain.identity import Principal
 from mtgvault.domain.user import User
 from mtgvault.domain.vault import (
@@ -90,6 +90,10 @@ class CardDataProvider(Protocol):
 
     def printings(self, oracle_id: UUID, page: int) -> ResultPage[Card]:
         """Every printing of a card, newest first."""
+        ...
+
+    def lookup(self, card_ids: Sequence[UUID]) -> LookupResult:
+        """The cards with these ids, and the ids the source does not know (batched inside)."""
         ...
 
 

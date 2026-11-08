@@ -41,7 +41,7 @@ from mtgvault.application.scan_service import ScanService
 from mtgvault.application.user_service import UserService
 from mtgvault.application.vault_service import VaultService
 from mtgvault.config import Settings, load_settings
-from mtgvault.domain.card import Card, ResultPage
+from mtgvault.domain.card import Card, LookupResult, ResultPage
 from mtgvault.domain.errors import UpstreamUnavailable
 from mtgvault.logging_setup import configure_logging
 
@@ -187,6 +187,9 @@ class _NoCards:
         raise UpstreamUnavailable(_NO_SOURCE)
 
     def printings(self, *_: object) -> ResultPage[Card]:
+        raise UpstreamUnavailable(_NO_SOURCE)
+
+    def lookup(self, *_: object) -> LookupResult:
         raise UpstreamUnavailable(_NO_SOURCE)
 
 

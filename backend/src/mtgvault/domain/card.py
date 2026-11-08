@@ -56,6 +56,14 @@ class Card:
 
 
 @dataclass(frozen=True)
+class LookupResult:
+    """Cards found by id, and the ids the source does not know (FR-PRC-04)."""
+
+    cards: tuple[Card, ...]
+    not_found: tuple[UUID, ...]
+
+
+@dataclass(frozen=True)
 class ResultPage[T]:
     """One page of a larger result. ``total`` is None when the source does not say."""
 
