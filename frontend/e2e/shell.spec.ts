@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousViolations } from './support/axe';
+import { signIn } from './support/session';
 
 /**
  * Application shell (issue #9, NFR-USA-01..03, NFR-LEG-01, FR-API-02). The API is mocked at the
@@ -16,6 +17,9 @@ const ROUTES = [
   '/no-such-page',
 ];
 const THEMES = ['light', 'dark'] as const;
+
+// The vault, catalogue, scan and account pages need a session (US-001).
+test.beforeEach(async ({ page }) => signIn(page));
 
 async function useTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
   await page.addInitScript((value) => localStorage.setItem('mtgvault.theme', value), theme);

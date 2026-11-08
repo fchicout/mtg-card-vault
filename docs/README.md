@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.25
+**Docs set version:** 0.3.26
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.26 | 2026-11-08 | Issues #61, #62, #64: route guard, sign-in page, user menu, sign-out and the CSP/CORS rules for the identity provider documented. |
 | 0.3.25 | 2026-11-08 | Issue #60: SPA sign-in (library choice, storage rules, run-time settings) documented. |
 | 0.3.24 | 2026-11-08 | Issue #59: the OIDC test double and the E2E compose overlay documented. |
 | 0.3.23 | 2026-11-08 | Issue #58: `GET /api/v1/me` and user provisioning on first authenticated request. |

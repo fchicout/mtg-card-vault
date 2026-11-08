@@ -1,6 +1,6 @@
 # 02 — User Stories
 
-**Docs set version:** 0.3.25
+**Docs set version:** 0.3.26
 **Document:** 02 User Stories (Connextra format, INVEST, Gherkin acceptance criteria)
 **Status:** Draft
 **Last updated:** 2026-10-31

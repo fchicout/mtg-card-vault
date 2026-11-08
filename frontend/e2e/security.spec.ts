@@ -22,6 +22,12 @@ test.describe('security headers', () => {
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain('https://cards.scryfall.io');
+    // The identity provider's origin is allowed for the token endpoint, and nothing broader.
+    const config = await (await request.get('/config.json')).json();
+    if (config.issuer) {
+      expect(csp).toContain(`connect-src 'self' ${new URL(config.issuer).origin}`);
+    }
+    expect(csp).not.toMatch(/connect-src[^;]*\*/);
     expect(csp).not.toContain('unsafe-inline');
     expect(csp).not.toContain('unsafe-eval');
 
