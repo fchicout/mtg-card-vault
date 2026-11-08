@@ -322,7 +322,8 @@ def test_an_empty_vault_summarises_to_zeros(migrated: Engine) -> None:
     with uow(migrated) as unit:
         summary = unit.vault.summary(user)
     assert (summary.total_cards, summary.entries, summary.unpriced_usd) == (0, 0, 0)
-    assert summary.value_usd == Decimal("0.00") and summary.value_eur == Decimal("0.00")
+    assert summary.value_usd == Decimal("0.00")
+    assert summary.value_eur == Decimal("0.00")
     assert summary.oldest_prices_updated_at is None
 
 
@@ -332,7 +333,8 @@ def test_a_real_price_of_zero_is_priced_not_unpriced(migrated: Engine) -> None:
     add(migrated, user, free, 5)
     with uow(migrated) as unit:
         summary = unit.vault.summary(user)
-    assert summary.unpriced_usd == 0 and summary.value_usd == Decimal("0.00")
+    assert summary.unpriced_usd == 0
+    assert summary.value_usd == Decimal("0.00")
 
 
 # ---------------------------------------------------------------------------- bulk refresh (#137)

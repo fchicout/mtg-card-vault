@@ -85,7 +85,8 @@ def test_adding_a_printing_creates_an_entry_and_caches_the_card(
     assert body["card"]["name"] == "Lightning Bolt"
     assert body["unit_price"] == "3.00"  # the foil price
     assert body["line_value_usd"] == "6.00"  # x 2
-    assert body["unit_price_eur"] is None and body["line_value_eur"] is None  # no price, not zero
+    assert body["unit_price_eur"] is None
+    assert body["line_value_eur"] is None
     assert body["available_finishes"] == ["nonfoil", "foil"]
     with migrated.connect() as connection:
         assert connection.execute(text("SELECT count(*) FROM cards")).scalar_one() == 1
@@ -375,10 +376,14 @@ def test_the_summary_endpoint_totals_the_callers_collection_only(client: TestCli
     add(client, "alice", LOTUS.id, 1)  # 9000.00
     add(client, "bob", BOLT.id, 100)
     body = client.get("/api/v1/vault/summary", headers=headers("alice")).json()
-    assert body["total_cards"] == 3 and body["entries"] == 2
+    assert body["total_cards"] == 3
+    assert body["entries"] == 2
     assert body["value_usd"] == "9006.00"
-    assert body["value_eur"] == "0.00" and body["unpriced_eur"] == 2 and body["lower_bound_eur"]
-    assert body["unpriced_usd"] == 0 and body["lower_bound_usd"] is False
+    assert body["value_eur"] == "0.00"
+    assert body["unpriced_eur"] == 2
+    assert body["lower_bound_eur"]
+    assert body["unpriced_usd"] == 0
+    assert body["lower_bound_usd"] is False
 
 
 def test_the_summary_needs_a_token_and_an_empty_vault_is_zeros(client: TestClient) -> None:

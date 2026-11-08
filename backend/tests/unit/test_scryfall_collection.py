@@ -93,7 +93,8 @@ def test_a_throttled_post_is_retried_with_the_same_body() -> None:
         min_interval=0.0, base_delay=0.0, max_delay=0.0, sleeper=lambda _: None,
     )  # fmt: skip
     ScryfallCardProvider(client).lookup([uuid4()])
-    assert len(bodies) == 2 and bodies[0] == bodies[1]
+    assert len(bodies) == 2
+    assert bodies[0] == bodies[1]
 
 
 def test_throttling_and_outages_surface_as_typed_errors(double: ScryfallDouble) -> None:
@@ -114,9 +115,10 @@ def test_an_answer_of_the_wrong_shape_is_an_upstream_error(double: ScryfallDoubl
         def post_json(self, path, body):  # type: ignore[no-untyped-def]
             return {"object": "list", "data": [{"id": "not-a-card"}], "not_found": []}
 
-    client = Odd(base_url=double.base_url, user_agent=UA)
+    source = ScryfallCardProvider(Odd(base_url=double.base_url, user_agent=UA))
+    ids = [uuid4()]
     with pytest.raises(UpstreamUnavailable):
-        ScryfallCardProvider(client).lookup([uuid4()])
+        source.lookup(ids)
 
 
 def test_the_breaker_opens_during_an_outage(double: ScryfallDouble) -> None:
@@ -142,6 +144,7 @@ def test_the_double_refuses_more_than_75_and_serves_changed_prices(double: Scryf
     card_id = next(iter(double._cards))
     control(double, prices={card_id: {"usd": "123.45", "eur": None}})
     card = provider(double).lookup([UUID(card_id)]).cards[0]
-    assert str(card.prices.usd) == "123.45" and card.prices.eur is None
+    assert str(card.prices.usd) == "123.45"
+    assert card.prices.eur is None
     control(double, reset=True)
     assert str(provider(double).lookup([UUID(card_id)]).cards[0].prices.usd) != "123.45"

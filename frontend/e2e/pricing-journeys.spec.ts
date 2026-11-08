@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 import { expectNoSeriousViolations } from './support/axe';
 import { controlScryfall, scryfallIsUp, stubCardImages } from './support/cards';
@@ -41,21 +41,39 @@ async function addFromCatalogue(
   return id;
 }
 
-/** The id of the plain Lightning Bolt: open its card page and read the address. */
+/**
+ * The id of the plain Lightning Bolt, read from the link of the search result (the card page is
+ * not opened: the API caches card pages for a few minutes, and these journeys set the prices).
+ */
 async function boltId(page: Page): Promise<string> {
   await gotoSignedIn(page, '/catalogue?q=lightning%20bolt');
-  await page.getByTestId('result').nth(1).click();
-  await page.waitForURL(/\/catalogue\/[0-9a-f-]{36}$/);
-  return page.url().split('/').pop() ?? '';
+  const href = await page.getByTestId('result').nth(1).getAttribute('href');
+  return (href ?? '').split('/').pop() ?? '';
+}
+
+/**
+ * Gives the Scryfall double the prices, adds the card and lets the worker store them: the price a
+ * card was added with may come from the API's short-lived cache, the refresh always asks the source.
+ */
+async function ownBolt(
+  page: Page,
+  request: APIRequestContext,
+  quantity: number,
+  prices: Record<string, string>,
+): Promise<string> {
+  const bolt = await boltId(page);
+  await controlScryfall(request, { prices: { [bolt]: prices } });
+  await addFromCatalogue(page, 'lightning bolt', 1, quantity);
+  const run = await runWorkerOnce();
+  expect(run.code, run.output).toBe(0);
+  return bolt;
 }
 
 test('@UC-07 the vault shows unit prices and line values and the summary adds them up', async ({
   page,
   request,
 }) => {
-  const bolt = await boltId(page);
-  await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
-  await addFromCatalogue(page, 'lightning bolt', 1, 2);
+  await ownBolt(page, request, 2, { usd: '1.50', eur: '1.30' });
 
   await gotoSignedIn(page, '/vault');
   const row = page.getByTestId('entry');
@@ -76,10 +94,10 @@ test('@UC-07 a card without a price says so and makes the total a lower bound', 
   page,
   request,
 }) => {
-  const bolt = await boltId(page);
-  await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
-  await addFromCatalogue(page, 'lightning bolt', 1, 1);
+  await ownBolt(page, request, 1, { usd: '1.50', eur: '1.30' });
   await addFromCatalogue(page, 'lightning bolt', 0, 3); // the double-faced one has no prices
+  const run = await runWorkerOnce();
+  expect(run.code, run.output).toBe(0);
 
   await gotoSignedIn(page, '/vault');
   await expect(page.getByTestId('entry')).toHaveCount(2);
@@ -95,10 +113,7 @@ test('@UC-08 the refresh brings new prices into the vault and the summary', asyn
   page,
   request,
 }) => {
-  const bolt = await boltId(page);
-  await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
-  await addFromCatalogue(page, 'lightning bolt', 1, 2);
-
+  const bolt = await ownBolt(page, request, 2, { usd: '1.50', eur: '1.30' });
   await controlScryfall(request, { prices: { [bolt]: { usd: '2.25', eur: '1.90' } } });
   const run = await runWorkerOnce();
   expect(run.code, run.output).toBe(0);
@@ -115,10 +130,7 @@ test('@UC-08 a throttled or failing source leaves the old prices in place', asyn
   page,
   request,
 }) => {
-  const bolt = await boltId(page);
-  await controlScryfall(request, { prices: { [bolt]: { usd: '1.50', eur: '1.30' } } });
-  await addFromCatalogue(page, 'lightning bolt', 1, 1);
-
+  const bolt = await ownBolt(page, request, 1, { usd: '1.50', eur: '1.30' });
   await controlScryfall(request, {
     prices: { [bolt]: { usd: '9.99' } },
     fail: 429,
