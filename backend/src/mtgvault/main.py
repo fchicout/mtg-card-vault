@@ -33,7 +33,7 @@ from mtgvault.application.ports import (
 )
 from mtgvault.application.user_service import UserService
 from mtgvault.config import Settings, load_settings
-from mtgvault.domain.card import Card, Page
+from mtgvault.domain.card import Card, ResultPage
 from mtgvault.domain.errors import UpstreamUnavailable
 from mtgvault.logging_setup import configure_logging
 
@@ -155,11 +155,11 @@ class _NoCards:
     def _fail(self) -> NoReturn:
         raise UpstreamUnavailable("No card data source is configured.")
 
-    def search(self, query: str, page: int) -> Page[Card]:
+    def search(self, query: str, page: int) -> ResultPage[Card]:
         self._fail()
 
     def get(self, card_id: UUID) -> Card:
         self._fail()
 
-    def printings(self, oracle_id: UUID, page: int) -> Page[Card]:
+    def printings(self, oracle_id: UUID, page: int) -> ResultPage[Card]:
         self._fail()

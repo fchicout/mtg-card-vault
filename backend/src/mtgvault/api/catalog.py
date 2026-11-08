@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from mtgvault.api.dependencies import get_catalog_service
 from mtgvault.application.catalog_query import CatalogFilters, parse_colors
 from mtgvault.application.catalog_service import CatalogService
-from mtgvault.domain.card import Card, CardFace, Page, Prices
+from mtgvault.domain.card import Card, CardFace, Prices, ResultPage
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -141,7 +141,7 @@ def _printing(card: Card) -> Printing:
     )
 
 
-def _meta(page: Page[Card]) -> dict[str, object]:
+def _meta(page: ResultPage[Card]) -> dict[str, object]:
     return {"page": page.page, "has_more": page.has_more, "total": page.total}
 
 
