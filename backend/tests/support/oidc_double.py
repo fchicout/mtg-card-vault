@@ -113,9 +113,27 @@ class OidcDouble:
             claims["email"] = user["email"]
         return jwt.encode(claims, self._key, algorithm="RS256", headers={"kid": KID})
 
-    def _issue(self, sub: str, audience: str, *, with_refresh: bool = True) -> dict[str, Any]:
+    def id_token(self, sub: str, nonce: str | None = None) -> str:
+        """The OIDC identity token: clients validate its issuer, audience (client id) and nonce."""
+        now = int(time.time())
+        user = USERS.get(sub, {})
+        claims: dict[str, Any] = {
+            "iss": self.issuer, "aud": self.client_id, "sub": sub, "iat": now, "exp": now + 600,
+        }  # fmt: skip
+        if nonce:
+            claims["nonce"] = nonce
+        if user.get("name"):
+            claims["name"] = user["name"]
+        if user.get("email"):
+            claims["email"] = user["email"]
+        return jwt.encode(claims, self._key, algorithm="RS256", headers={"kid": KID})
+
+    def _issue(
+        self, sub: str, audience: str, *, nonce: str | None = None, with_refresh: bool = True
+    ) -> dict[str, Any]:
         body: dict[str, Any] = {
             "access_token": self.access_token(sub, audience=audience),
+            "id_token": self.id_token(sub, nonce),
             "token_type": "bearer",
             "expires_in": self.access_ttl,
             "scope": "openid profile email offline_access",
@@ -171,6 +189,7 @@ class OidcDouble:
                 "challenge": query["code_challenge"],
                 "redirect": redirect,
                 "aud": audience,
+                "nonce": query.get("nonce"),
             }
         return 302, {"Location": f"{redirect}?{urlencode({'code': code, 'state': state})}"}, None
 
@@ -191,7 +210,7 @@ class OidcDouble:
                 if not ok or entry is None:
                     return 400, {"error": "invalid_grant"}
                 self.code_grants += 1
-                return 200, self._issue(entry["sub"], entry["aud"])
+                return 200, self._issue(entry["sub"], entry["aud"], nonce=entry.get("nonce"))
             if grant == "refresh_token":
                 entry = self.refresh_tokens.pop(form.get("refresh_token", ""), None)  # rotation
                 if entry is None or entry["exp"] < time.time():

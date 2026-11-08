@@ -54,6 +54,10 @@ export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/support/global-setup.ts',
   fullyParallel: true,
+  // Sign-in redirects through the provider and back; Firefox in particular needs a few seconds.
+  expect: { timeout: 10_000 },
+  // A broken stack must fail fast instead of burning the whole job timeout.
+  maxFailures: process.env['CI'] ? 15 : 0,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
