@@ -16,7 +16,7 @@ from mtgvault.correlation import current_correlation_id
 REDACTED = "[REDACTED]"
 
 _JWT = re.compile(r"\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*")
-_BEARER = re.compile(r"(?i)\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{6,}")
+_BEARER = re.compile(r"(?i)\b(bearer|basic)\s+[A-Z0-9._~+/=-]{6,}")
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 # Image payloads: data URIs, or any long unbroken base64-looking run.
 _DATA_URI = re.compile(r"data:[\w.+-]+/[\w.+-]+;base64,[A-Za-z0-9+/=]+")
