@@ -10,12 +10,12 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
 const OIDC = process.env['E2E_OIDC_URL'] ?? 'http://localhost:9000';
 const REDIRECT = 'https://localhost:8443/callback';
 
-test.beforeAll(async ({ request }) => {
+test.beforeEach(async ({ request }, testInfo) => {
   const reachable = await request
     .get(`${OIDC}/.well-known/openid-configuration`)
     .then((r) => r.ok())
     .catch(() => false);
-  test.skip(!reachable, 'the OIDC test double is not running (deploy/compose.e2e.yaml)');
+  testInfo.skip(!reachable, 'the OIDC test double is not running (deploy/compose.e2e.yaml)');
 });
 
 async function signIn(request: APIRequestContext, hint = 'user-1'): Promise<string> {
