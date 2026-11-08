@@ -477,7 +477,9 @@ jobs:
   # for main). It never deploys: the operator rolls out manually (ADR-015).
   publish-images:
     name: publish-images
-    if: github.event_name == 'push'
+    # commit-policy only runs on pull requests (skipped on a push), which would skip this job too;
+    # so run on every push unless a needed job failed or was cancelled.
+    if: ${{ always() && github.event_name == 'push' && needs.quality-gate.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     needs:
       - docs-sync
       - commit-policy
