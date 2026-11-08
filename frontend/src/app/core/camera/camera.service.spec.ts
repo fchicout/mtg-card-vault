@@ -37,6 +37,27 @@ describe('CameraService', () => {
     expect(constraints.video.facingMode).toEqual({ ideal: 'environment' });
   });
 
+  it.each(['NotFoundError', 'OverconstrainedError'])(
+    'falls back to any camera when the preferences fail with %s',
+    async (name) => {
+      const stream = {} as MediaStream;
+      const getUserMedia = vi
+        .fn()
+        .mockRejectedValueOnce(new DOMException('x', name))
+        .mockResolvedValueOnce(stream);
+      withMedia(getUserMedia);
+      expect(await service.open()).toBe(stream);
+      expect(getUserMedia.mock.calls[1][0]).toEqual({ audio: false, video: true });
+    },
+  );
+
+  it('does not retry a refused permission', async () => {
+    const getUserMedia = vi.fn().mockRejectedValue(new DOMException('x', 'NotAllowedError'));
+    withMedia(getUserMedia);
+    await expect(service.open()).rejects.toMatchObject({ reason: 'denied' });
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+  });
+
   it('stops every track on close and tolerates no stream', () => {
     const stop = vi.fn();
     service.close({ getTracks: () => [{ stop }, { stop }] } as unknown as MediaStream);

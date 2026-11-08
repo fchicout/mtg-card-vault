@@ -21,11 +21,20 @@ export class CameraService {
     if (!this.supported) {
       throw new CameraError('unsupported');
     }
+    const media = navigator.mediaDevices;
     try {
-      return await navigator.mediaDevices.getUserMedia({
+      return await media.getUserMedia({
         audio: false,
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } },
       });
+    } catch (error) {
+      // Some devices reject the preferences (rear camera, size): any camera is better than none.
+      if (!isUnsatisfiable(error)) {
+        throw new CameraError(classify(error));
+      }
+    }
+    try {
+      return await media.getUserMedia({ audio: false, video: true });
     } catch (error) {
       throw new CameraError(classify(error));
     }
@@ -60,6 +69,11 @@ export class CameraError extends Error {
   constructor(readonly reason: CameraFailure) {
     super(reason);
   }
+}
+
+function isUnsatisfiable(error: unknown): boolean {
+  const name = error instanceof DOMException ? error.name : '';
+  return name === 'NotFoundError' || name === 'OverconstrainedError';
 }
 
 function classify(error: unknown): CameraFailure {
