@@ -97,14 +97,13 @@ def test_the_database_rejects_invalid_entries(
     migrated: Engine, quantity: int, condition: str, finish: str
 ) -> None:
     user, card = new_user(migrated, "u"), put_card(migrated)
+    statement = text(
+        "INSERT INTO vault_entries (id, user_id, card_id, quantity, condition, finish)"
+        " VALUES (:id, :u, :c, :q, :co, :f)"
+    )
+    params = {"id": uuid4(), "u": user, "c": card, "q": quantity, "co": condition, "f": finish}
     with migrated.begin() as connection, pytest.raises(IntegrityError):
-        connection.execute(
-            text(
-                "INSERT INTO vault_entries (id, user_id, card_id, quantity, condition, finish)"
-                " VALUES (:id, :u, :c, :q, :co, :f)"
-            ),
-            {"id": uuid4(), "u": user, "c": card, "q": quantity, "co": condition, "f": finish},
-        )
+        connection.execute(statement, params)
 
 
 def test_identity_is_unique_and_a_missing_card_is_refused(migrated: Engine) -> None:
@@ -113,12 +112,15 @@ def test_identity_is_unique_and_a_missing_card_is_refused(migrated: Engine) -> N
         "INSERT INTO vault_entries (id, user_id, card_id, quantity, condition, finish)"
         " VALUES (:id, :u, :c, 1, 'NM', 'foil')"
     )
+    first, second, third = (uuid4() for _ in range(3))
     with migrated.begin() as connection:
-        connection.execute(insert, {"id": uuid4(), "u": user, "c": card})
+        connection.execute(insert, {"id": first, "u": user, "c": card})
+    duplicate = {"id": second, "u": user, "c": card}
     with migrated.begin() as connection, pytest.raises(IntegrityError):
-        connection.execute(insert, {"id": uuid4(), "u": user, "c": card})
+        connection.execute(insert, duplicate)
+    missing_card = {"id": third, "u": user, "c": uuid4()}
     with migrated.begin() as connection, pytest.raises(IntegrityError):
-        connection.execute(insert, {"id": uuid4(), "u": user, "c": uuid4()})
+        connection.execute(insert, missing_card)
 
 
 def test_deleting_a_user_removes_their_entries_but_keeps_the_cards(migrated: Engine) -> None:

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from alembic import command
+from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, create_engine, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -14,6 +15,10 @@ from mtgvault.adapters.db.unit_of_work import SqlAlchemyUnitOfWork
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 pytestmark = pytest.mark.integration
+# The newest revision of the chain, read from the scripts: a new migration needs no edit here.
+HEAD = ScriptDirectory.from_config(
+    alembic_config("postgresql://x/x", BACKEND_DIR)
+).get_current_head()
 
 
 def versions(engine: Engine) -> list[str]:
@@ -28,17 +33,17 @@ def versions(engine: Engine) -> list[str]:
 def test_upgrade_then_downgrade_round_trip(database_url: str, engine: Engine) -> None:
     config = alembic_config(database_url, BACKEND_DIR)
     command.upgrade(config, "head")
-    assert versions(engine) == ["0002"]
+    assert versions(engine) == [HEAD]
     command.downgrade(config, "base")
     assert versions(engine) == []
     command.upgrade(config, "head")  # and up again: the chain is repeatable
-    assert versions(engine) == ["0002"]
+    assert versions(engine) == [HEAD]
 
 
 def test_upgrade_to_head_is_idempotent(database_url: str, engine: Engine) -> None:
     upgrade_to_head(database_url, BACKEND_DIR)
     upgrade_to_head(database_url, BACKEND_DIR)
-    assert versions(engine) == ["0002"]
+    assert versions(engine) == [HEAD]
 
 
 def test_changes_in_db_session_are_rolled_back_between_tests(
@@ -88,7 +93,7 @@ def test_concurrent_migrations_do_not_race(database_url: str, engine: Engine) ->
     ]
     results = [(p.wait(timeout=120), p.stderr.read() if p.stderr else "") for p in processes]
     assert [code for code, _ in results] == [0, 0, 0, 0], results
-    assert versions(engine) == ["0002"]
+    assert versions(engine) == [HEAD]
 
 
 def test_api_container_entry_uses_the_real_engine(database_url: str) -> None:

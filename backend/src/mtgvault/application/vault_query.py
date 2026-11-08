@@ -39,6 +39,45 @@ class VaultQuery:
     descending: bool = True
 
 
+def _paging_errors(page: int, page_size: int) -> list[FieldError]:
+    errors: list[FieldError] = []
+    if not 1 <= page <= 100_000:
+        errors.append(FieldError("page", "Use a page number of 1 or more."))
+    if not 1 <= page_size <= MAX_PAGE_SIZE:
+        errors.append(FieldError("page_size", f"Use a page size from 1 to {MAX_PAGE_SIZE}."))
+    return errors
+
+
+def _filter_errors(
+    q: str | None, set_code: str | None, rarity: str | None, type_text: str | None
+) -> list[FieldError]:
+    checks = [
+        (bool(q) and len(q or "") > MAX_NAME, FieldError("q", f"At most {MAX_NAME} characters.")),
+        (
+            bool(set_code) and not _SET.match((set_code or "").lower()),
+            FieldError("set", "Use the 2-6 letter or digit set code."),
+        ),
+        (
+            bool(rarity) and rarity not in RARITIES,
+            FieldError("rarity", "Use common, uncommon, rare or mythic."),
+        ),
+        (
+            bool(type_text) and not _TYPE.match((type_text or "").strip()),
+            FieldError("type", "Letters, spaces and hyphens, up to 40."),
+        ),
+    ]
+    return [error for failed, error in checks if failed]
+
+
+def _sort_errors(sort: str, direction: str | None) -> list[FieldError]:
+    errors: list[FieldError] = []
+    if sort not in SORT_FIELDS:
+        errors.append(FieldError("sort", f"Use one of: {', '.join(SORT_FIELDS)}."))
+    if direction not in (None, "asc", "desc"):
+        errors.append(FieldError("dir", "Use asc or desc."))
+    return errors
+
+
 def build_vault_query(  # one argument per documented query field
     *,
     page: int = 1,
@@ -52,24 +91,9 @@ def build_vault_query(  # one argument per documented query field
     direction: str | None = None,
 ) -> VaultQuery:
     """Check the raw parameters; raises ``ValidationFailed`` naming every offending field."""
-    errors: list[FieldError] = []
-    if not 1 <= page <= 100_000:
-        errors.append(FieldError("page", "Use a page number of 1 or more."))
-    if not 1 <= page_size <= MAX_PAGE_SIZE:
-        errors.append(FieldError("page_size", f"Use a page size from 1 to {MAX_PAGE_SIZE}."))
-    name = normalise(q) if q else None
-    if q and len(q) > MAX_NAME:
-        errors.append(FieldError("q", f"At most {MAX_NAME} characters."))
-    if set_code and not _SET.match(set_code.lower()):
-        errors.append(FieldError("set", "Use the 2-6 letter or digit set code."))
-    if rarity and rarity not in RARITIES:
-        errors.append(FieldError("rarity", "Use common, uncommon, rare or mythic."))
-    if type_text and not _TYPE.match(type_text.strip()):
-        errors.append(FieldError("type", "Letters, spaces and hyphens, up to 40."))
-    if sort not in SORT_FIELDS:
-        errors.append(FieldError("sort", f"Use one of: {', '.join(SORT_FIELDS)}."))
-    if direction not in (None, "asc", "desc"):
-        errors.append(FieldError("dir", "Use asc or desc."))
+    errors = _paging_errors(page, page_size)
+    errors += _filter_errors(q, set_code, rarity, type_text)
+    errors += _sort_errors(sort, direction)
     try:
         parsed_colors = parse_colors(colors)
     except ValidationFailed as error:
@@ -82,7 +106,7 @@ def build_vault_query(  # one argument per documented query field
     return VaultQuery(
         page=page,
         page_size=page_size,
-        name=name or None,
+        name=normalise(q) if q and normalise(q) else None,
         set_code=set_code.lower() if set_code else None,
         colors=parsed_colors,
         rarity=rarity or None,
