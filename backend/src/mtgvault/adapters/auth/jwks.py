@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import logging
 import threading
 import time
@@ -90,10 +92,7 @@ class JwksTokenVerifier:
 
     # ------------------------------------------------------------------ public API
     def verify(self, token: str) -> Principal:
-        try:
-            header = jwt.get_unverified_header(token)
-        except jwt.PyJWTError as error:
-            raise self._reject("malformed token") from error
+        header = self._header_of(token)
         algorithm = header.get("alg")
         if algorithm not in self._algorithms:
             raise self._reject(f"algorithm {algorithm!r} is not allowed")
@@ -114,6 +113,17 @@ class JwksTokenVerifier:
             return principal_from_claims(claims)
         except ValueError:
             raise self._reject("empty subject") from None
+
+    def _header_of(self, token: str) -> dict[str, Any]:
+        """The JOSE header, read only to choose the key; the signature is verified right after."""
+        try:
+            segment = token.split(".")[0]
+            header = json.loads(base64.urlsafe_b64decode(segment + "=" * (-len(segment) % 4)))
+        except ValueError as error:  # includes binascii.Error and JSON decode errors
+            raise self._reject("malformed token") from error
+        if not isinstance(header, dict):
+            raise self._reject("malformed token")
+        return header
 
     # ------------------------------------------------------------------ keys
     def _key_for(self, kid: object) -> jwt.PyJWK:
