@@ -43,12 +43,25 @@ class Settings(BaseSettings):
     oidc_allowed_algs: str = "RS256"
     # Comma-separated browser origins allowed to call the API; empty means no cross-origin access.
     cors_origins: str = ""
+    # Scryfall (FR-DAT-01): identify the application with a contact, as their API rules ask.
+    scryfall_user_agent: str = Field(min_length=10)
+    scryfall_base_url: str = "https://api.scryfall.com"
+    # Catalogue results are cached briefly (ADR-007).
+    catalog_cache_ttl_seconds: int = Field(default=300, ge=1, le=3600)
+    catalog_cache_max_entries: int = Field(default=500, ge=1, le=10000)
     # The interactive API documentation is for development; production leaves it off.
     api_docs_enabled: bool = False
 
     @field_validator("oidc_issuer_url")
     @classmethod
     def _issuer_is_https(cls, value: str) -> str:
+        if not is_acceptable_url(value):
+            raise ValueError("must be an https URL (http only for localhost)")
+        return value.rstrip("/")
+
+    @field_validator("scryfall_base_url")
+    @classmethod
+    def _scryfall_url_is_https(cls, value: str) -> str:
         if not is_acceptable_url(value):
             raise ValueError("must be an https URL (http only for localhost)")
         return value.rstrip("/")

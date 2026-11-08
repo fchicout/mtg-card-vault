@@ -12,12 +12,22 @@ from sqlalchemy.orm import sessionmaker
 
 from mtgvault.adapters.auth.deny_all import DenyAllTokenVerifier
 from mtgvault.adapters.auth.jwks import JwksTokenVerifier, httpx_json_fetcher
+from mtgvault.adapters.cache import TtlCache
 from mtgvault.adapters.db.unit_of_work import SqlAlchemyUnitOfWork
+from mtgvault.adapters.resilience import CircuitBreaker
+from mtgvault.adapters.scryfall.client import ScryfallClient
+from mtgvault.adapters.scryfall.provider import ScryfallCardProvider
 from mtgvault.adapters.sql_readiness import SqlReadinessProbe
 from mtgvault.api import health, v1
 from mtgvault.api.errors import PROBLEM_RESPONSES, install_error_handlers
 from mtgvault.api.middleware import CorrelationIdMiddleware
-from mtgvault.application.ports import ReadinessProbe, TokenVerifier, UnitOfWork
+from mtgvault.application.ports import (
+    Cache,
+    CardDataProvider,
+    ReadinessProbe,
+    TokenVerifier,
+    UnitOfWork,
+)
 from mtgvault.application.user_service import UserService
 from mtgvault.config import Settings, load_settings
 from mtgvault.logging_setup import configure_logging
@@ -29,6 +39,8 @@ def create_app(
     readiness_probe: ReadinessProbe | None = None,
     unit_of_work_factory: Callable[[], UnitOfWork] | None = None,
     token_verifier: TokenVerifier | None = None,
+    card_provider: CardDataProvider | None = None,
+    cache: Cache | None = None,
 ) -> FastAPI:
     """Build the application. Collaborators can be injected (tests, OpenAPI export).
 
@@ -54,6 +66,20 @@ def create_app(
             if settings
             else DenyAllTokenVerifier()
         )
+    if settings and card_provider is None:
+        # ONE client: its request spacing and circuit breaker are process-wide (FR-DAT-01).
+        card_provider = ScryfallCardProvider(
+            ScryfallClient(
+                base_url=settings.scryfall_base_url,
+                user_agent=settings.scryfall_user_agent,
+                breaker=CircuitBreaker("scryfall"),
+            )
+        )
+    if cache is None:
+        cache = TtlCache(
+            settings.catalog_cache_ttl_seconds if settings else 300,
+            settings.catalog_cache_max_entries if settings else 500,
+        )
     docs_enabled = settings is None or settings.api_docs_enabled
 
     app = FastAPI(
@@ -76,6 +102,8 @@ def create_app(
     )
     app.state.readiness_probe = readiness_probe
     app.state.token_verifier = token_verifier
+    app.state.card_provider = card_provider
+    app.state.catalog_cache = cache
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
     app.add_middleware(CorrelationIdMiddleware)
