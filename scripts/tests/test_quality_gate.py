@@ -120,6 +120,11 @@ class SonarConditionsTest(unittest.TestCase):
             with self.subTest(name):
                 self.assertEqual(statuses[name], gate.FAIL)
 
+    def test_the_server_gate_is_a_condition_that_fails_closed(self) -> None:
+        for status, expected in (("OK", gate.PASS), ("ERROR", gate.FAIL), (None, gate.FAIL)):
+            conditions = {c.name: c.status for c in gate.sonar_conditions(self.CLEAN, 1.0, status, ["x"])}
+            self.assertEqual(conditions["SonarQube quality gate (its own, on new code)"], expected, status)
+
     def test_there_is_no_hotspot_condition_any_more(self) -> None:
         # Security Hotspots are deprecated in SonarQube and become security issues (26.7 / 26.11).
         names = {c.name for c in gate.sonar_conditions(self.CLEAN, 1.0)}
@@ -189,7 +194,7 @@ class SonarClientTest(unittest.TestCase):
         self.assertEqual(failing, ["new_coverage is 12.5 (needs LT 80)"])
         self.assertEqual(gate.fetch_server_gate("https://s", "k", "t", lambda u, t: (403, {})), (None, []))
 
-    def test_server_gate_status_is_informational(self) -> None:
+    def test_server_gate_status(self) -> None:
         body = {"projectStatus": {"status": "ERROR"}}
         self.assertEqual(gate.fetch_server_gate_status("https://s", "k", "t", lambda u, t: (200, body)), "ERROR")
         self.assertIsNone(gate.fetch_server_gate_status("https://s", "k", "t", lambda u, t: (403, {})))
@@ -278,32 +283,46 @@ class CliTest(unittest.TestCase):
         code, _, _ = self.run_cli(["sonar", "--project", "p", "--require"])
         self.assertEqual(code, 2)
 
-    def sonar_run(self, issues_body: dict) -> tuple[int, str]:
-        def fake_get(url: str, token: str) -> tuple[int, dict]:
-            return (200, issues_body) if "/api/issues/search" in url else (403, {})
+    CLEAN_ISSUES = {"paging": {"total": 0}, "facets": []}
+    ENV = {"SONAR_TOKEN": "t", "SONAR_HOST_URL": "https://s"}
 
-        with mock.patch.object(gate, "sonar_get", fake_get):
-            code, out, _ = self.run_cli(["sonar", "--project", "p"],
-                                        {"SONAR_TOKEN": "t", "SONAR_HOST_URL": "https://s"})
-        return code, out
-
-    def test_sonar_gate_passes_on_a_clean_project_even_if_extras_are_unreadable(self) -> None:
-        code, out = self.sonar_run({"paging": {"total": 0}, "facets": []})
-        self.assertEqual(code, 0, out)
-        self.assertIn("SKIPPED", out)
-
-    def test_sonar_own_failing_gate_does_not_change_our_verdict(self) -> None:
+    def sonar_run(self, issues_body: dict, gate_status: tuple[int, dict] = (200, {"projectStatus": {"status": "OK"}}),
+                  extra_args: list[str] | None = None) -> tuple[int, str]:
         def fake_get(url: str, token: str) -> tuple[int, dict]:
             if "/api/issues/search" in url:
-                return 200, {"paging": {"total": 0}, "facets": []}
+                return 200, issues_body
             if "/api/qualitygates/project_status" in url:
-                return 200, {"projectStatus": {"status": "ERROR"}}
+                return gate_status
             return 403, {}
 
         with mock.patch.object(gate, "sonar_get", fake_get):
-            code, out, _ = self.run_cli(["sonar", "--project", "p"], {"SONAR_TOKEN": "t", "SONAR_HOST_URL": "https://s"})
+            code, out, _ = self.run_cli(["sonar", "--project", "p", *(extra_args or [])], self.ENV)
+        return code, out
+
+    def test_sonar_gate_passes_when_everything_including_the_servers_gate_is_ok(self) -> None:
+        code, out = self.sonar_run(self.CLEAN_ISSUES)
         self.assertEqual(code, 0, out)
-        self.assertIn("SonarQube's own gate: ERROR (informational only", out)
+        self.assertIn("SonarQube quality gate (its own, on new code)", out)
+
+    def test_the_servers_own_failing_gate_fails_the_verdict_and_says_why(self) -> None:
+        failing = (200, {"projectStatus": {"status": "ERROR", "conditions": [
+            {"status": "ERROR", "metricKey": "new_violations", "comparator": "GT", "errorThreshold": "0", "actualValue": "6"}]}})
+        code, out = self.sonar_run(self.CLEAN_ISSUES, failing)
+        self.assertEqual(code, 1, out)
+        self.assertIn("new_violations is 6 (needs GT 0)", out)
+
+    def test_an_unreadable_servers_gate_fails_closed(self) -> None:
+        code, out = self.sonar_run(self.CLEAN_ISSUES, (403, {}))
+        self.assertEqual(code, 1, out)
+        self.assertIn("could not be read", out)
+
+    def test_new_code_issues_are_listed_when_the_gate_fails(self) -> None:
+        listed = {"paging": {"total": 1}, "facets": [], "issues": [
+            {"severity": "MINOR", "type": "CODE_SMELL", "rule": "python:S1234", "component": "p:src/a.py", "line": 3,
+             "message": "Do better."}]}
+        code, out = self.sonar_run(listed, (200, {"projectStatus": {"status": "ERROR"}}))
+        self.assertEqual(code, 1, out)
+        self.assertIn("ISSUE    MINOR CODE_SMELL python:S1234 p:src/a.py:3 Do better.", out)
 
     def test_sonar_gate_fails_on_an_open_vulnerability(self) -> None:
         body = {"paging": {"total": 1}, "facets": [
