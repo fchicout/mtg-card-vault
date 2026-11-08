@@ -1,6 +1,6 @@
 # 06 — Traceability Matrix
 
-**Docs set version:** 0.3.22
+**Docs set version:** 0.3.23
 **Document:** 06 Requirements Traceability Matrix
 **Status:** Draft
 **Last updated:** 2026-10-31

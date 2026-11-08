@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.22
+**Docs set version:** 0.3.23
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -250,7 +250,7 @@ All endpoints require a valid bearer JWT (`FR-AUTH-05`) unless marked *public*. 
 
 | Method & path | Purpose | Requirement |
 |---|---|---|
-| `GET /me` | Current user profile; provisions the user on first call. | FR-AUTH-04 |
+| `GET /me` | Current user profile (`id`, `display_name`, `email` only); provisions the user on first call, idempotently and race-safely; `last_login_at` is rewritten at most hourly. Implemented in issue #58. | FR-AUTH-04 |
 | `DELETE /me` | Delete my account and data. | FR-AUTH-08 |
 | `GET /vault/entries` | List/filter/sort/paginate my entries. | FR-VLT-02, FR-VLT-05 |
 | `POST /vault/entries` | Add (or merge into) an entry. | FR-VLT-01, FR-VLT-06 |
