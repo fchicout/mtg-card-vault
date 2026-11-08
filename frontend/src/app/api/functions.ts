@@ -19,6 +19,8 @@ export type { RemoveVaultEntry$Params as RemoveVaultEntry$Params } from './fn/va
 export { removeVaultEntry as removeVaultEntry } from './fn/vault/remove-vault-entry';
 export type { EditVaultEntry$Params as EditVaultEntry$Params } from './fn/vault/edit-vault-entry';
 export { editVaultEntry as editVaultEntry } from './fn/vault/edit-vault-entry';
+export type { GetVaultSummary$Params as GetVaultSummary$Params } from './fn/vault/get-vault-summary';
+export { getVaultSummary as getVaultSummary } from './fn/vault/get-vault-summary';
 export type { GetLiveness$Params as GetLiveness$Params } from './fn/health/get-liveness';
 export { getLiveness as getLiveness } from './fn/health/get-liveness';
 export type { GetReadiness$Params as GetReadiness$Params } from './fn/health/get-readiness';

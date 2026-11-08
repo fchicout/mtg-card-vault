@@ -43,6 +43,7 @@ const SERIAL_SPECS = [
   'vault-journeys',
   'vault-privacy',
   'scan-journey',
+  'pricing-journeys',
 ];
 const SERIAL_PATTERN = new RegExp(`(${SERIAL_SPECS.join('|')})\\.spec\\.ts$`);
 const regular = projects.map((project) => ({ ...project, testIgnore: SERIAL_PATTERN }));

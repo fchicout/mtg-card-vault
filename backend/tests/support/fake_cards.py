@@ -1,10 +1,11 @@
 """An in-memory CardDataProvider for service and API tests (no network, no fixtures)."""
 
 import re
+from collections.abc import Sequence
 from decimal import Decimal
 from uuid import UUID, uuid5
 
-from mtgvault.domain.card import Card, Prices, ResultPage
+from mtgvault.domain.card import Card, LookupResult, Prices, ResultPage
 from mtgvault.domain.errors import NotFound, UpstreamUnavailable
 
 NAMESPACE = UUID("00000000-0000-0000-0000-00000000c0de")
@@ -69,6 +70,7 @@ class FakeCardProvider:
         self.search_calls: list[tuple[str, int]] = []
         self.get_calls: list[UUID] = []
         self.printings_calls: list[tuple[UUID, int]] = []
+        self.lookup_calls: list[tuple[UUID, ...]] = []
 
     def _check(self) -> None:
         if self.fail:
@@ -102,3 +104,10 @@ class FakeCardProvider:
         self._check()
         self.printings_calls.append((oracle_id, page))
         return self._page([c for c in self.cards if c.oracle_id == oracle_id], page)
+
+    def lookup(self, card_ids: Sequence[UUID]) -> LookupResult:
+        self._check()
+        self.lookup_calls.append(tuple(card_ids))
+        known = {card.id: card for card in self.cards}
+        found = tuple(known[i] for i in card_ids if i in known)
+        return LookupResult(found, tuple(i for i in card_ids if i not in known))

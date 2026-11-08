@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.35
+**Docs set version:** 0.3.36
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.36 | 2026-11-08 | Issues #131-#145: pricing - currency policy (OQ-07 resolved: USD and EUR) and money rules, line values, collection summary, Scryfall batch lookup, owned-card refresh, daily worker job (ADR-012 accepted), lazy refresh, vault and card-page price UI, 10,000-entry budgets, pricing journeys. |
 | 0.3.35 | 2026-11-08 | Issues #113-#127: scanning - OCR engine decision (Tesseract, ADR-004, OQ-02 resolved with measured numbers), upload limits, rate limit, privacy, scan endpoint, camera page, confirmation and manual fallback, scan journey, nightly accuracy job. |
 | 0.3.34 | 2026-11-08 | Issues #102-#106: vault page, add/edit/remove dialogs, filters in the address and the vault journeys documented; the OIDC double keeps an SSO-like session. |
 | 0.3.33 | 2026-11-08 | Issues #92-#101: cards and vault_entries tables, user-scoped repository, vault endpoints (add, list, filter, edit, remove), isolation suite, outage behaviour and stale-price flag documented; name search uses name_search instead of pg_trgm. |

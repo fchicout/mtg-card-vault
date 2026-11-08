@@ -1,6 +1,6 @@
 """Ports: interfaces the application layer needs, implemented by adapters (ADR-006)."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from types import TracebackType
@@ -8,10 +8,17 @@ from typing import Protocol, Self
 from uuid import UUID
 
 from mtgvault.application.vault_query import VaultQuery
-from mtgvault.domain.card import Card, ResultPage
+from mtgvault.domain.card import Card, LookupResult, Prices, ResultPage
 from mtgvault.domain.identity import Principal
 from mtgvault.domain.user import User
-from mtgvault.domain.vault import CardSnapshot, Condition, Finish, VaultEntry, VaultItem
+from mtgvault.domain.vault import (
+    CardSnapshot,
+    Condition,
+    Finish,
+    VaultEntry,
+    VaultItem,
+    VaultSummary,
+)
 
 
 class TokenVerifier(Protocol):
@@ -39,6 +46,10 @@ class UserRepository(Protocol):
         ``last_login_at`` is only rewritten when it is older than ``refresh_after``, so a busy
         client does not cause a write on every request.
         """
+        ...
+
+    def id_of(self, subject: str) -> UUID | None:
+        """The id of the user with this token subject, or None when they were never provisioned."""
         ...
 
 
@@ -85,6 +96,10 @@ class CardDataProvider(Protocol):
         """Every printing of a card, newest first."""
         ...
 
+    def lookup(self, card_ids: Sequence[UUID]) -> LookupResult:
+        """The cards with these ids, and the ids the source does not know (batched inside)."""
+        ...
+
 
 class Cache(Protocol):
     """A small, short-lived cache. Implementations are thread-safe and bounded."""
@@ -103,6 +118,18 @@ class CardRepository(Protocol):
 
     def upsert_snapshot(self, card: Card, now: datetime) -> None:
         """Insert or refresh the printing; prices and data timestamps become ``now``."""
+        ...
+
+    def upsert_snapshots(self, cards: Sequence[Card], now: datetime) -> None:
+        """Insert or refresh many printings in one statement; duplicates in ``cards`` collapse."""
+        ...
+
+    def owned_ids(self, after: UUID | None, limit: int) -> list[UUID]:
+        """Ids of printings owned by at least one user, ascending, ``limit`` after ``after``."""
+        ...
+
+    def prices_of(self, card_ids: Sequence[UUID]) -> dict[UUID, Prices]:
+        """The stored prices of the cards that exist locally (unknown ids are left out)."""
         ...
 
     def get(self, card_id: UUID) -> CardSnapshot | None: ...
@@ -150,6 +177,19 @@ class VaultRepository(Protocol):
     def delete(self, user_id: UUID, entry_id: UUID) -> bool: ...
 
     def count(self, user_id: UUID) -> int: ...
+
+    def owned_snapshot(self, user_id: UUID, card_id: UUID) -> CardSnapshot | None:
+        """The stored copy of the printing when THIS user owns it, otherwise None."""
+        ...
+
+    def stale_card_ids(self, user_id: UUID, before: datetime, limit: int) -> list[UUID]:
+        """Distinct printings the user owns whose prices were last refreshed before ``before``
+        (never refreshed counts as stale), oldest first."""
+        ...
+
+    def summary(self, user_id: UUID) -> VaultSummary:
+        """Totals of ALL the user's entries, aggregated in SQL (never loading the entries)."""
+        ...
 
 
 class RateLimiter(Protocol):

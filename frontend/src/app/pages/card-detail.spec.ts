@@ -57,7 +57,9 @@ describe('CardDetailPage', () => {
     fixture.componentRef.setInput('id', 'c1');
     fixture.detectChanges();
     await fixture.whenStable();
-    await new Promise<void>((resolve) => setTimeout(resolve));
+    await (vi.isFakeTimers()
+      ? vi.advanceTimersByTimeAsync(0)
+      : new Promise<void>((resolve) => setTimeout(resolve)));
     fixture.detectChanges();
     return fixture;
   }
@@ -214,5 +216,69 @@ describe('CardDetailPage', () => {
     answers.printings = { items: [], page: 1, has_more: false, total: 0 };
     const f = await render();
     expect(q(f, '[data-testid="empty"]')?.textContent).toContain('No printings found');
+  });
+
+  describe('price freshness', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('names the price source next to the prices', async () => {
+      const f = await render();
+      expect(q(f, '[data-testid="price-source"]')?.textContent).toContain('Scryfall');
+      expect(q(f, '[data-testid="freshness"]')).toBeNull(); // not in the caller's collection
+    });
+
+    it('shows when the stored prices were updated, without a stale marker', async () => {
+      answers.card = detail({
+        collection: { prices_updated_at: '2026-11-08T09:00:00Z', prices_stale: false },
+      });
+      const f = await render();
+      expect(q(f, '[data-testid="freshness"]')?.textContent).toContain('were updated');
+      expect(q(f, '[data-testid="freshness"]')?.textContent).toContain('2026');
+      expect(q(f, '[data-testid="stale"]')).toBeNull();
+    });
+
+    it('marks stale prices and says so when they were never updated', async () => {
+      answers.card = detail({ collection: { prices_updated_at: null, prices_stale: true } });
+      const f = await render();
+      expect(q(f, '[data-testid="freshness"]')?.textContent).toContain('not been updated yet');
+      expect(q(f, '[data-testid="stale"]')).toBeTruthy();
+    });
+
+    it('picks up the refreshed prices once, without a reload', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      answers.card = detail({
+        collection: { prices_updated_at: '2026-11-01T09:00:00Z', prices_stale: true },
+      });
+      const f = await render();
+      const cardCalls = () => invoke.mock.calls.filter((c) => c[0] === getCard).length;
+      expect(cardCalls()).toBe(1);
+      answers.card = detail({
+        collection: { prices_updated_at: '2026-11-08T09:00:00Z', prices_stale: false },
+      });
+      await vi.advanceTimersByTimeAsync(6000);
+      f.detectChanges();
+      expect(cardCalls()).toBe(2);
+      expect(q(f, '[data-testid="stale"]')).toBeNull();
+      expect(q(f, '[data-testid="freshness"]')?.textContent).toContain('Nov 8, 2026');
+      await vi.advanceTimersByTimeAsync(60000);
+      expect(cardCalls()).toBe(2); // once, never a loop
+    });
+
+    it('does not look again when the prices are fresh or the card is not owned', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      await render();
+      await vi.advanceTimersByTimeAsync(60000);
+      expect(invoke.mock.calls.filter((c) => c[0] === getCard)).toHaveLength(1);
+    });
+
+    it('keeps the page when the follow-up fails', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      answers.card = detail({ collection: { prices_updated_at: null, prices_stale: true } });
+      const f = await render();
+      answers.card = new HttpErrorResponse({ status: 503 });
+      await vi.advanceTimersByTimeAsync(6000);
+      f.detectChanges();
+      expect(q(f, '[data-testid="card-name"]')?.textContent).toBe('Lightning Bolt');
+    });
   });
 });

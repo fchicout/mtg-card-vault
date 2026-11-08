@@ -11,6 +11,7 @@ license = "MIT"
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.18",
+    "apscheduler>=3.11,<4",
     "fastapi>=0.162.0",
     "httpx>=0.28.1",
     "numpy>=2.2",
@@ -30,9 +31,10 @@ packages = ["src/mtgvault"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m 'not perf'"
 markers = [
     "integration: needs Docker (PostgreSQL via testcontainers)",
+    "perf: performance budgets (run with -m perf; not part of the pull request run)",
 ]
 
 [tool.coverage.run]
@@ -61,6 +63,11 @@ strict = true
 python_version = "3.13"
 mypy_path = "src"
 packages = ["mtgvault"]
+
+# APScheduler 3 ships no type information.
+[[tool.mypy.overrides]]
+module = "apscheduler.*"
+ignore_missing_imports = true
 
 # Architecture rules from docs/05 section 5.2 (NFR-MNT-03).
 [tool.importlinter]

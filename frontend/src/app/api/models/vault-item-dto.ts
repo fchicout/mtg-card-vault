@@ -11,9 +11,12 @@ export interface VaultItemDto {
   created_at: string;
   finish: Finish;
   id: string;
+  line_value_eur?: (string | null);
+  line_value_usd?: (string | null);
   prices_stale: boolean;
   prices_updated_at?: (string | null);
   quantity: number;
   unit_price?: (string | null);
+  unit_price_eur?: (string | null);
   updated_at: string;
 }

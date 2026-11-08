@@ -111,11 +111,24 @@ class ScryfallClient:
 
     # ------------------------------------------------------------------ public
     def get_json(self, path: str, params: Mapping[str, str | int] | None = None) -> dict[str, Any]:
+        return self._call("GET", path, params, None)
+
+    def post_json(self, path: str, body: Mapping[str, Any]) -> dict[str, Any]:
+        """A POST with a JSON body (the collection lookup); same rules as every other request."""
+        return self._call("POST", path, None, body)
+
+    def _call(
+        self,
+        method: str,
+        path: str,
+        params: Mapping[str, str | int] | None,
+        body: Mapping[str, Any] | None,
+    ) -> dict[str, Any]:
         url = self._url(path)
         if self._breaker:
             self._breaker.allow()
         try:
-            document = self._get_with_retries(url, params)
+            document = self._send_with_retries(method, url, params, body)
         except (UpstreamUnavailable, RateLimited):
             if self._breaker:
                 self._breaker.record_failure()
@@ -137,13 +150,19 @@ class ScryfallClient:
             raise ValueError("the request would leave the configured host")
         return url
 
-    def _get_with_retries(self, url: str, params: Mapping[str, str | int] | None) -> dict[str, Any]:
+    def _send_with_retries(
+        self,
+        method: str,
+        url: str,
+        params: Mapping[str, str | int] | None,
+        body: Mapping[str, Any] | None,
+    ) -> dict[str, Any]:
         started = self._clock()
         retry_hint: float | None = None
         for attempt in range(1, self._max_attempts + 1):
             self._spacer.wait()
             try:
-                response = self._client.get(url, params=params)
+                response = self._client.request(method, url, params=params, json=body)
             except httpx.HTTPError as error:
                 _log.warning("scryfall request failed: %s", type(error).__name__)
                 status, hint = 0, None

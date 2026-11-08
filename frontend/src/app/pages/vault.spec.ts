@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
-import { Api, editVaultEntry, listVaultEntries, removeVaultEntry } from '../api';
+import { Api, editVaultEntry, getVaultSummary, listVaultEntries, removeVaultEntry } from '../api';
 import { VaultPage } from './vault';
 
 const item = (name: string, extra: Record<string, unknown> = {}) => ({
@@ -24,20 +24,54 @@ const item = (name: string, extra: Record<string, unknown> = {}) => ({
   },
   available_finishes: ['nonfoil', 'foil'],
   unit_price: '3.00',
+  unit_price_eur: '2.50',
+  line_value_usd: '6.00',
+  line_value_eur: '5.00',
   prices_updated_at: '2026-11-08T09:00:00Z',
   prices_stale: false,
+  ...extra,
+});
+const summary = (extra: Record<string, unknown> = {}) => ({
+  total_cards: 12,
+  entries: 3,
+  value_usd: '1234.50',
+  value_eur: '980.00',
+  unpriced_usd: 0,
+  unpriced_eur: 0,
+  lower_bound_usd: false,
+  lower_bound_eur: false,
+  oldest_prices_updated_at: '2026-11-08T09:00:00Z',
+  newest_prices_updated_at: '2026-11-08T09:00:00Z',
   ...extra,
 });
 const list = (items: unknown[], total = items.length) => ({ items, page: 1, page_size: 50, total });
 
 describe('VaultPage', () => {
-  let invoke: ReturnType<typeof vi.fn>;
+  let invoke: ReturnType<typeof vi.fn<(...args: unknown[]) => unknown>>;
   let navigate: ReturnType<typeof vi.spyOn>;
+  let summaryAnswer: unknown;
+  let summaryCalls: number;
 
   async function render(inputs: Record<string, string> = {}): Promise<ComponentFixture<VaultPage>> {
     TestBed.configureTestingModule({
       imports: [VaultPage],
-      providers: [provideRouter([]), { provide: Api, useValue: { invoke } }],
+      providers: [
+        provideRouter([]),
+        {
+          provide: Api,
+          useValue: {
+            invoke: (fn: unknown, ...args: unknown[]) => {
+              if (fn === getVaultSummary) {
+                summaryCalls += 1;
+                return summaryAnswer instanceof Error
+                  ? Promise.reject(summaryAnswer)
+                  : Promise.resolve(summaryAnswer);
+              }
+              return invoke(fn, ...args);
+            },
+          },
+        },
+      ],
     });
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(VaultPage);
@@ -61,13 +95,26 @@ describe('VaultPage', () => {
 
   beforeEach(() => {
     invoke = vi.fn();
+    summaryAnswer = summary();
+    summaryCalls = 0;
   });
 
   it('lists entries with image, name, set, number, finish, condition, quantity and price', async () => {
     invoke.mockResolvedValue(list([item('Lightning Bolt')]));
     const f = await render();
     const row = q(f, '[data-testid="entry"]')!;
-    for (const text of ['Lightning Bolt', 'Alpha (LEA)', '161', 'foil', 'NM', '2', '$3.00']) {
+    for (const text of [
+      'Lightning Bolt',
+      'Alpha (LEA)',
+      '161',
+      'foil',
+      'NM',
+      '2',
+      '$3.00',
+      '€2.50',
+      '$6.00',
+      '€5.00',
+    ]) {
       expect(row.textContent).toContain(text);
     }
     expect(row.querySelector('img')?.getAttribute('alt')).toBe('Lightning Bolt');
@@ -90,11 +137,14 @@ describe('VaultPage', () => {
 
   it('marks outdated prices and unknown ones', async () => {
     invoke.mockResolvedValue(
-      list([item('A', { prices_stale: true }), item('B', { unit_price: null })]),
+      list([
+        item('A', { prices_stale: true }),
+        item('B', { unit_price: null, line_value_usd: null }),
+      ]),
     );
     const f = await render();
     expect(all(f, '[data-testid="stale"]')).toHaveLength(1);
-    expect(all(f, '[data-testid="entry-price"]')[1].textContent).toContain('unknown');
+    expect(all(f, '[data-testid="entry-price"]')[1].textContent).toContain('no price');
   });
 
   it('sends the address to the API, with paging', async () => {
@@ -263,5 +313,123 @@ describe('VaultPage', () => {
     await settle(f);
     expect(q(f, '[data-testid="notice"]')?.textContent).toContain('not found');
     expect(invoke.mock.calls.filter((c) => c[0] === listVaultEntries)).toHaveLength(2);
+  });
+
+  it('says when the prices were last updated, also to screen readers', async () => {
+    invoke.mockResolvedValue(list([item('A', { prices_stale: true })]));
+    const f = await render();
+    expect(q(f, '[data-testid="stale"]')?.getAttribute('title')).toContain('Last updated');
+    expect(q(f, '[data-testid="stale-note"]')?.textContent).toContain('out of date');
+  });
+
+  it('says so when the prices were never updated', async () => {
+    invoke.mockResolvedValue(list([item('N', { prices_stale: true, prices_updated_at: null })]));
+    const f = await render();
+    expect(q(f, '[data-testid="stale-note"]')?.textContent).toContain('not been updated yet');
+  });
+
+  it('shows no price for both currencies when none is known, never zero', async () => {
+    invoke.mockResolvedValue(
+      list([
+        item('A', {
+          unit_price: null,
+          unit_price_eur: null,
+          line_value_usd: null,
+          line_value_eur: null,
+        }),
+      ]),
+    );
+    const f = await render();
+    const row = q(f, '[data-testid="entry"]')!;
+    expect(row.textContent).not.toContain('0.00');
+    expect(row.textContent?.match(/no price/g)).toHaveLength(4);
+  });
+
+  describe('collection summary', () => {
+    it('shows cards, entries and the value in both currencies', async () => {
+      invoke.mockResolvedValue(list([item('A')]));
+      const f = await render();
+      expect(q(f, '[data-testid="summary-cards"]')?.textContent).toBe('12');
+      expect(q(f, '[data-testid="summary-entries"]')?.textContent).toBe('3');
+      expect(q(f, '[data-testid="summary-usd"]')?.textContent).toBe('$1,234.50');
+      expect(q(f, '[data-testid="summary-eur"]')?.textContent).toBe('€980.00');
+      expect(q(f, '[data-testid="lower-bound"]')).toBeNull();
+    });
+
+    it('says the value is a lower bound when entries have no price', async () => {
+      summaryAnswer = summary({ unpriced_usd: 2, lower_bound_usd: true });
+      invoke.mockResolvedValue(list([item('A')]));
+      const f = await render();
+      const note = q(f, '[data-testid="lower-bound"]')!;
+      expect(note.textContent).toContain('lower bound');
+      expect(q(f, '[data-testid="unpriced-usd"]')?.textContent).toContain('2');
+      expect(q(f, '[data-testid="unpriced-eur"]')).toBeNull();
+    });
+
+    it('shows zeros for an empty vault, without a lower-bound notice', async () => {
+      summaryAnswer = summary({
+        total_cards: 0,
+        entries: 0,
+        value_usd: '0.00',
+        value_eur: '0.00',
+        unpriced_usd: 0,
+        lower_bound_usd: true,
+      });
+      invoke.mockResolvedValue(list([]));
+      const f = await render();
+      expect(q(f, '[data-testid="summary-usd"]')?.textContent).toBe('$0.00');
+      expect(q(f, '[data-testid="lower-bound"]')).toBeNull();
+    });
+
+    it('reports a failure inline and keeps the table', async () => {
+      summaryAnswer = new Error('boom');
+      invoke.mockResolvedValue(list([item('A')]));
+      const f = await render();
+      expect(q(f, '[data-testid="summary"] [data-testid="error"]')?.textContent).toContain(
+        'could not be loaded',
+      );
+      expect(q(f, '[data-testid="entry"]')).not.toBeNull();
+    });
+
+    it('reloads after an entry is removed', async () => {
+      invoke.mockResolvedValue(list([item('A')]));
+      const f = await render();
+      expect(summaryCalls).toBe(1);
+      q(f, '[data-testid="remove"]')!.click();
+      f.detectChanges();
+      invoke.mockResolvedValue(list([]));
+      q(f, '[data-testid="remove-confirm"]')!.click();
+      await settle(f);
+      expect(summaryCalls).toBe(2);
+    });
+  });
+
+  describe('prices refreshed in the background', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('looks again once, quietly, when entries are stale', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      invoke.mockResolvedValue(list([item('A', { prices_stale: true })]));
+      const f = await render();
+      const listCalls = () => invoke.mock.calls.filter((c) => c[0] === listVaultEntries).length;
+      expect(listCalls()).toBe(1);
+      invoke.mockResolvedValue(list([item('A', { unit_price: '4.00' })]));
+      await vi.advanceTimersByTimeAsync(6000);
+      f.detectChanges();
+      expect(listCalls()).toBe(2);
+      expect(summaryCalls).toBe(2);
+      expect(q(f, '[data-testid="entry-price"]')?.textContent).toContain('$4.00');
+      expect(q(f, '[data-testid="stale"]')).toBeNull();
+      await vi.advanceTimersByTimeAsync(60000);
+      expect(listCalls()).toBe(2); // one follow-up, never a loop
+    });
+
+    it('does not look again when nothing is stale', async () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      invoke.mockResolvedValue(list([item('A')]));
+      await render();
+      await vi.advanceTimersByTimeAsync(60000);
+      expect(invoke.mock.calls.filter((c) => c[0] === listVaultEntries)).toHaveLength(1);
+    });
   });
 });

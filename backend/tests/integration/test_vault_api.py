@@ -84,6 +84,9 @@ def test_adding_a_printing_creates_an_entry_and_caches_the_card(
     assert (body["quantity"], body["condition"], body["finish"]) == (2, "NM", "foil")
     assert body["card"]["name"] == "Lightning Bolt"
     assert body["unit_price"] == "3.00"  # the foil price
+    assert body["line_value_usd"] == "6.00"  # x 2
+    assert body["unit_price_eur"] is None
+    assert body["line_value_eur"] is None
     assert body["available_finishes"] == ["nonfoil", "foil"]
     with migrated.connect() as connection:
         assert connection.execute(text("SELECT count(*) FROM cards")).scalar_one() == 1
@@ -259,6 +262,10 @@ ISOLATION_COVERAGE = {
     ("GET", "/api/v1/vault/entries"),
     ("PATCH", "/api/v1/vault/entries/{entry_id}"),
     ("DELETE", "/api/v1/vault/entries/{entry_id}"),
+    (
+        "GET",
+        "/api/v1/vault/summary",
+    ),  # test_the_summary_endpoint_totals_the_callers_collection_only
 }
 
 
@@ -361,3 +368,119 @@ def test_stale_prices_are_flagged(client: TestClient, migrated: Engine) -> None:
     with migrated.begin() as connection:
         connection.execute(text("UPDATE cards SET prices_updated_at = NULL"))
     assert entries(client, "alice")["items"][0]["prices_stale"] is True  # type: ignore[index]
+
+
+# ---------------------------------------------------------------------------- summary (#133)
+def test_the_summary_endpoint_totals_the_callers_collection_only(client: TestClient) -> None:
+    add(client, "alice", BOLT.id, 2, "foil")  # 6.00
+    add(client, "alice", LOTUS.id, 1)  # 9000.00
+    add(client, "bob", BOLT.id, 100)
+    body = client.get("/api/v1/vault/summary", headers=headers("alice")).json()
+    assert body["total_cards"] == 3
+    assert body["entries"] == 2
+    assert body["value_usd"] == "9006.00"
+    assert body["value_eur"] == "0.00"
+    assert body["unpriced_eur"] == 2
+    assert body["lower_bound_eur"]
+    assert body["unpriced_usd"] == 0
+    assert body["lower_bound_usd"] is False
+
+
+def test_the_summary_needs_a_token_and_an_empty_vault_is_zeros(client: TestClient) -> None:
+    assert client.get("/api/v1/vault/summary").status_code == 401
+    body = client.get("/api/v1/vault/summary", headers=headers("bob")).json()
+    assert (body["total_cards"], body["entries"], body["value_usd"]) == (0, 0, "0.00")
+
+
+# ---------------------------------------------------------------------------- lazy refresh (#141)
+def make_stale(migrated: Engine) -> None:
+    old = datetime.now(UTC) - timedelta(hours=30)
+    with migrated.begin() as connection:
+        connection.execute(text("UPDATE cards SET prices_updated_at = :t, usd = 0.01"), {"t": old})
+
+
+def stored_usd(migrated: Engine) -> object:
+    with migrated.connect() as connection:
+        return connection.execute(text("SELECT usd FROM cards")).scalar_one()
+
+
+def test_listing_stale_entries_refreshes_them_after_the_response(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    make_stale(migrated)
+    body = entries(client, "alice")  # the answer is what was stored when it was asked
+    assert body["items"][0]["prices_stale"] is True  # type: ignore[index]
+    assert body["items"][0]["unit_price"] == "0.01"  # type: ignore[index]
+    assert provider.lookup_calls == [(BOLT.id,)]
+    assert stored_usd(migrated) == Decimal("1.50")  # refreshed afterwards
+    assert entries(client, "alice")["items"][0]["prices_stale"] is False  # type: ignore[index]
+    assert len(provider.lookup_calls) == 1  # fresh prices cause no further refresh
+
+
+def test_the_summary_and_the_card_page_refresh_stale_prices_too(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    make_stale(migrated)
+    assert (
+        client.get("/api/v1/vault/summary", headers=headers("alice")).json()["value_usd"] == "0.01"
+    )
+    assert stored_usd(migrated) == Decimal("1.50")
+    make_stale(migrated)
+    assert (
+        client.get(f"/api/v1/catalog/cards/{BOLT.id}", headers=headers("alice")).status_code == 200
+    )
+    assert stored_usd(migrated) == Decimal("1.50")
+    assert len(provider.lookup_calls) == 2
+
+
+def test_an_unowned_card_page_does_not_trigger_a_refresh(
+    client: TestClient, provider: FakeCardProvider
+) -> None:
+    assert (
+        client.get(f"/api/v1/catalog/cards/{LOTUS.id}", headers=headers("alice")).status_code == 200
+    )
+    assert provider.lookup_calls == []
+
+
+def test_a_source_outage_never_changes_the_answer(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    make_stale(migrated)
+    provider.fail = True
+    response = client.get("/api/v1/vault/entries", headers=headers("alice"))
+    assert response.status_code == 200
+    assert response.json()["items"][0]["unit_price"] == "0.01"
+    assert stored_usd(migrated) == Decimal("0.01")  # nothing was lost
+
+
+def test_only_the_callers_stale_cards_are_refreshed(
+    client: TestClient, migrated: Engine, provider: FakeCardProvider
+) -> None:
+    add(client, "alice", BOLT.id)
+    add(client, "bob", LOTUS.id)
+    make_stale(migrated)
+    entries(client, "alice")
+    assert provider.lookup_calls == [(BOLT.id,)]
+
+
+def test_the_card_page_tells_the_owner_how_fresh_the_stored_prices_are(
+    client: TestClient, migrated: Engine
+) -> None:
+    add(client, "alice", BOLT.id)
+    url = f"/api/v1/catalog/cards/{BOLT.id}"
+    mine = client.get(url, headers=headers("alice")).json()["collection"]
+    assert mine["prices_stale"] is False
+    assert mine["prices_updated_at"] is not None
+    assert client.get(url, headers=headers("bob")).json()["collection"] is None  # not theirs
+    make_stale(migrated)
+    stale = client.get(url, headers=headers("alice")).json()["collection"]
+    assert stale["prices_stale"] is True  # what was stored when the page was asked for
+    assert (
+        client.get(f"/api/v1/catalog/cards/{LOTUS.id}", headers=headers("alice")).json()[
+            "collection"
+        ]
+        is None
+    )

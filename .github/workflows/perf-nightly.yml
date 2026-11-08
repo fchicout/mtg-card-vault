@@ -1,0 +1,39 @@
+name: Performance nightly
+
+# Server-side budgets at 10,000 vault entries (issue #134, NFR-PRF-01): a page of the list, the
+# summary and the stale-price lookup must each stay under p95 300 ms on PostgreSQL. Not part of
+# the pull request run; a failure here is a regression to investigate.
+on:
+  schedule:
+    - cron: "11 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  vault-budgets:
+    name: vault-budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen
+      - name: Measure list, summary and stale lookup at 10,000 entries
+        run: uv run pytest -m perf tests/integration/test_perf_vault.py -s -q | tee perf.txt
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo "### Vault performance (p50 / p95, ms)"
+            echo '```'
+            grep '^PERF' perf.txt || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,16 +1,20 @@
 """Catalogue endpoints: search, card detail and printings (US-012..US-014, UC-10)."""
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from pydantic import BaseModel, Field
 
-from mtgvault.api.dependencies import get_catalog_service
+from mtgvault.api.dependencies import get_catalog_service, get_vault_service
+from mtgvault.api.security import current_principal
 from mtgvault.application.catalog_query import CatalogFilters, parse_colors
 from mtgvault.application.catalog_service import CatalogService
+from mtgvault.application.vault_service import VaultService
 from mtgvault.domain.card import Card, CardFace, Prices, ResultPage
+from mtgvault.domain.identity import Principal
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -45,6 +49,13 @@ class CardFaceDto(BaseModel):
     image_normal: str | None = None
 
 
+class OwnedPrices(BaseModel):
+    """How fresh the prices stored for the caller's own copy of this printing are (FR-PRC-05)."""
+
+    prices_updated_at: datetime | None = None
+    prices_stale: bool
+
+
 class CardDetail(CardSummary):
     oracle_id: UUID | None = None
     lang: str
@@ -56,6 +67,9 @@ class CardDetail(CardSummary):
     image_normal: str | None = None
     faces: list[CardFaceDto]
     prices: PricesDto
+    collection: OwnedPrices | None = Field(
+        default=None, description="Set when the caller owns this printing"
+    )
 
 
 class Printing(BaseModel):
@@ -173,8 +187,21 @@ def search_cards(  # one parameter per documented query field
 
 
 @router.get("/cards/{card_id}", operation_id="getCard", summary="One printing in detail")
-def get_card(card_id: UUID, service: Service) -> CardDetail:
-    return _detail(service.get(card_id))
+def get_card(
+    card_id: UUID,
+    service: Service,
+    vault: Annotated[VaultService, Depends(get_vault_service)],
+    principal: Annotated[Principal, Depends(current_principal)],
+    background: BackgroundTasks,
+) -> CardDetail:
+    detail = _detail(service.get(card_id))
+    owned = vault.owned_prices(principal.subject, card_id)
+    if owned is not None:
+        detail.collection = OwnedPrices(
+            prices_updated_at=owned.prices_updated_at, prices_stale=vault.prices_stale(owned)
+        )
+    background.add_task(vault.refresh_card_if_stale, card_id)  # after the response (FR-PRC-05)
+    return detail
 
 
 @router.get(

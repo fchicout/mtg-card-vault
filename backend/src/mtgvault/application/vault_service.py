@@ -1,10 +1,12 @@
 """Vault use cases (US-005..US-011, UC-03..UC-06). The user id always comes from the token."""
 
+import logging
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from mtgvault.application.catalog_service import CatalogService
+from mtgvault.application.lazy_refresh import MAX_PER_REQUEST, LazyPriceRefresher
 from mtgvault.application.ports import UnitOfWork
 from mtgvault.application.vault_query import VaultQuery
 from mtgvault.domain.card import Card
@@ -20,10 +22,12 @@ from mtgvault.domain.vault import (
     Condition,
     Finish,
     VaultItem,
+    VaultSummary,
     validate_finish,
     validate_quantity,
 )
 
+_log = logging.getLogger("mtgvault.pricing")
 DEFAULT_STALE_AFTER = timedelta(hours=24)
 _NO_ENTRY = "No such entry."
 
@@ -39,11 +43,13 @@ class VaultService:
         catalog: CatalogService,
         clock: Callable[[], datetime] = _utc_now,
         stale_after: timedelta = DEFAULT_STALE_AFTER,
+        lazy: LazyPriceRefresher | None = None,
     ) -> None:
         self._uow = unit_of_work_factory
         self._catalog = catalog
         self._clock = clock
         self._stale_after = stale_after
+        self._lazy = lazy
 
     # ------------------------------------------------------------------ add
     def add(
@@ -81,6 +87,10 @@ class VaultService:
     def list(self, user_id: UUID, query: VaultQuery) -> tuple[list[VaultItem], int]:
         with self._uow() as unit:
             return unit.vault.list_items(user_id, query)
+
+    def summary(self, user_id: UUID) -> VaultSummary:
+        with self._uow() as unit:
+            return unit.vault.summary(user_id)
 
     def get(self, user_id: UUID, entry_id: UUID) -> VaultItem:
         with self._uow() as unit:
@@ -135,3 +145,46 @@ class VaultService:
         """Prices older than the threshold, or never refreshed, are shown as stale (FR-DAT-03)."""
         updated = snapshot.prices_updated_at
         return updated is None or self._clock() - updated >= self._stale_after
+
+    def owned_prices(self, subject: str, card_id: UUID) -> CardSnapshot | None:
+        """The stored copy of a printing the user owns (its price freshness), else None.
+
+        An extra on the card page: when the database cannot answer, the page still works.
+        """
+        try:
+            with self._uow() as unit:
+                user_id = unit.users.id_of(subject)
+                return None if user_id is None else unit.vault.owned_snapshot(user_id, card_id)
+        except Exception:
+            _log.warning("could not read the stored prices", exc_info=True)
+            return None
+
+    def refresh_stale_prices(self, user_id: UUID) -> None:
+        """Refresh, in this process, the user's printings whose prices are stale (FR-PRC-05).
+
+        Best effort and meant for a background task: it talks to the data source, may take a while
+        and never raises.
+        """
+        if self._lazy is None:
+            return
+        try:
+            with self._uow() as unit:
+                ids = unit.vault.stale_card_ids(
+                    user_id, self._clock() - self._stale_after, MAX_PER_REQUEST
+                )
+            if ids:
+                self._lazy.refresh_now(ids)
+        except Exception:
+            _log.exception("could not look for stale prices")
+
+    def refresh_card_if_stale(self, card_id: UUID) -> None:
+        """Refresh one printing when we hold a snapshot of it and its prices are stale."""
+        if self._lazy is None:
+            return
+        try:
+            with self._uow() as unit:
+                snapshot = unit.cards.get(card_id)
+            if snapshot is not None and self.prices_stale(snapshot):
+                self._lazy.refresh_now([card_id])
+        except Exception:
+            _log.exception("could not look for stale prices")
