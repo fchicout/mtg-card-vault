@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.19
+**Docs set version:** 0.3.20
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -395,7 +395,7 @@ flowchart LR
 | db | `postgres` 17 (pinned by digest) | none | On an internal network with no route out; named volume; backup stub in section 7.2a. |
 
 ### 7.2 Configuration (environment, validated at start-up)
-`DATABASE_URL`, `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_ALLOWED_ALGS` (default `RS256`), `BIND_HOST` (default `127.0.0.1`; the image sets `0.0.0.0`), `BIND_PORT` (8000), `CORS_ORIGINS`, `SCRYFALL_USER_AGENT`, `PRICE_REFRESH_CRON`, `PRICE_STALE_AFTER_HOURS` (24), `SCAN_MAX_BYTES` (2 MB), `SCAN_RATE_PER_MINUTE` (30), `LOG_LEVEL`. Only `.env.example` is committed.
+`DATABASE_URL`, `OIDC_ISSUER_URL` (https; http only for localhost; required), `OIDC_AUDIENCE` (required), `OIDC_ALLOWED_ALGS` (default `RS256`; asymmetric algorithms only, `none` and HMAC are refused at start-up), `API_DOCS_ENABLED` (default `false`: no `/api/v1/docs` or `openapi.json` at runtime), `BIND_HOST` (default `127.0.0.1`; the image sets `0.0.0.0`), `BIND_PORT` (8000), `CORS_ORIGINS` (comma-separated explicit origins, no wildcard, no credentials; empty = no cross-origin access), `SCRYFALL_USER_AGENT`, `PRICE_REFRESH_CRON`, `PRICE_STALE_AFTER_HOURS` (24), `SCAN_MAX_BYTES` (2 MB), `SCAN_RATE_PER_MINUTE` (30), `LOG_LEVEL`. Only `.env.example` is committed.
 
 ### 7.2a Backup and restore (stub)
 Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: back up with `pg_dump --format=custom --file mtgvault.dump "$DATABASE_URL"` (schema, data and the `alembic_version` row) and restore into an empty database with `pg_restore --clean --if-exists --dbname "$DATABASE_URL" mtgvault.dump`; the API applies any newer migrations itself on its next start. Scheduled backups, retention and a restore rehearsal belong to the operator runbook (milestone M6).
@@ -461,7 +461,7 @@ Enforced conventions (`scripts/check_commit_policy.py`):
 
 ### 8.1 Authentication and authorization
 - SPA = public OIDC client, Authorization Code + PKCE (S256), tokens in memory, refresh token rotation (`FR-AUTH-01`, `FR-AUTH-03`); it requests the API audience explicitly and signs out by revoking the refresh token and visiting Authelia's logout page (`ADR-003`, `FR-AUTH-02`).
-- API = resource server. `TokenVerifier` port, implemented by `adapters/auth`: downloads discovery + JWKS from the issuer, caches keys, refreshes on unknown `kid` (rate-limited), enforces algorithm allow-list, `iss`, `aud`, `exp`, `nbf` (`FR-AUTH-05`). Authelia does issue JWT access tokens (`OQ-05`, `ADR-003`); token introspection stays a possible adapter behind the same port.
+- API = resource server. `TokenVerifier` port, implemented by `adapters/auth`: downloads discovery + JWKS from the issuer, caches keys, refreshes on unknown `kid` (rate-limited), enforces algorithm allow-list, `iss`, `aud`, `exp`, `nbf` (`FR-AUTH-05`). Authelia does issue JWT access tokens (`OQ-05`, `ADR-003`); token introspection stays a possible adapter behind the same port. Behaviour (issue #15): the whole `/api/v1` router depends on `current_principal` (401 `problem+json` with `WWW-Authenticate: Bearer`, plus `error="invalid_token"` when a token was presented; 403 for authenticated-but-forbidden; the validation reason is logged, never returned); keys are cached 10 minutes, an unknown `kid` refreshes at most once per 30 s, cached keys survive an identity-provider outage for up to 24 h and after that the API answers 503, not 401; only `/healthz` and `/readyz` are public, and `/api/v1/docs` plus `openapi.json` are served only when `API_DOCS_ENABLED=true`; the temporary `/hello` route is removed.
 - Authorization = ownership. The current user id comes only from the verified `sub` (`FR-VLT-07`); repositories require `user_id` in every query method (no unscoped access API exists).
 - "Only the front end may call the API": enforced by (a) the token audience bound to the SPA's client, (b) CORS allow-list, (c) no cookie auth (so no CSRF surface). A token is the security boundary; network origin cannot be proven for non-browser clients (`NFR-SEC-01` limitation).
 

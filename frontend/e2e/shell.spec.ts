@@ -17,12 +17,6 @@ const ROUTES = [
 ];
 const THEMES = ['light', 'dark'] as const;
 
-async function mockGreeting(page: Page): Promise<void> {
-  await page.route('**/hello', (route) =>
-    route.fulfill({ json: { message: 'Hello, MTG Vault!' } }),
-  );
-}
-
 async function useTheme(page: Page, theme: 'light' | 'dark'): Promise<void> {
   await page.addInitScript((value) => localStorage.setItem('mtgvault.theme', value), theme);
 }
@@ -31,7 +25,6 @@ for (const theme of THEMES) {
   test.describe(`${theme} theme`, () => {
     for (const route of ROUTES) {
       test(`${route}: accessible, with the legal footer`, async ({ page }) => {
-        await mockGreeting(page);
         await useTheme(page, theme);
         await page.goto(route);
         await expect(page.locator('h1')).toBeVisible();
@@ -49,8 +42,6 @@ for (const theme of THEMES) {
 }
 
 test.describe('navigation', () => {
-  test.beforeEach(async ({ page }) => mockGreeting(page));
-
   test('the four sections are reachable and mark the current page', async ({ page }) => {
     await page.goto('/');
     for (const [name, path] of [
@@ -117,49 +108,5 @@ test.describe('navigation', () => {
     expect(after).not.toBe(before);
     await page.reload();
     await expect(page.locator('body')).toHaveAttribute('cds-theme', after!);
-  });
-});
-
-test.describe('API errors (FR-API-02)', () => {
-  test('a problem document becomes a plain-language alert with the correlation id in the details', async ({
-    page,
-  }) => {
-    await page.route('**/hello', (route) =>
-      route.fulfill({
-        status: 503,
-        contentType: 'application/problem+json',
-        json: {
-          type: 'urn:mtgvault:problem:upstream-unavailable',
-          title: 'Service Unavailable',
-          status: 503,
-          detail: 'Scryfall is down.',
-          correlation_id: 'e2e-corr-503',
-        },
-      }),
-    );
-    await page.goto('/');
-
-    const alert = page.getByTestId('alert-message');
-    await expect(alert).toHaveText(/not available\. Try again in a moment\./);
-    await expect(alert).not.toContainText('Scryfall is down');
-    await expect(page.getByTestId('correlation-id')).toBeHidden();
-    await page.getByTestId('alert-details').locator('summary').click();
-    await expect(page.getByTestId('correlation-id')).toHaveText('e2e-corr-503');
-    await expect(page.getByTestId('error')).toBeVisible();
-    await expectNoSeriousViolations(page);
-  });
-
-  test('an unreachable API is explained, and retry loads the greeting', async ({ page }) => {
-    let calls = 0;
-    await page.route('**/hello', (route) => {
-      calls += 1;
-      return calls === 1
-        ? route.abort('connectionrefused')
-        : route.fulfill({ json: { message: 'Hello, MTG Vault!' } });
-    });
-    await page.goto('/');
-    await expect(page.getByTestId('alert-message')).toContainText('cannot be reached');
-    await page.getByTestId('retry').click();
-    await expect(page.getByTestId('greeting')).toHaveText('Hello, MTG Vault!');
   });
 });

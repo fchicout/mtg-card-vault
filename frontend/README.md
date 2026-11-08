@@ -16,4 +16,4 @@ The API client in `src/app/api/` is generated from the backend's OpenAPI documen
 
 ## Skeleton status
 
-The page only shows the greeting from the temporary `GET /hello` route (issue #1). It is replaced by the real shell in issue #9.
+The start page is a static welcome card; the first API-backed pages arrive with the identity milestone (every `/api/v1` route needs a bearer token).

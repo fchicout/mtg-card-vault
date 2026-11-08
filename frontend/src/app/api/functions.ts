@@ -5,5 +5,3 @@ export type { GetLiveness$Params as GetLiveness$Params } from './fn/health/get-l
 export { getLiveness as getLiveness } from './fn/health/get-liveness';
 export type { GetReadiness$Params as GetReadiness$Params } from './fn/health/get-readiness';
 export { getReadiness as getReadiness } from './fn/health/get-readiness';
-export type { GetHello$Params as GetHello$Params } from './fn/skeleton/get-hello';
-export { getHello as getHello } from './fn/skeleton/get-hello';

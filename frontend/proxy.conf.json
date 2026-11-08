@@ -1,5 +1,4 @@
 {
-  "/hello": { "target": "http://localhost:8000", "secure": false },
   "/healthz": { "target": "http://localhost:8000", "secure": false },
   "/readyz": { "target": "http://localhost:8000", "secure": false },
   "/api": { "target": "http://localhost:8000", "secure": false }
