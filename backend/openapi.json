@@ -898,6 +898,79 @@
         ],
         "title": "VaultPage",
         "type": "object"
+      },
+      "VaultSummaryDto": {
+        "description": "Totals of the whole collection. A non-zero ``unpriced_*`` count means the matching value is\na lower bound: entries without a price add nothing to it.",
+        "properties": {
+          "entries": {
+            "title": "Entries",
+            "type": "integer"
+          },
+          "lower_bound_eur": {
+            "title": "Lower Bound Eur",
+            "type": "boolean"
+          },
+          "lower_bound_usd": {
+            "title": "Lower Bound Usd",
+            "type": "boolean"
+          },
+          "newest_prices_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Newest Prices Updated At"
+          },
+          "oldest_prices_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldest Prices Updated At"
+          },
+          "total_cards": {
+            "title": "Total Cards",
+            "type": "integer"
+          },
+          "unpriced_eur": {
+            "title": "Unpriced Eur",
+            "type": "integer"
+          },
+          "unpriced_usd": {
+            "title": "Unpriced Usd",
+            "type": "integer"
+          },
+          "value_eur": {
+            "title": "Value Eur",
+            "type": "string"
+          },
+          "value_usd": {
+            "title": "Value Usd",
+            "type": "string"
+          }
+        },
+        "required": [
+          "total_cards",
+          "entries",
+          "value_usd",
+          "value_eur",
+          "unpriced_usd",
+          "unpriced_eur",
+          "lower_bound_usd",
+          "lower_bound_eur"
+        ],
+        "title": "VaultSummaryDto",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -1961,6 +2034,82 @@
           }
         ],
         "summary": "Change an entry",
+        "tags": [
+          "vault"
+        ]
+      }
+    },
+    "/api/v1/vault/summary": {
+      "get": {
+        "operationId": "getVaultSummary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultSummaryDto"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or invalid token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not allowed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The identity provider is unreachable"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Totals and value of the caller's whole collection",
         "tags": [
           "vault"
         ]

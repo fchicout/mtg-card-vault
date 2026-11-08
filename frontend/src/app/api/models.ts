@@ -21,3 +21,4 @@ export type { RecognizedTextDto } from './models/recognized-text-dto';
 export type { ScanResponse } from './models/scan-response';
 export type { VaultItemDto } from './models/vault-item-dto';
 export type { VaultPage } from './models/vault-page';
+export type { VaultSummaryDto } from './models/vault-summary-dto';

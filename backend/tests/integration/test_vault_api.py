@@ -261,6 +261,10 @@ ISOLATION_COVERAGE = {
     ("GET", "/api/v1/vault/entries"),
     ("PATCH", "/api/v1/vault/entries/{entry_id}"),
     ("DELETE", "/api/v1/vault/entries/{entry_id}"),
+    (
+        "GET",
+        "/api/v1/vault/summary",
+    ),  # test_the_summary_endpoint_totals_the_callers_collection_only
 }
 
 
@@ -363,3 +367,21 @@ def test_stale_prices_are_flagged(client: TestClient, migrated: Engine) -> None:
     with migrated.begin() as connection:
         connection.execute(text("UPDATE cards SET prices_updated_at = NULL"))
     assert entries(client, "alice")["items"][0]["prices_stale"] is True  # type: ignore[index]
+
+
+# ---------------------------------------------------------------------------- summary (#133)
+def test_the_summary_endpoint_totals_the_callers_collection_only(client: TestClient) -> None:
+    add(client, "alice", BOLT.id, 2, "foil")  # 6.00
+    add(client, "alice", LOTUS.id, 1)  # 9000.00
+    add(client, "bob", BOLT.id, 100)
+    body = client.get("/api/v1/vault/summary", headers=headers("alice")).json()
+    assert body["total_cards"] == 3 and body["entries"] == 2
+    assert body["value_usd"] == "9006.00"
+    assert body["value_eur"] == "0.00" and body["unpriced_eur"] == 2 and body["lower_bound_eur"]
+    assert body["unpriced_usd"] == 0 and body["lower_bound_usd"] is False
+
+
+def test_the_summary_needs_a_token_and_an_empty_vault_is_zeros(client: TestClient) -> None:
+    assert client.get("/api/v1/vault/summary").status_code == 401
+    body = client.get("/api/v1/vault/summary", headers=headers("bob")).json()
+    assert (body["total_cards"], body["entries"], body["value_usd"]) == (0, 0, "0.00")

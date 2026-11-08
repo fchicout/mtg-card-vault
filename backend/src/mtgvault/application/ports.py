@@ -11,7 +11,14 @@ from mtgvault.application.vault_query import VaultQuery
 from mtgvault.domain.card import Card, ResultPage
 from mtgvault.domain.identity import Principal
 from mtgvault.domain.user import User
-from mtgvault.domain.vault import CardSnapshot, Condition, Finish, VaultEntry, VaultItem
+from mtgvault.domain.vault import (
+    CardSnapshot,
+    Condition,
+    Finish,
+    VaultEntry,
+    VaultItem,
+    VaultSummary,
+)
 
 
 class TokenVerifier(Protocol):
@@ -150,6 +157,10 @@ class VaultRepository(Protocol):
     def delete(self, user_id: UUID, entry_id: UUID) -> bool: ...
 
     def count(self, user_id: UUID) -> int: ...
+
+    def summary(self, user_id: UUID) -> VaultSummary:
+        """Totals of ALL the user's entries, aggregated in SQL (never loading the entries)."""
+        ...
 
 
 class RateLimiter(Protocol):

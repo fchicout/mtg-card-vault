@@ -78,6 +78,21 @@ class VaultItem:
         return line_value(self.unit_price_eur, self.entry.quantity)
 
 
+@dataclass(frozen=True)
+class VaultSummary:
+    """What a collection is worth (FR-PRC-03). Unpriced entries add nothing to a value, so a
+    non-zero ``unpriced_*`` count means the value is a lower bound."""
+
+    total_cards: int
+    entries: int
+    value_usd: Decimal
+    value_eur: Decimal
+    unpriced_usd: int
+    unpriced_eur: int
+    oldest_prices_updated_at: datetime | None
+    newest_prices_updated_at: datetime | None
+
+
 def validate_quantity(quantity: int) -> int:
     if not 1 <= quantity <= MAX_QUANTITY:
         raise ValidationFailed(

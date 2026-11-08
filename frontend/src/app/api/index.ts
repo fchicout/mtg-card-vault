@@ -27,6 +27,7 @@ export type { RecognizedTextDto } from './models/recognized-text-dto';
 export type { ScanResponse } from './models/scan-response';
 export type { VaultItemDto } from './models/vault-item-dto';
 export type { VaultPage } from './models/vault-page';
+export type { VaultSummaryDto } from './models/vault-summary-dto';
 
 export type { SearchCards$Params as SearchCards$Params } from './fn/catalog/search-cards';
 export { searchCards as searchCards } from './fn/catalog/search-cards';
@@ -46,6 +47,8 @@ export type { RemoveVaultEntry$Params as RemoveVaultEntry$Params } from './fn/va
 export { removeVaultEntry as removeVaultEntry } from './fn/vault/remove-vault-entry';
 export type { EditVaultEntry$Params as EditVaultEntry$Params } from './fn/vault/edit-vault-entry';
 export { editVaultEntry as editVaultEntry } from './fn/vault/edit-vault-entry';
+export type { GetVaultSummary$Params as GetVaultSummary$Params } from './fn/vault/get-vault-summary';
+export { getVaultSummary as getVaultSummary } from './fn/vault/get-vault-summary';
 export type { GetLiveness$Params as GetLiveness$Params } from './fn/health/get-liveness';
 export { getLiveness as getLiveness } from './fn/health/get-liveness';
 export type { GetReadiness$Params as GetReadiness$Params } from './fn/health/get-readiness';

@@ -20,6 +20,7 @@ from mtgvault.domain.vault import (
     Condition,
     Finish,
     VaultItem,
+    VaultSummary,
     validate_finish,
     validate_quantity,
 )
@@ -81,6 +82,10 @@ class VaultService:
     def list(self, user_id: UUID, query: VaultQuery) -> tuple[list[VaultItem], int]:
         with self._uow() as unit:
             return unit.vault.list_items(user_id, query)
+
+    def summary(self, user_id: UUID) -> VaultSummary:
+        with self._uow() as unit:
+            return unit.vault.summary(user_id)
 
     def get(self, user_id: UUID, entry_id: UUID) -> VaultItem:
         with self._uow() as unit:

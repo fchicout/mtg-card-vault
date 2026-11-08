@@ -15,7 +15,7 @@ from mtgvault.api.security import current_user
 from mtgvault.application.vault_query import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, build_vault_query
 from mtgvault.application.vault_service import VaultService
 from mtgvault.domain.user import User
-from mtgvault.domain.vault import Condition, Finish, VaultItem
+from mtgvault.domain.vault import Condition, Finish, VaultItem, VaultSummary
 
 router = APIRouter(prefix="/vault", tags=["vault"])
 Service = Annotated[VaultService, Depends(get_vault_service)]
@@ -44,6 +44,22 @@ class VaultPage(BaseModel):
     page: int
     page_size: int
     total: int
+
+
+class VaultSummaryDto(BaseModel):
+    """Totals of the whole collection. A non-zero ``unpriced_*`` count means the matching value is
+    a lower bound: entries without a price add nothing to it."""
+
+    total_cards: int
+    entries: int
+    value_usd: Decimal
+    value_eur: Decimal
+    unpriced_usd: int
+    unpriced_eur: int
+    lower_bound_usd: bool
+    lower_bound_eur: bool
+    oldest_prices_updated_at: datetime | None = None
+    newest_prices_updated_at: datetime | None = None
 
 
 class AddEntry(BaseModel):
@@ -138,3 +154,27 @@ def edit_entry(entry_id: UUID, body: EditEntry, owner: Owner, service: Service) 
 )
 def remove_entry(entry_id: UUID, owner: Owner, service: Service) -> None:
     service.remove(owner.id, entry_id)
+
+
+@router.get(
+    "/summary",
+    operation_id="getVaultSummary",
+    summary="Totals and value of the caller's whole collection",
+)
+def get_summary(owner: Owner, service: Service) -> VaultSummaryDto:
+    return _summary_dto(service.summary(owner.id))
+
+
+def _summary_dto(summary: VaultSummary) -> VaultSummaryDto:
+    return VaultSummaryDto(
+        total_cards=summary.total_cards,
+        entries=summary.entries,
+        value_usd=summary.value_usd,
+        value_eur=summary.value_eur,
+        unpriced_usd=summary.unpriced_usd,
+        unpriced_eur=summary.unpriced_eur,
+        lower_bound_usd=summary.unpriced_usd > 0,
+        lower_bound_eur=summary.unpriced_eur > 0,
+        oldest_prices_updated_at=summary.oldest_prices_updated_at,
+        newest_prices_updated_at=summary.newest_prices_updated_at,
+    )
