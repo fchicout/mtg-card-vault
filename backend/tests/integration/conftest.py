@@ -54,3 +54,12 @@ def db_session(engine: Engine) -> Iterator[Session]:
         session.close()
         outer.rollback()
         connection.close()
+
+
+@pytest.fixture
+def migrated(database_url: str, engine: Engine) -> Engine:
+    """A database brought to the newest schema by the real migrations."""
+    from mtgvault.adapters.db.migrate import upgrade_to_head
+
+    upgrade_to_head(database_url, BACKEND_DIR)
+    return engine

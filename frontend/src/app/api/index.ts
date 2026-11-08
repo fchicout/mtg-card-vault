@@ -7,17 +7,23 @@ export { RequestBuilder } from './request-builder';
 export type { StrictHttpResponse } from './strict-http-response';
 export { Api } from './api';
 
+export type { AddEntry } from './models/add-entry';
 export type { CardDetail } from './models/card-detail';
 export type { CardFaceDto } from './models/card-face-dto';
 export type { CardPage } from './models/card-page';
 export type { CardSummary } from './models/card-summary';
+export type { Condition } from './models/condition';
+export type { EditEntry } from './models/edit-entry';
 export type { FieldProblem } from './models/field-problem';
+export type { Finish } from './models/finish';
 export type { HealthStatus } from './models/health-status';
 export type { Me } from './models/me';
 export type { PricesDto } from './models/prices-dto';
 export type { Printing } from './models/printing';
 export type { PrintingPage } from './models/printing-page';
 export type { Problem } from './models/problem';
+export type { VaultItemDto } from './models/vault-item-dto';
+export type { VaultPage } from './models/vault-page';
 
 export type { SearchCards$Params as SearchCards$Params } from './fn/catalog/search-cards';
 export { searchCards as searchCards } from './fn/catalog/search-cards';
@@ -27,6 +33,14 @@ export type { GetCardPrintings$Params as GetCardPrintings$Params } from './fn/ca
 export { getCardPrintings as getCardPrintings } from './fn/catalog/get-card-printings';
 export type { GetMe$Params as GetMe$Params } from './fn/account/get-me';
 export { getMe as getMe } from './fn/account/get-me';
+export type { ListVaultEntries$Params as ListVaultEntries$Params } from './fn/vault/list-vault-entries';
+export { listVaultEntries as listVaultEntries } from './fn/vault/list-vault-entries';
+export type { AddVaultEntry$Params as AddVaultEntry$Params } from './fn/vault/add-vault-entry';
+export { addVaultEntry as addVaultEntry } from './fn/vault/add-vault-entry';
+export type { RemoveVaultEntry$Params as RemoveVaultEntry$Params } from './fn/vault/remove-vault-entry';
+export { removeVaultEntry as removeVaultEntry } from './fn/vault/remove-vault-entry';
+export type { EditVaultEntry$Params as EditVaultEntry$Params } from './fn/vault/edit-vault-entry';
+export { editVaultEntry as editVaultEntry } from './fn/vault/edit-vault-entry';
 export type { GetLiveness$Params as GetLiveness$Params } from './fn/health/get-liveness';
 export { getLiveness as getLiveness } from './fn/health/get-liveness';
 export type { GetReadiness$Params as GetReadiness$Params } from './fn/health/get-readiness';

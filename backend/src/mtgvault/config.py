@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     # Catalogue results are cached briefly (ADR-007).
     catalog_cache_ttl_seconds: int = Field(default=300, ge=1, le=3600)
     catalog_cache_max_entries: int = Field(default=500, ge=1, le=10000)
+    # Prices older than this are marked stale in the vault (FR-DAT-03).
+    price_stale_after_hours: int = Field(default=24, ge=1, le=720)
     # The interactive API documentation is for development; production leaves it off.
     api_docs_enabled: bool = False
 

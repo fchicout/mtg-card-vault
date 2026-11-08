@@ -9,6 +9,14 @@ export type { GetCardPrintings$Params as GetCardPrintings$Params } from './fn/ca
 export { getCardPrintings as getCardPrintings } from './fn/catalog/get-card-printings';
 export type { GetMe$Params as GetMe$Params } from './fn/account/get-me';
 export { getMe as getMe } from './fn/account/get-me';
+export type { ListVaultEntries$Params as ListVaultEntries$Params } from './fn/vault/list-vault-entries';
+export { listVaultEntries as listVaultEntries } from './fn/vault/list-vault-entries';
+export type { AddVaultEntry$Params as AddVaultEntry$Params } from './fn/vault/add-vault-entry';
+export { addVaultEntry as addVaultEntry } from './fn/vault/add-vault-entry';
+export type { RemoveVaultEntry$Params as RemoveVaultEntry$Params } from './fn/vault/remove-vault-entry';
+export { removeVaultEntry as removeVaultEntry } from './fn/vault/remove-vault-entry';
+export type { EditVaultEntry$Params as EditVaultEntry$Params } from './fn/vault/edit-vault-entry';
+export { editVaultEntry as editVaultEntry } from './fn/vault/edit-vault-entry';
 export type { GetLiveness$Params as GetLiveness$Params } from './fn/health/get-liveness';
 export { getLiveness as getLiveness } from './fn/health/get-liveness';
 export type { GetReadiness$Params as GetReadiness$Params } from './fn/health/get-readiness';
