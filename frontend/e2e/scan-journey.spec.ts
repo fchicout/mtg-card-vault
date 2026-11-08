@@ -34,7 +34,7 @@ test('@UC-02 a scanned card is only added after the person confirms it', async (
 
   // Nothing is in the vault yet: scanning never adds by itself.
   await page.getByTestId('choose').first().click();
-  await expect(page.getByTestId('confirm-dialog')).toBeVisible();
+  await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByTestId('cancel').click();
   await gotoSignedIn(page, '/vault');
   await expect(page.getByTestId('entry')).toHaveCount(0);
