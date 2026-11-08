@@ -1,10 +1,10 @@
-import '../testing/resize-observer';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { Api, editVaultEntry, listVaultEntries, removeVaultEntry } from '../api';
 import { VaultPage } from './vault';
+import { installResizeObserverStub } from '../testing/resize-observer';
 
 const item = (name: string, extra: Record<string, unknown> = {}) => ({
   id: `e-${name}`,
@@ -32,6 +32,8 @@ const item = (name: string, extra: Record<string, unknown> = {}) => ({
 const list = (items: unknown[], total = items.length) => ({ items, page: 1, page_size: 50, total });
 
 describe('VaultPage', () => {
+  beforeAll(() => installResizeObserverStub());
+
   let invoke: ReturnType<typeof vi.fn>;
   let navigate: ReturnType<typeof vi.spyOn>;
 

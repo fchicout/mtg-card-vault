@@ -1,10 +1,10 @@
-import '../testing/resize-observer';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { Api, addVaultEntry, getCard, getCardPrintings } from '../api';
 import { CardDetailPage } from './card-detail';
+import { installResizeObserverStub } from '../testing/resize-observer';
 
 const detail = (extra: Record<string, unknown> = {}) => ({
   id: 'c1',
@@ -39,6 +39,8 @@ const printing = (id: string) => ({
 });
 
 describe('CardDetailPage', () => {
+  beforeAll(() => installResizeObserverStub());
+
   let invoke: ReturnType<typeof vi.fn>;
   let navigate: ReturnType<typeof vi.spyOn>;
   let answers: { card: unknown; printings: unknown; added?: unknown };

@@ -1,4 +1,4 @@
-/** jsdom has no ResizeObserver; Clarity's modal needs one. Imported by specs that open modals. */
+/** jsdom has no ResizeObserver; Clarity's modal needs one. Call from a spec's beforeAll. */
 class StubResizeObserver {
   observe(): undefined {
     return undefined;
@@ -11,4 +11,6 @@ class StubResizeObserver {
   }
 }
 
-(globalThis as { ResizeObserver?: unknown }).ResizeObserver ??= StubResizeObserver;
+export function installResizeObserverStub(): void {
+  (globalThis as { ResizeObserver?: unknown }).ResizeObserver ??= StubResizeObserver;
+}
