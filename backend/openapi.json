@@ -32,19 +32,6 @@
         "title": "HealthStatus",
         "type": "object"
       },
-      "HelloResponse": {
-        "properties": {
-          "message": {
-            "title": "Message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "title": "HelloResponse",
-        "type": "object"
-      },
       "Problem": {
         "description": "The problem document returned for every error.",
         "properties": {
@@ -102,7 +89,7 @@
     }
   },
   "info": {
-    "description": "REST API of MTG Card Vault. Every error is an RFC 9457 `application/problem+json` document carrying a `correlation_id`, also returned in the `X-Request-ID` header.",
+    "description": "REST API of MTG Card Vault. Every versioned route needs an OIDC bearer token. Every error is an RFC 9457 `application/problem+json` document carrying a `correlation_id`, also returned in the `X-Request-ID` header.",
     "summary": "Private, priced inventory of a Magic: The Gathering collection.",
     "title": "MTG Card Vault API",
     "version": "0.1.0"
@@ -147,47 +134,6 @@
         "summary": "Liveness: the process is up",
         "tags": [
           "health"
-        ]
-      }
-    },
-    "/hello": {
-      "get": {
-        "operationId": "getHello",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HelloResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            },
-            "description": "Validation failed"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            },
-            "description": "Unexpected error"
-          }
-        },
-        "summary": "Skeleton greeting (temporary)",
-        "tags": [
-          "skeleton"
         ]
       }
     },
@@ -247,10 +193,6 @@
     {
       "description": "Liveness and readiness (public).",
       "name": "health"
-    },
-    {
-      "description": "Temporary skeleton route, removed with issue #15.",
-      "name": "skeleton"
     }
   ]
 }

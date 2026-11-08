@@ -3,13 +3,17 @@
 from types import TracebackType
 from typing import Protocol, Self
 
-from mtgvault.domain.greeting import Greeting
+from mtgvault.domain.identity import Principal
 
 
-class GreetingProvider(Protocol):
-    """Supplies the greeting. Skeleton port (issue #1)."""
+class TokenVerifier(Protocol):
+    """Turns a bearer token into the caller's identity (ADR-003, FR-AUTH-05).
 
-    def current(self) -> Greeting: ...
+    Raises ``Unauthenticated`` for any token that is not acceptable (the reason is only logged)
+    and ``UpstreamUnavailable`` when the identity provider's keys cannot be obtained at all.
+    """
+
+    def verify(self, token: str) -> Principal: ...
 
 
 class ReadinessProbe(Protocol):

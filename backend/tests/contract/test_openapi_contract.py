@@ -16,8 +16,7 @@ def test_generated_document_is_a_valid_openapi_spec() -> None:
 
 def test_expected_operations_are_present() -> None:
     paths = json.loads(build_document())["paths"]
-    assert set(paths) == {"/hello", "/healthz", "/readyz"}
-    assert paths["/hello"]["get"]["operationId"] == "getHello"
+    assert set(paths) == {"/healthz", "/readyz"}  # business routes arrive with their issues
 
 
 def test_committed_openapi_json_is_up_to_date() -> None:

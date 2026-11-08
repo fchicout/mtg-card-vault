@@ -8,7 +8,7 @@ def test_document_is_deterministic_json() -> None:
     first, second = build_document(), build_document()
     assert first == second
     assert first.endswith("\n")
-    assert "/hello" in json.loads(first)["paths"]
+    assert "/healthz" in json.loads(first)["paths"]
 
 
 def test_main_writes_the_file(tmp_path: Path) -> None:
