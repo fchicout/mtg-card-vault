@@ -1,3 +1,35 @@
+## [0.5.0] - 2026-11-08
+
+### Bug fixes
+- **pricing:** Clear the SonarQube findings of the pricing code (c2e1ec6)
+- **pricing:** Set the prices through the worker in the journeys and split assertions (3317afe)
+
+
+### Build
+- **deploy:** Run the worker in the default stack with a heartbeat healthcheck (a409c97)
+
+
+### Documentation
+- **arch:** Currency policy, money rules, pricing design and worker notes (e834c33)
+
+
+### Features
+- **pricing:** Line value and EUR unit price on vault entries (f0dbd20)
+- **vault:** Collection summary endpoint with totals, value and unpriced count (3c9050f)
+- **scryfall:** Batch lookup of up to 75 cards and a double that serves it (f024e8d)
+- **db:** Select owned cards and refresh their snapshots in one statement (cf57a4c)
+- **pricing:** Refresh service for the prices of all owned cards (42cea1d)
+- **pricing:** Daily price refresh job with a standard-cron schedule (4f225b5)
+- **pricing:** Refresh stale prices after the response with one refresh per card (9001caf)
+- **ui:** Collection value summary, prices and line values with stale notes in the vault (c2bb310)
+- **ui:** Price freshness for the owner and the price source on the card page (8a934fa)
+
+
+### Tests
+- **vault:** List, summary and stale lookup budgets at 10,000 entries (451b2cd)
+- **e2e:** Pricing journeys with the real worker and the Scryfall double (d7cc143)
+
+
 ## [0.4.0] - 2026-11-08
 
 ### Bug fixes
