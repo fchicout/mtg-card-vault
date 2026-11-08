@@ -49,3 +49,15 @@ class RateLimited(DomainError):
     def __init__(self, detail: str, retry_after_seconds: int | None = None) -> None:
         super().__init__(detail)
         self.retry_after_seconds = retry_after_seconds
+
+
+class Unauthenticated(DomainError):
+    """No valid credentials. The detail is generic on purpose (reasons are logged, not returned)."""
+
+    def __init__(self, detail: str, *, invalid_token: bool = False) -> None:
+        super().__init__(detail)
+        self.invalid_token = invalid_token
+
+
+class Forbidden(DomainError):
+    """The caller is authenticated but not allowed to do this."""

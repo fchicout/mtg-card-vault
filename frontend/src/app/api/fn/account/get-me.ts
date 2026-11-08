@@ -7,13 +7,13 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { HelloResponse } from '../../models/hello-response';
+import { Me } from '../../models/me';
 
-export interface GetHello$Params {
+export interface GetMe$Params {
 }
 
-export function getHello(http: HttpClient, rootUrl: string, params?: GetHello$Params, context?: HttpContext): Observable<StrictHttpResponse<HelloResponse>> {
-  const rb = new RequestBuilder(rootUrl, getHello.PATH, 'get');
+export function getMe(http: HttpClient, rootUrl: string, params?: GetMe$Params, context?: HttpContext): Observable<StrictHttpResponse<Me>> {
+  const rb = new RequestBuilder(rootUrl, getMe.PATH, 'get');
   if (params) {
   }
 
@@ -22,9 +22,9 @@ export function getHello(http: HttpClient, rootUrl: string, params?: GetHello$Pa
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<HelloResponse>;
+      return r as StrictHttpResponse<Me>;
     })
   );
 }
 
-getHello.PATH = '/hello';
+getMe.PATH = '/api/v1/me';

@@ -13,6 +13,8 @@ import {
 } from '@cds/core/icon';
 import '@cds/core/icon/register.js';
 
+import { AuthService } from './core/auth/auth.service';
+import { ProfileService } from './core/auth/profile.service';
 import { Notifications } from './core/notifications/notifications';
 import { ThemeService } from './core/theme/theme.service';
 
@@ -44,4 +46,16 @@ ClarityIcons.addIcons(
 })
 export class App {
   protected readonly theme = inject(ThemeService);
+  protected readonly auth = inject(AuthService);
+  protected readonly profile = inject(ProfileService);
+
+  protected readonly accountLabel = $localize`:@@auth.account:Account`;
+
+  protected signOut(): void {
+    void this.auth.signOut();
+  }
+
+  protected signIn(): void {
+    void this.auth.signIn(window.location.pathname + window.location.search);
+  }
 }

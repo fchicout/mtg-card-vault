@@ -16,12 +16,6 @@ def client(ready: bool = True) -> TestClient:
     return TestClient(create_app(readiness_probe=StubProbe(ready)))
 
 
-def test_hello_returns_the_greeting() -> None:
-    response = client().get("/hello")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Hello, MTG Vault!"}
-
-
 def test_liveness_is_ok() -> None:
     response = client(ready=False).get("/healthz")
     assert response.status_code == 200

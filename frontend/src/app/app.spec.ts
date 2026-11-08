@@ -7,6 +7,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { provideApiConfiguration } from './api';
 import { App } from './app';
 import { routes } from './app.routes';
+import { AuthService } from './core/auth/auth.service';
 
 describe('App shell', () => {
   let element: HTMLElement;
@@ -76,16 +77,27 @@ describe('App shell', () => {
 });
 
 describe('routes', () => {
+  let signedIn = true;
   let harness: RouterTestingHarness;
   let http: HttpTestingController;
 
   beforeEach(async () => {
+    signedIn = true;
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         provideApiConfiguration(''),
         provideRouter(routes),
+        // A signed-in visitor: the protected pages are reachable (the guard has its own tests).
+        {
+          provide: AuthService,
+          useValue: {
+            authenticated: () => signedIn,
+            restore: () => Promise.resolve(),
+            configured: true,
+          },
+        },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -104,6 +116,17 @@ describe('routes', () => {
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent?.trim()).toBe(heading);
   });
 
+  it.each(['/vault', '/catalogue', '/scan', '/account'])(
+    'a visitor who is not signed in is sent from %s to the sign-in page',
+    async (url) => {
+      signedIn = false;
+      await harness.navigateByUrl(url);
+      expect(harness.routeNativeElement?.querySelector('h1')?.textContent?.trim()).toBe(
+        'Sign in required',
+      );
+    },
+  );
+
   it('sets a distinct document title per page', async () => {
     await harness.navigateByUrl('/vault');
     expect(document.title).toBe('Vault - MTG Card Vault');
@@ -116,15 +139,11 @@ describe('routes', () => {
     expect(harness.routeNativeElement?.querySelector('a[href="/"]')).toBeTruthy();
   });
 
-  it('the start page shows the skeleton greeting until /hello goes away', async () => {
-    const navigation = harness.navigateByUrl('/');
-    await navigation;
-    http.expectOne('/hello').flush({ message: 'Hello, MTG Vault!' });
-    await harness.fixture.whenStable();
-    await new Promise<void>((resolve) => setTimeout(resolve));
-    harness.detectChanges();
+  it('the start page welcomes the visitor without calling the API', async () => {
+    await harness.navigateByUrl('/');
     expect(
-      harness.routeNativeElement?.querySelector('[data-testid="greeting"]')?.textContent?.trim(),
-    ).toBe('Hello, MTG Vault!');
+      harness.routeNativeElement?.querySelector('[data-testid="welcome"]')?.textContent,
+    ).toContain('private');
+    http.expectNone(() => true);
   });
 });

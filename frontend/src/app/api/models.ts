@@ -3,5 +3,5 @@
 
 export type { FieldProblem } from './models/field-problem';
 export type { HealthStatus } from './models/health-status';
-export type { HelloResponse } from './models/hello-response';
+export type { Me } from './models/me';
 export type { Problem } from './models/problem';

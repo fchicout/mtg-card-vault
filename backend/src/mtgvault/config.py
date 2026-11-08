@@ -5,11 +5,25 @@ Every variable is documented in docs/05 section 7.2. No setting has a secret def
 
 import sys
 from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, ValidationError
+from pydantic import Field, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+# Signing algorithms we accept for access tokens: asymmetric only (never ``none`` or HMAC).
+ASYMMETRIC_ALGORITHMS = frozenset(
+    {"RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512"}
+)
+
+
+def is_acceptable_url(url: str) -> bool:
+    """HTTPS only, except for loopback hosts (local development and tests)."""
+    parts = urlsplit(url)
+    if parts.scheme == "https" and parts.hostname:
+        return True
+    return parts.scheme == "http" and parts.hostname in ("localhost", "127.0.0.1", "::1")
 
 
 class Settings(BaseSettings):
@@ -23,6 +37,54 @@ class Settings(BaseSettings):
     # reachable from the proxy), so a bare `python -m mtgvault.serve` never listens on the network.
     bind_host: str = "127.0.0.1"
     bind_port: int = Field(default=8000, ge=1, le=65535)
+    # Identity provider (ADR-003). No defaults: an API without an issuer must not start.
+    oidc_issuer_url: str = Field(min_length=1)
+    oidc_audience: str = Field(min_length=1)
+    oidc_allowed_algs: str = "RS256"
+    # Comma-separated browser origins allowed to call the API; empty means no cross-origin access.
+    cors_origins: str = ""
+    # The interactive API documentation is for development; production leaves it off.
+    api_docs_enabled: bool = False
+
+    @field_validator("oidc_issuer_url")
+    @classmethod
+    def _issuer_is_https(cls, value: str) -> str:
+        if not is_acceptable_url(value):
+            raise ValueError("must be an https URL (http only for localhost)")
+        return value.rstrip("/")
+
+    @field_validator("oidc_allowed_algs")
+    @classmethod
+    def _algs_are_asymmetric(cls, value: str) -> str:
+        names = [n.strip() for n in value.split(",") if n.strip()]
+        bad = [n for n in names if n not in ASYMMETRIC_ALGORITHMS]
+        if bad or not names:
+            raise ValueError(f"only asymmetric algorithms are accepted, not {bad or value!r}")
+        return ",".join(names)
+
+    @field_validator("cors_origins")
+    @classmethod
+    def _origins_are_explicit(cls, value: str) -> str:
+        for origin in (o.strip() for o in value.split(",") if o.strip()):
+            parts = urlsplit(origin)
+            if (
+                origin == "*"
+                or parts.scheme not in ("http", "https")
+                or not parts.hostname
+                or parts.path not in ("", "/")
+            ):
+                raise ValueError(
+                    f"{origin!r} is not an explicit origin such as https://app.example"
+                )
+        return value
+
+    @property
+    def oidc_algorithms(self) -> list[str]:
+        return self.oidc_allowed_algs.split(",")
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.cors_origins.split(",") if o.strip()]
 
 
 def load_settings() -> Settings:

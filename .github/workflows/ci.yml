@@ -246,9 +246,12 @@ jobs:
             echo "APP_HOST=localhost"
             echo "HTTP_PORT=8080"
             echo "HTTPS_PORT=8443"
+            echo "OIDC_ISSUER_URL=https://localhost:9000"
+            echo "OIDC_AUDIENCE=mtgvault-api"
+            echo "OIDC_CLIENT_ID=mtgvault-test"
           } > deploy/.env
       - name: Start the stack and wait until every service is healthy
-        run: docker compose -f deploy/compose.yaml up -d --build --wait --wait-timeout 240
+        run: docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml up -d --build --wait --wait-timeout 240
       - name: Install Playwright with Chromium, Firefox and WebKit
         working-directory: frontend
         run: |
@@ -262,7 +265,7 @@ jobs:
         run: npm run e2e
       - name: Stack logs on failure
         if: failure()
-        run: docker compose -f deploy/compose.yaml logs --no-color --tail 200
+        run: docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml logs --no-color --tail 200
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -273,7 +276,7 @@ jobs:
           if-no-files-found: ignore
       - name: Tear down
         if: always()
-        run: docker compose -f deploy/compose.yaml down -v
+        run: docker compose -f deploy/compose.yaml -f deploy/compose.e2e.yaml down -v
 
   # ------------------------------------------------------------------ security
   secret-scan:
@@ -467,3 +470,45 @@ jobs:
           report="$(find "$GITHUB_WORKSPACE" -name report-task.txt -path '*.scannerwork*' | head -n 1)"
           test -n "$report" || { echo "::error::the scanner left no report-task.txt"; exit 1; }
           python3 -I scripts/quality_gate.py sonar --project mtg-vault-frontend --require --report-task "$report"
+
+  # ------------------------------------------------------------------ publish (issue #52)
+  # Images for the exact commit, tagged with its SHA, once every job above is green on a push to
+  # develop or main. It lives in this workflow (not in a workflow_run workflow, which never fired
+  # for main). It never deploys: the operator rolls out manually (ADR-015).
+  publish-images:
+    name: publish-images
+    # commit-policy only runs on pull requests (skipped on a push), which would skip this job too;
+    # so run on every push unless a needed job failed or was cancelled.
+    if: ${{ always() && github.event_name == 'push' && needs.quality-gate.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    needs:
+      - docs-sync
+      - commit-policy
+      - gate-tests
+      - backend-quality
+      - backend-tests
+      - frontend-quality
+      - quality-gate
+      - contract-drift
+      - e2e
+      - secret-scan
+      - dependency-audit
+      - container-scan
+      - sonar-backend
+      - sonar-frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build and push images (immutable SHA tags, never latest)
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          for pair in "api:backend" "frontend:frontend"; do
+            name="${pair%%:*}"; context="${pair##*:}"
+            image="ghcr.io/${owner}/mtg-vault-${name}:${GITHUB_SHA}"
+            docker build -t "$image" "$context"
+            docker push "$image"
+          done

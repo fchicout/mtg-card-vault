@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { expectNoSeriousViolations, seriousViolations } from './support/axe';
+import { gotoSignedIn, signIn } from './support/session';
 import {
   BACKGROUND_LUMA,
   CARD,
@@ -11,21 +12,17 @@ import {
 import { expectNoUnmockedScryfall, mockScryfall } from './support/scryfall';
 
 /** Proves the shared E2E tooling itself (issue #12): each helper works, and fails when it should. */
-test.beforeEach(async ({ page }) => {
-  await page.route('**/hello', (route) =>
-    route.fulfill({ json: { message: 'Hello, MTG Vault!' } }),
-  );
-});
-
 test.describe('axe helper', () => {
+  test.beforeEach(async ({ page }) => signIn(page));
+
   test('passes on the clean shell', async ({ page }) => {
-    await page.goto('/vault');
+    await gotoSignedIn(page, '/vault');
     await expect(page.locator('h1')).toBeVisible();
     await expectNoSeriousViolations(page);
   });
 
   test('fails on a seeded violation and names the rule', async ({ page }) => {
-    await page.goto('/vault');
+    await gotoSignedIn(page, '/vault');
     await page.evaluate(() =>
       document
         .querySelector('main')!

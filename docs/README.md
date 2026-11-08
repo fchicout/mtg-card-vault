@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.16
+**Docs set version:** 0.3.27
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,17 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.27 | 2026-11-08 | Issues #63, #65, #66: session renewal behaviour, the operator guide for the identity provider (7.7) and the identity journeys documented. |
+| 0.3.26 | 2026-11-08 | Issues #61, #62, #64: route guard, sign-in page, user menu, sign-out and the CSP/CORS rules for the identity provider documented. |
+| 0.3.25 | 2026-11-08 | Issue #60: SPA sign-in (library choice, storage rules, run-time settings) documented. |
+| 0.3.24 | 2026-11-08 | Issue #59: the OIDC test double and the E2E compose overlay documented. |
+| 0.3.23 | 2026-11-08 | Issue #58: `GET /api/v1/me` and user provisioning on first authenticated request. |
+| 0.3.22 | 2026-11-08 | Issue #57: users table (migration 0002) and the race-safe provisioning upsert documented. |
+| 0.3.21 | 2026-11-08 | Issue #56: principal model and claim mapping with data minimisation documented. |
+| 0.3.20 | 2026-11-08 | Issue #15: JWT validation behaviour, `OIDC_*`, `CORS_ORIGINS` and `API_DOCS_ENABLED` settings documented; the skeleton `/hello` route is removed. |
+| 0.3.19 | 2026-11-08 | Issue #54: `scripts/smoke_check.py` (post-deploy check) added to the operator quickstart; staging and production now send HSTS. |
+| 0.3.18 | 2026-11-08 | Issue #53: stories, personas, charter and architecture no longer imply a bundled identity provider; the contract with the external IdP is stated in 7.3; a leftover 'SonarQube is never the judge' sentence fixed. |
+| 0.3.17 | 2026-11-08 | Issue #52: the image publishing moves from a `workflow_run` workflow (never fired for `main`) into a final `publish-images` job of `ci.yml`. |
 | 0.3.16 | 2026-11-07 | ADR-011 amended (owner decision): SonarQube's own quality gate decides together with the project's script; CON-07, NFR-MNT-01, US-030, charter and CONTRIBUTING reworded. |
 | 0.3.15 | 2026-11-07 | Quality gate follows SonarQube's retirement of Security Hotspots (issue #5): no hotspot condition, security issues counted by impact; NFR-MNT-01, ADR-011, charter 4.2 reworded. |
 | 0.3.14 | 2026-11-07 | SonarQube topology final (issue #5): OQ-08 resolved, ADR-011 topology and open hotspot follow-up, RSK-04 reassessed. |

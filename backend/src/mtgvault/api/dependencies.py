@@ -5,12 +5,12 @@ from typing import cast
 
 from fastapi import Request
 
-from mtgvault.application.greeting_service import GreetingService
 from mtgvault.application.ports import ReadinessProbe, UnitOfWork
+from mtgvault.application.user_service import UserService
 
 
-def get_greeting_service(request: Request) -> GreetingService:
-    return cast("GreetingService", request.app.state.greeting_service)
+def get_user_service(request: Request) -> UserService:
+    return cast("UserService", request.app.state.user_service)
 
 
 def get_readiness_probe(request: Request) -> ReadinessProbe:

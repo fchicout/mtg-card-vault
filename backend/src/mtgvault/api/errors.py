@@ -19,8 +19,10 @@ from mtgvault.correlation import current_correlation_id
 from mtgvault.domain.errors import (
     Conflict,
     DomainError,
+    Forbidden,
     NotFound,
     RateLimited,
+    Unauthenticated,
     UpstreamUnavailable,
     ValidationFailed,
 )
@@ -52,6 +54,8 @@ PROBLEM_RESPONSES: dict[int | str, dict[str, object]] = {
 }
 
 _BY_DOMAIN_ERROR: list[tuple[type[DomainError], int, str]] = [
+    (Unauthenticated, status.HTTP_401_UNAUTHORIZED, "unauthenticated"),
+    (Forbidden, status.HTTP_403_FORBIDDEN, "forbidden"),
     (NotFound, status.HTTP_404_NOT_FOUND, "not-found"),
     (ValidationFailed, status.HTTP_422_UNPROCESSABLE_CONTENT, "validation-failed"),
     (Conflict, status.HTTP_409_CONFLICT, "conflict"),
@@ -98,6 +102,15 @@ def problem_response(
     )
 
 
+def _headers_for(error: DomainError) -> dict[str, str] | None:
+    if isinstance(error, RateLimited) and error.retry_after_seconds is not None:
+        return {"Retry-After": str(error.retry_after_seconds)}
+    if isinstance(error, Unauthenticated):
+        challenge = 'Bearer error="invalid_token"' if error.invalid_token else "Bearer"
+        return {"WWW-Authenticate": challenge}
+    return None
+
+
 def _domain_error(_: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, DomainError)  # noqa: S101  # registered for DomainError only
     code, slug = _classify(error)
@@ -106,11 +119,7 @@ def _domain_error(_: Request, error: Exception) -> JSONResponse:
         if isinstance(error, ValidationFailed)
         else None
     )
-    headers = (
-        {"Retry-After": str(error.retry_after_seconds)}
-        if isinstance(error, RateLimited) and error.retry_after_seconds is not None
-        else None
-    )
+    headers = _headers_for(error)
     return problem_response(code, slug, error.detail, errors=errors or None, headers=headers)
 
 
