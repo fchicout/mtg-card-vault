@@ -15,7 +15,7 @@ import subprocess  # fixed command, no shell, arguments are constants
 import threading
 from collections.abc import Callable
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 
 from mtgvault.adapters.ocr.preprocess import decode, regions_from_frame
 from mtgvault.application.ports import RecognizedText
@@ -63,7 +63,7 @@ class TesseractRecognizer:
     def read(self, image: bytes) -> RecognizedText:
         try:
             frame = decode(image)
-        except (UnidentifiedImageError, OSError, ValueError) as error:
+        except (OSError, ValueError) as error:
             raise ValidationFailed(
                 "The image cannot be read.",
                 (FieldError("image", "The file is damaged or not an image."),),

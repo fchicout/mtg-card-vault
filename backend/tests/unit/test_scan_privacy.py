@@ -6,7 +6,6 @@ import io
 import logging
 import os
 import tempfile
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -59,7 +58,7 @@ def image_with_sentinel(size: tuple[int, int], quality: int) -> bytes:
 
 
 @pytest.fixture
-def client() -> Iterator[tuple[TestClient, Recognizer]]:
+def client() -> tuple[TestClient, Recognizer]:
     recognizer = Recognizer()
     app = create_app(
         readiness_probe=Probe(),
@@ -70,7 +69,7 @@ def client() -> Iterator[tuple[TestClient, Recognizer]]:
         scan_rate_limiter=SlidingWindowRateLimiter(30, 60),
         unit_of_work_factory=_no_database,
     )
-    yield TestClient(app), recognizer
+    return TestClient(app), recognizer
 
 
 def scan(client: TestClient, data: bytes) -> int:

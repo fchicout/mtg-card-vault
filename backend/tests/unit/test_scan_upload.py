@@ -73,22 +73,25 @@ def test_a_renamed_file_is_judged_by_its_bytes() -> None:
 
 @pytest.mark.parametrize("cut", [12, 30])
 def test_damaged_images_are_422(cut: int) -> None:
+    damaged = encoded("PNG")[:cut]
     with pytest.raises(ValidationFailed) as refused:
-        inspect_upload(encoded("PNG")[:cut])
+        inspect_upload(damaged)
     assert refused.value.errors[0].field == "image"
 
 
 @pytest.mark.parametrize(("w", "h"), [(4097, 100), (100, 4097), (5000, 5000)])
 def test_too_many_pixels_are_422(w: int, h: int) -> None:
+    claiming = png_claiming(w, h)
     with pytest.raises(ValidationFailed) as refused:
-        inspect_upload(png_claiming(w, h))
+        inspect_upload(claiming)
     assert "4096" in refused.value.errors[0].message
 
 
 def test_the_limits_themselves_pass() -> None:
     assert inspect_upload(png_claiming(4096, 3906)).width == 4096  # 15.99 MP
+    too_big = png_claiming(4096, 4096)  # 16.8 MP
     with pytest.raises(ValidationFailed):
-        inspect_upload(png_claiming(4096, 4096))  # 16.8 MP
+        inspect_upload(too_big)
 
 
 def test_a_decompression_bomb_is_refused_from_the_header_without_a_memory_spike() -> None:

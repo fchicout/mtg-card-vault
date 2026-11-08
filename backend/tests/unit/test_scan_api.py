@@ -50,7 +50,7 @@ def jpeg(size: tuple[int, int] = (640, 480), quality: int = 80) -> bytes:
 
 
 @pytest.fixture
-def parts() -> Iterator[tuple[TestClient, Recognizer, FakeCardProvider]]:
+def parts() -> tuple[TestClient, Recognizer, FakeCardProvider]:
     provider, recognizer = FakeCardProvider([BOLT, make_card("Giant Growth")]), Recognizer()
     app = create_app(
         readiness_probe=Probe(),
@@ -60,7 +60,7 @@ def parts() -> Iterator[tuple[TestClient, Recognizer, FakeCardProvider]]:
         text_recognizer=recognizer,
         scan_rate_limiter=SlidingWindowRateLimiter(30, 60),
     )
-    yield TestClient(app), recognizer, provider
+    return TestClient(app), recognizer, provider
 
 
 def post(client: TestClient, data: bytes, **kwargs: object):  # type: ignore[no-untyped-def]

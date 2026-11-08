@@ -40,8 +40,9 @@ def test_it_reads_both_regions_through_standard_input_only() -> None:
 
 
 def test_an_undecodable_image_is_a_validation_error() -> None:
+    recognizer = TesseractRecognizer(runner=Runner())
     with pytest.raises(ValidationFailed):
-        TesseractRecognizer(runner=Runner()).read(b"\xff\xd8\xff garbage")
+        recognizer.read(b"\xff\xd8\xff garbage")
 
 
 @pytest.mark.parametrize(
@@ -52,8 +53,10 @@ def test_engine_failures_are_a_typed_503(failure: Exception) -> None:
     def broken(command: list[str], payload: bytes, timeout: float) -> str:
         raise failure
 
+    recognizer = TesseractRecognizer(runner=broken)
+    frame = frame_bytes()
     with pytest.raises(UpstreamUnavailable):
-        TesseractRecognizer(runner=broken).read(frame_bytes())
+        recognizer.read(frame)
 
 
 def test_concurrency_is_bounded() -> None:

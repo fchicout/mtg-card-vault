@@ -10,7 +10,7 @@ from __future__ import annotations
 import io
 from dataclasses import dataclass
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 
 from mtgvault.domain.errors import (
     FieldError,
@@ -55,7 +55,7 @@ def inspect_upload(data: bytes) -> ImageInfo:
     try:
         with Image.open(io.BytesIO(data)) as image:  # reads the header only
             width, height = image.size
-    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as error:
+    except (OSError, Image.DecompressionBombError) as error:
         raise ValidationFailed(
             "The image cannot be read.",
             (FieldError("image", "The file is damaged or not an image."),),

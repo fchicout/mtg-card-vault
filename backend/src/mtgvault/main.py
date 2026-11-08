@@ -74,9 +74,7 @@ def create_app(
     token_verifier = _build_verifier(settings) if token_verifier is None else token_verifier
     card_provider = _build_card_provider(settings) if card_provider is None else card_provider
     cache = _build_cache(settings) if cache is None else cache
-    scan_rate_limiter = scan_rate_limiter or SlidingWindowRateLimiter(
-        settings.scan_rate_per_minute if settings else 30
-    )
+    scan_rate_limiter = scan_rate_limiter or _build_rate_limiter(settings)
     text_recognizer = _build_recognizer(settings) if text_recognizer is None else text_recognizer
     docs_enabled = settings is None or settings.api_docs_enabled
 
@@ -111,7 +109,7 @@ def create_app(
     app.state.vault_service = VaultService(
         unit_of_work_factory or _no_database,
         catalog,
-        stale_after=timedelta(hours=settings.price_stale_after_hours if settings else 24),
+        stale_after=_stale_after(settings),
     )
     app.state.unit_of_work_factory = unit_of_work_factory or _no_database
     app.state.user_service = UserService(app.state.unit_of_work_factory)
@@ -190,6 +188,14 @@ class _NoCards:
 
     def printings(self, *_: object) -> ResultPage[Card]:
         raise UpstreamUnavailable(_NO_SOURCE)
+
+
+def _build_rate_limiter(settings: Settings | None) -> RateLimiter:
+    return SlidingWindowRateLimiter(settings.scan_rate_per_minute if settings else 30)
+
+
+def _stale_after(settings: Settings | None) -> timedelta:
+    return timedelta(hours=settings.price_stale_after_hours if settings else 24)
 
 
 def _build_recognizer(settings: Settings | None) -> TextRecognizer | None:
