@@ -116,6 +116,14 @@ class CardRepository(Protocol):
         """Insert or refresh the printing; prices and data timestamps become ``now``."""
         ...
 
+    def upsert_snapshots(self, cards: Sequence[Card], now: datetime) -> None:
+        """Insert or refresh many printings in one statement; duplicates in ``cards`` collapse."""
+        ...
+
+    def owned_ids(self, after: UUID | None, limit: int) -> list[UUID]:
+        """Ids of printings owned by at least one user, ascending, ``limit`` after ``after``."""
+        ...
+
     def get(self, card_id: UUID) -> CardSnapshot | None: ...
 
 

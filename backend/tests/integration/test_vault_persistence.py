@@ -333,3 +333,62 @@ def test_a_real_price_of_zero_is_priced_not_unpriced(migrated: Engine) -> None:
     with uow(migrated) as unit:
         summary = unit.vault.summary(user)
     assert summary.unpriced_usd == 0 and summary.value_usd == Decimal("0.00")
+
+
+# ---------------------------------------------------------------------------- bulk refresh (#137)
+def test_owned_ids_pages_through_distinct_owned_cards_only(migrated: Engine) -> None:
+    alice, bob = new_user(migrated, "alice"), new_user(migrated, "bob")
+    ids = sorted(put_card(migrated, name=f"Card {n}", number=str(n)) for n in range(1, 6))
+    unowned = put_card(migrated, name="Unowned", number="99")
+    for owner in (alice, bob):  # owned twice, still listed once
+        for card in ids[:4]:
+            add(migrated, owner, card)
+    with uow(migrated) as unit:
+        first = unit.cards.owned_ids(None, 3)
+        second = unit.cards.owned_ids(first[-1], 3)
+        third = unit.cards.owned_ids(second[-1], 3) if second else []
+    assert first == ids[:3] and second == ids[3:4] and third == []
+    assert unowned not in first + second
+
+
+def test_a_batch_of_75_is_one_statement_and_refreshes_prices(migrated: Engine) -> None:
+    from sqlalchemy import event
+
+    cards = [
+        make_card(
+            name=f"Card {n}", set_code="tst", number=str(n), prices=Prices(usd=Decimal("1.00"))
+        )
+        for n in range(75)
+    ]
+    with uow(migrated) as unit:
+        unit.cards.upsert_snapshots(cards, NOW)
+        unit.commit()
+    cheaper = [
+        make_card(
+            name=f"Card {n}", set_code="tst", number=str(n), prices=Prices(usd=Decimal("0.50"))
+        )
+        for n in range(75)
+    ]
+    later = NOW + timedelta(days=1)
+    statements: list[str] = []
+    event.listen(
+        migrated, "before_cursor_execute", lambda c, cur, stmt, *a: statements.append(stmt)
+    )
+    with uow(migrated) as unit:
+        unit.cards.upsert_snapshots([*cheaper, cheaper[0]], later)  # a duplicate collapses
+        unit.commit()
+    assert sum("INSERT INTO cards" in s for s in statements) == 1
+    assert scalar(migrated, "SELECT count(*) FROM cards") == 75
+    assert scalar(migrated, "SELECT count(*) FROM cards WHERE usd = 0.50") == 75
+    with migrated.connect() as connection:
+        stamps = (
+            connection.execute(text("SELECT DISTINCT prices_updated_at FROM cards")).scalars().all()
+        )
+    assert stamps == [later]
+
+
+def test_an_empty_batch_writes_nothing(migrated: Engine) -> None:
+    with uow(migrated) as unit:
+        unit.cards.upsert_snapshots([], NOW)
+        unit.commit()
+    assert scalar(migrated, "SELECT count(*) FROM cards") == 0

@@ -1,13 +1,16 @@
 """PostgreSQL store of card snapshots: one atomic upsert per printing (FR-DAT-02, ADR-007)."""
 
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from mtgvault.adapters.db.models import CardRow
+from mtgvault.adapters.db.models import CardRow, VaultEntryRow
 from mtgvault.application.vault_query import normalise
 from mtgvault.domain.card import Card, Prices
 from mtgvault.domain.vault import CardSnapshot
@@ -46,8 +49,9 @@ class SqlAlchemyCardRepository:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def upsert_snapshot(self, card: Card, now: datetime) -> None:
-        values = {
+    @staticmethod
+    def _values(card: Card, now: datetime) -> dict[str, Any]:
+        return {
             "scryfall_id": card.id,
             "oracle_id": card.oracle_id,
             "name": card.name,
@@ -68,12 +72,29 @@ class SqlAlchemyCardRepository:
             "prices_updated_at": now,
             "data_updated_at": now,
         }
-        statement = insert(CardRow).values(**values)
+
+    def upsert_snapshot(self, card: Card, now: datetime) -> None:
+        self.upsert_snapshots([card], now)
+
+    def upsert_snapshots(self, cards: Sequence[Card], now: datetime) -> None:
+        """One statement for the whole batch (the daily refresh sends 75 at a time)."""
+        unique = {card.id: card for card in cards}  # one row per id: PostgreSQL refuses duplicates
+        if not unique:
+            return
+        rows = [self._values(card, now) for card in unique.values()]
+        statement = insert(CardRow).values(rows)
         statement = statement.on_conflict_do_update(
             index_elements=[CardRow.scryfall_id],
-            set_={k: v for k, v in values.items() if k != "scryfall_id"},
+            set_={key: statement.excluded[key] for key in rows[0] if key != "scryfall_id"},
         )
         self._session.execute(statement)
+
+    def owned_ids(self, after: UUID | None, limit: int) -> list[UUID]:
+        """Ids of cards that at least one user owns, in id order, ``limit`` after ``after``."""
+        statement = select(VaultEntryRow.card_id).distinct().order_by(VaultEntryRow.card_id)
+        if after is not None:
+            statement = statement.where(VaultEntryRow.card_id > after)
+        return list(self._session.scalars(statement.limit(limit)))
 
     def get(self, card_id: UUID) -> CardSnapshot | None:
         row = self._session.get(CardRow, card_id)
