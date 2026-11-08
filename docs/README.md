@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.20
+**Docs set version:** 0.3.21
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.21 | 2026-11-08 | Issue #56: principal model and claim mapping with data minimisation documented. |
 | 0.3.20 | 2026-11-08 | Issue #15: JWT validation behaviour, `OIDC_*`, `CORS_ORIGINS` and `API_DOCS_ENABLED` settings documented; the skeleton `/hello` route is removed. |
 | 0.3.19 | 2026-11-08 | Issue #54: `scripts/smoke_check.py` (post-deploy check) added to the operator quickstart; staging and production now send HSTS. |
 | 0.3.18 | 2026-11-08 | Issue #53: stories, personas, charter and architecture no longer imply a bundled identity provider; the contract with the external IdP is stated in 7.3; a leftover 'SonarQube is never the judge' sentence fixed. |
