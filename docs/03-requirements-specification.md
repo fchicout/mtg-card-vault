@@ -1,6 +1,6 @@
 # 03 — Software Requirements Specification (SRS)
 
-**Docs set version:** 0.3.33
+**Docs set version:** 0.3.34
 **Document:** 03 Requirements Specification (structured after ISO/IEC/IEEE 29148 / IEEE 830)
 **Status:** Draft
 **Last updated:** 2026-10-31
