@@ -49,4 +49,10 @@ services:
       - --redirect-uri=https://localhost:8443/callback
 
 volumes:
+  # A world-writable in-memory volume: the two containers run as different unprivileged users.
   oidc-certs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: mode=1777

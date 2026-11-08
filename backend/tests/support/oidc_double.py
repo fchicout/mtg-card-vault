@@ -107,7 +107,7 @@ class OidcDouble:
         self._lock = threading.Lock()
         self._server = ThreadingHTTPServer((host, port), _make_handler(self))
         if tls:
-            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)  # TLS 1.2 or newer
             context.load_cert_chain(*tls)
             self._server.socket = context.wrap_socket(self._server.socket, server_side=True)
         self.port = self._server.server_address[1]
