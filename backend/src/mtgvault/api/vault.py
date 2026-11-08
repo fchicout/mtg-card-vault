@@ -32,6 +32,9 @@ class VaultItemDto(BaseModel):
     card: CardSummary
     available_finishes: list[str]
     unit_price: Decimal | None = None
+    unit_price_eur: Decimal | None = None
+    line_value_usd: Decimal | None = None
+    line_value_eur: Decimal | None = None
     prices_updated_at: datetime | None = None
     prices_stale: bool
 
@@ -74,6 +77,9 @@ def _dto(item: VaultItem, service: VaultService) -> VaultItemDto:
         card=card_summary(card),
         available_finishes=list(card.finishes),
         unit_price=item.unit_price,
+        unit_price_eur=item.unit_price_eur,
+        line_value_usd=item.line_value_usd,
+        line_value_eur=item.line_value_eur,
         prices_updated_at=item.snapshot.prices_updated_at,
         prices_stale=service.prices_stale(item.snapshot),
     )

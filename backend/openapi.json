@@ -784,6 +784,28 @@
             "title": "Id",
             "type": "string"
           },
+          "line_value_eur": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Value Eur"
+          },
+          "line_value_usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Value Usd"
+          },
           "prices_stale": {
             "title": "Prices Stale",
             "type": "boolean"
@@ -814,6 +836,17 @@
               }
             ],
             "title": "Unit Price"
+          },
+          "unit_price_eur": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price Eur"
           },
           "updated_at": {
             "format": "date-time",

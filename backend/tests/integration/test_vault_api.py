@@ -84,6 +84,8 @@ def test_adding_a_printing_creates_an_entry_and_caches_the_card(
     assert (body["quantity"], body["condition"], body["finish"]) == (2, "NM", "foil")
     assert body["card"]["name"] == "Lightning Bolt"
     assert body["unit_price"] == "3.00"  # the foil price
+    assert body["line_value_usd"] == "6.00"  # x 2
+    assert body["unit_price_eur"] is None and body["line_value_eur"] is None  # no price, not zero
     assert body["available_finishes"] == ["nonfoil", "foil"]
     with migrated.connect() as connection:
         assert connection.execute(text("SELECT count(*) FROM cards")).scalar_one() == 1
