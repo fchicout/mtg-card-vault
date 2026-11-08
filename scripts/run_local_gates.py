@@ -7,7 +7,7 @@
     python3 scripts/run_local_gates.py --sonar         # also scan + judge with SonarQube
 
 Requires uv, Node/npm and Docker (for integration tests, e2e, gitleaks and Trivy).
-SonarQube never decides: scripts/quality_gate.py does (NFR-MNT-01). Exit code 1 if any gate fails.
+scripts/quality_gate.py judges, and SonarQube's own gate decides too when --sonar is used (NFR-MNT-01, ADR-011). Exit code 1 if any gate fails.
 """
 
 from __future__ import annotations

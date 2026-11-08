@@ -8,8 +8,8 @@ import { expect, test } from '@playwright/test';
 const HTTP_URL = process.env['E2E_HTTP_URL'] ?? 'http://localhost:8080';
 
 test.describe('security headers', () => {
-  test.beforeEach(({ baseURL }) => {
-    test.skip(!baseURL?.startsWith('https://'), 'needs the HTTPS stack (proxy in front)');
+  test.beforeEach(({ baseURL }, testInfo) => {
+    testInfo.skip(!baseURL?.startsWith('https://'), 'needs the HTTPS stack (proxy in front)');
   });
 
   test('the page carries the complete set', async ({ request }) => {
@@ -73,8 +73,8 @@ test.describe('security headers', () => {
 });
 
 test.describe('the content security policy in a real browser', () => {
-  test.beforeEach(({ baseURL }) => {
-    test.skip(!baseURL?.startsWith('https://'), 'needs the HTTPS stack (proxy in front)');
+  test.beforeEach(({ baseURL }, testInfo) => {
+    testInfo.skip(!baseURL?.startsWith('https://'), 'needs the HTTPS stack (proxy in front)');
   });
 
   for (const theme of ['light', 'dark'] as const) {

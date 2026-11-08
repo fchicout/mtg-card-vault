@@ -147,9 +147,9 @@ jobs:
           path: frontend/coverage/frontend/lcov.info
           if-no-files-found: error
 
-  # ------------------------------------------------------------------ quality gate (project-owned)
-  # The gate is judged by scripts/quality_gate.py, never by SonarQube's own quality gate. The same
-  # script runs on developer machines (see scripts/run_local_gates.py). NFR-MNT-01.
+  # ------------------------------------------------------------------ quality gate
+  # The gate is judged by scripts/quality_gate.py, with SonarQube's own gate as one condition
+  # (ADR-011). The same script runs on developer machines (scripts/run_local_gates.py). NFR-MNT-01.
   quality-gate:
     name: quality-gate
     needs: [backend-tests, frontend-quality, gate-tests]
@@ -383,10 +383,10 @@ jobs:
           path: ${{ runner.temp }}/sbom/*.cdx.json
 
   # ------------------------------------------------------------------ sonarqube
-  # SonarQube is an analysis and issue source only: the verdict is produced by
-  # scripts/quality_gate.py (open bugs, vulnerabilities, Blocker/Critical issues), never by
-  # SonarQube's own quality gate (mandate, ADR-011). Its server-side gate status is printed for
-  # information only. Two projects: mtg-vault-backend, mtg-vault-frontend.
+  # The verdict is produced by scripts/quality_gate.py: open bugs, security issues, Blocker/Critical
+  # issues, the maintainability rating and SonarQube's own quality gate on new code (ADR-011,
+  # amended 2026-11-07); an unreadable server gate fails. Two projects: mtg-vault-backend,
+  # mtg-vault-frontend.
   # Needs the secrets SONAR_HOST_URL (a repository variable also works) and one scan token per
   # project: SONAR_TOKEN for mtg-vault-backend, SONAR_FRONTEND_TOKEN for mtg-vault-frontend;
   # without them the jobs warn and pass, so forks and unconfigured clones are not blocked.

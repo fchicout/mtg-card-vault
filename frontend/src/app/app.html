@@ -6,13 +6,11 @@
       </a>
     </div>
     <div class="header-actions">
-      <a
-        href="#"
-        role="button"
+      <button
+        type="button"
         class="nav-link nav-text"
         data-testid="theme-toggle"
-        (click)="$event.preventDefault(); theme.toggle()"
-        (keydown.space)="$event.preventDefault(); theme.toggle()"
+        (click)="theme.toggle()"
       >
         <cds-icon
           [attr.shape]="theme.theme() === 'dark' ? 'sun' : 'moon'"
@@ -23,7 +21,7 @@
         } @else {
           <ng-container i18n="@@theme.dark">Dark theme</ng-container>
         }
-      </a>
+      </button>
     </div>
   </clr-header>
 

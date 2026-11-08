@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Project-owned quality gate (NFR-MNT-01). SonarQube's own gate is never consulted.
+"""Quality gate of the project (NFR-MNT-01), identical on developer machines and in GitHub Actions.
 
-The conditions and thresholds live here, in version control, and are evaluated identically on a
-developer machine and in GitHub Actions. SonarQube is only an *issue source* for what cannot be
-computed locally; it never decides pass or fail.
+The conditions and thresholds live here, in version control. Coverage and duplication of new code
+are computed locally; bugs, security issues and the maintainability rating are read from
+SonarQube, and SonarQube's own quality gate ("Sonar way", judged on new code) decides together with
+them (ADR-011, amended 2026-11-07: the owner chose to rely on the server's gate as well). An
+unreadable server gate fails closed.
 
 Sub-commands
   coverage     coverage of NEW code (lines added vs a base ref) for the back end and the front end
@@ -221,10 +223,10 @@ def fetch_issue_counts(host: str, key: str, token: str, get: HttpGet) -> IssueCo
 
 
 def fetch_blocking_issues(host: str, key: str, token: str, get: HttpGet, limit: int = 20) -> list[str]:
-    """One line per open bug, security or Blocker/Critical issue, so a failure is actionable."""
+    """One line per open bug, security, Blocker/Critical or new-code issue, so a failure is actionable."""
     lines: list[str] = []
     for params in ({"types": "BUG,VULNERABILITY"}, {"impactSoftwareQualities": "SECURITY"},
-                   {"severities": "BLOCKER,CRITICAL"}):
+                   {"severities": "BLOCKER,CRITICAL"}, {"inNewCodePeriod": "true"}):
         query = urllib.parse.urlencode({"componentKeys": key, "resolved": "false", "ps": str(limit), **params})
         status, body = get(f"{host}/api/issues/search?{query}", token)
         if status != 200:
@@ -268,7 +270,18 @@ def fetch_server_gate_status(host: str, key: str, token: str, get: HttpGet) -> s
     return fetch_server_gate(host, key, token, get)[0]
 
 
-def sonar_conditions(counts: IssueCounts, maintainability_rating: float | None) -> list[Condition]:
+def server_gate_condition(status: str | None, failures: list[str]) -> Condition:
+    """SonarQube's own quality gate decides too; an unreadable status fails closed."""
+    name = "SonarQube quality gate (its own, on new code)"
+    if status == "OK":
+        return Condition(name, PASS, "OK", "OK", "")
+    if status is None:
+        return Condition(name, FAIL, "unreadable", "OK", "the gate status could not be read with this token")
+    return Condition(name, FAIL, status, "OK", "; ".join(failures) or "see the project dashboard")
+
+
+def sonar_conditions(counts: IssueCounts, maintainability_rating: float | None,
+                     server_status: str | None = "OK", server_failures: list[str] | None = None) -> list[Condition]:
     def at_most_zero(name: str, value: int, detail: str) -> Condition:
         return Condition(name, PASS if value == 0 else FAIL, str(value), "0", detail)
 
@@ -284,6 +297,7 @@ def sonar_conditions(counts: IssueCounts, maintainability_rating: float | None) 
                      "any open issue with a security impact lowers the rating"),
         at_most_zero("Open Blocker/Critical issues", counts.blocker_or_critical, ""),
         maintainability,
+        server_gate_condition(server_status, server_failures or []),
     ]
 
 
@@ -360,17 +374,12 @@ def cmd_sonar(args: argparse.Namespace) -> int:
     maintainability = fetch_optional_number(
         f"{host}/api/measures/component?component={key}&metricKeys=sqale_rating", token, sonar_get,
         lambda body: next((float(m["value"]) for m in body["component"]["measures"]), None))
-    conditions = sonar_conditions(counts, maintainability)
-    print(render(f"Quality gate - SonarQube issues for {args.project} (judged by this script)", conditions))
+    server, server_failures = fetch_server_gate(host, args.project, token, sonar_get)
+    conditions = sonar_conditions(counts, maintainability, server, server_failures)
+    print(render(f"Quality gate - SonarQube issues for {args.project} (this script plus SonarQube's own gate)", conditions))
     if verdict(conditions):
         for issue_line in fetch_blocking_issues(host, args.project, token, sonar_get):
             print(f"ISSUE    {issue_line}")
-    server, server_failures = fetch_server_gate(host, args.project, token, sonar_get)
-    print("INFO     SonarQube's own gate: "
-          + (f"{server} (informational only, never used for the verdict)" if server
-             else "not readable with this token (never used for the verdict)"))
-    for failure in server_failures:
-        print(f"INFO       its condition in error: {failure}")
     return verdict(conditions)
 
 

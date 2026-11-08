@@ -1,1 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* The theme switch is a real <button>; Clarity colours it like the header links, but the browser
+   default button background must not show through (it failed the contrast check). */
+.header-actions button.nav-link {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}

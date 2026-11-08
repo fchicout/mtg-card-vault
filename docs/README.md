@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.15
+**Docs set version:** 0.3.16
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,7 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.16 | 2026-11-07 | ADR-011 amended (owner decision): SonarQube's own quality gate decides together with the project's script; CON-07, NFR-MNT-01, US-030, charter and CONTRIBUTING reworded. |
 | 0.3.15 | 2026-11-07 | Quality gate follows SonarQube's retirement of Security Hotspots (issue #5): no hotspot condition, security issues counted by impact; NFR-MNT-01, ADR-011, charter 4.2 reworded. |
 | 0.3.14 | 2026-11-07 | SonarQube topology final (issue #5): OQ-08 resolved, ADR-011 topology and open hotspot follow-up, RSK-04 reassessed. |
 | 0.3.13 | 2026-11-07 | Compose stack (issue #10): ADR-016 (Caddy edge, headers in the front-end server), OQ-03 resolved, infrastructure table, operator quickstart in section 7.6; the repository bundles no identity provider any more: sign-in uses the homelab Authelia (section 7.3). |

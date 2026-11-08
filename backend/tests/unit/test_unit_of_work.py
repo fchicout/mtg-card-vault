@@ -42,9 +42,13 @@ def test_leaving_without_commit_rolls_back(factory) -> None:  # type: ignore[no-
 
 
 def test_an_exception_rolls_back_even_after_work(factory) -> None:  # type: ignore[no-untyped-def]
-    with pytest.raises(RuntimeError), SqlAlchemyUnitOfWork(factory) as uow:
-        uow.session.execute(text("INSERT INTO item VALUES ('a')"))
-        raise RuntimeError("boom")
+    def work_then_fail() -> None:
+        with SqlAlchemyUnitOfWork(factory) as uow:
+            uow.session.execute(text("INSERT INTO item VALUES ('a')"))
+            raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError):
+        work_then_fail()
     assert count(factory) == 0
 
 

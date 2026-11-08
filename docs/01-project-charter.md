@@ -1,6 +1,6 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.3.15
+**Docs set version:** 0.3.16
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -45,7 +45,7 @@ A web application (Angular + VMware Clarity front end, Python/FastAPI REST back 
 1. lets an authenticated collector (Authelia single sign-on) maintain a **private vault** of owned cards (printing, quantity, condition, finish);
 2. lets the collector **add a card by holding it in front of a webcam**: the back end reads the printed text with OCR, matches it against **Scryfall** (the public MTG database/API) using fuzzy search, and the user confirms the exact printing;
 3. keeps card data and **prices** accurate by refreshing from Scryfall (scheduled and on demand);
-4. is delivered with **full test suite, project-owned quality gates (run locally and in CI; SonarQube supplies analysis only), security scanning in CI/CD**, GitHub-hosted git with gitflow, semantic versioning and atomic commits.
+4. is delivered with **full test suite, quality gates (run locally and in CI; the project's script and SonarQube's own gate both decide), security scanning in CI/CD**, GitHub-hosted git with gitflow, semantic versioning and atomic commits.
 
 ### 2.4 Business objectives
 
@@ -102,7 +102,7 @@ Objectives are SMART where possible. They are traced to requirements in `06-trac
 | Scanning | Webcam capture in the browser; OCR on the back end; fuzzy match to Scryfall; user confirms; manual-search fallback; scan images never stored. |
 | Pricing | Latest Scryfall prices per card; collection total value; daily scheduled refresh + lazy refresh when stale. |
 | Platform | REST API with OpenAPI; JWT validation on every call; health checks; structured logs; docker-compose deployment. |
-| Engineering | Test suite, project-owned quality gates, security scans, gitflow/semver/atomic commits, synchronized docs. |
+| Engineering | Test suite, quality gates (project script plus SonarQube's gate), security scans, gitflow/semver/atomic commits, synchronized docs. |
 
 ### 5.2 Out of scope (v1.0) — explicit non-goals
 
@@ -140,7 +140,7 @@ Detailed, testable requirements live in `03-requirements-specification.md`. High
 | CON-04 | Authentication through Authelia (OIDC); every API transaction carries a JWT validated by the back end. |
 | CON-05 | Git is mandatory; gitflow branching, semantic versioning, atomic commits (Conventional Commits). |
 | CON-06 | GitHub hosts the public remote repository and runs CI/CD (GitHub Actions). |
-| CON-07 | SonarQube (self-hosted Community Edition) provides analysis and issue data. Quality gates are evaluated by project-owned scripts, locally and in GitHub Actions, and never by SonarQube's own quality gate. |
+| CON-07 | SonarQube (self-hosted Community Edition) analyses the code. Quality gates run locally and in GitHub Actions through `scripts/quality_gate.py`, and SonarQube's own quality gate ("Sonar way", on new code) decides together with it; an unreadable server gate fails the check (amended 2026-11-07, ADR-011). |
 | CON-08 | Code quality principles: SOLID, DRY, KISS, YAGNY; full automated test suite. |
 | CON-09 | Scryfall terms apply: send `User-Agent` and `Accept` headers, keep ≥ 100 ms between requests (≤ 10 req/s), cache data, do not paywall Scryfall data, do not crop or distort card images, do not imply endorsement by Scryfall or Wizards of the Coast. |
 | CON-10 | Deployment is self-hosted via docker compose; PostgreSQL is the database. |
@@ -215,7 +215,7 @@ Resolved questions become requirements, ADRs or assumptions, and the row is mark
 | OQ-05 | Can the Authelia OIDC client be configured to issue RS256-signed JWT access tokens with the API as audience? Else use introspection. | M1 | Resolved 2026-11-07: yes, with the SPA requesting the audience explicitly (ADR-003). |
 | OQ-06 | Which open-source licence (MIT vs Apache-2.0) for the public repository? | M0 | Resolved 2026-11-07: MIT (file `LICENSE`, referenced in the README and the package metadata). |
 | OQ-07 | Should prices be shown in USD only, or USD + EUR? (Docs currently assume both are shown.) | M5 | Open |
-| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is project-owned)? | M0 | Resolved 2026-11-07: the self-hosted SonarQube (`https://sonar.fchicout.dev`, Community Build 26.10) is publicly reachable, so GitHub-hosted runners scan it directly with one scan token per project; the Community Build has no branch or pull-request analysis (ADR-011). The gate no longer has a hotspot condition: SonarQube deprecated Security Hotspots in 26.7 and turns them into security issues in 26.11 (ADR-011). |
+| OQ-08 | Which self-hosted CI runner / tunnel strategy gives GitHub Actions access to SonarQube, and does the current SonarQube Community Build support branch / pull-request analysis (this only decides where analysis is published, since the gate is read right after each scan)? | M0 | Resolved 2026-11-07: the self-hosted SonarQube (`https://sonar.fchicout.dev`, Community Build 26.10) is publicly reachable, so GitHub-hosted runners scan it directly with one scan token per project; the Community Build has no branch or pull-request analysis (ADR-011). The gate no longer has a hotspot condition: SonarQube deprecated Security Hotspots in 26.7 and turns them into security issues in 26.11 (ADR-011). |
 
 ## 13. Approval
 
