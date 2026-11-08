@@ -1,6 +1,6 @@
 # 02 — User Stories
 
-**Docs set version:** 0.3.16
+**Docs set version:** 0.3.19
 **Document:** 02 User Stories (Connextra format, INVEST, Gherkin acceptance criteria)
 **Status:** Draft
 **Last updated:** 2026-10-31
@@ -12,7 +12,7 @@ How to read this document: each story states **who** wants **what** and **why**,
 | Persona | Description |
 |---|---|
 | **Collector** | A person who owns physical MTG cards and wants a private, accurate, priced inventory. Comfortable with a browser; may have thousands of cards. Primary user. |
-| **Operator** | The person who deploys and runs the stack (docker compose, Authelia, SonarQube). |
+| **Operator** | The person who deploys and runs the stack (docker compose, the OIDC provider it signs in against, SonarQube). |
 | **Maintainer** | A developer working on this repository (writes code, docs, tests, pipelines). |
 | **Scheduler** | Non-human actor (a timed job in the worker) that refreshes prices. |
 
@@ -676,7 +676,7 @@ Scenario: Safe logs
 - **Requirements:** FR-OPS-03, NFR-SEC-02, NFR-SEC-05, NFR-REL-02, NFR-PRT-01
 - **Use cases:** —
 
-**As an** Operator, **I want** `docker compose up` to start the proxy, Authelia, API, worker, front end and database with configuration from environment files, **so that** I can deploy and upgrade safely.
+**As an** Operator, **I want** `docker compose up` to start the proxy, API, worker, front end and database with configuration from environment files (the OIDC provider is external and only configured by its issuer URL and audience), **so that** I can deploy and upgrade safely.
 
 ```gherkin
 Scenario: Fresh deployment

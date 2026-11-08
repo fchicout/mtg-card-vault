@@ -1,6 +1,6 @@
 # MTG Card Vault — Engineering Documentation
 
-**Docs set version:** 0.3.16
+**Docs set version:** 0.3.19
 **Status:** Draft
 **Last updated:** 2026-11-07
 
@@ -81,6 +81,9 @@ What it cannot check (reviewers must): that the *meaning* of linked artifacts is
 
 | Docs set version | Date | Summary |
 |---|---|---|
+| 0.3.19 | 2026-11-08 | Issue #54: `scripts/smoke_check.py` (post-deploy check) added to the operator quickstart; staging and production now send HSTS. |
+| 0.3.18 | 2026-11-08 | Issue #53: stories, personas, charter and architecture no longer imply a bundled identity provider; the contract with the external IdP is stated in 7.3; a leftover 'SonarQube is never the judge' sentence fixed. |
+| 0.3.17 | 2026-11-08 | Issue #52: the image publishing moves from a `workflow_run` workflow (never fired for `main`) into a final `publish-images` job of `ci.yml`. |
 | 0.3.16 | 2026-11-07 | ADR-011 amended (owner decision): SonarQube's own quality gate decides together with the project's script; CON-07, NFR-MNT-01, US-030, charter and CONTRIBUTING reworded. |
 | 0.3.15 | 2026-11-07 | Quality gate follows SonarQube's retirement of Security Hotspots (issue #5): no hotspot condition, security issues counted by impact; NFR-MNT-01, ADR-011, charter 4.2 reworded. |
 | 0.3.14 | 2026-11-07 | SonarQube topology final (issue #5): OQ-08 resolved, ADR-011 topology and open hotspot follow-up, RSK-04 reassessed. |

@@ -467,3 +467,43 @@ jobs:
           report="$(find "$GITHUB_WORKSPACE" -name report-task.txt -path '*.scannerwork*' | head -n 1)"
           test -n "$report" || { echo "::error::the scanner left no report-task.txt"; exit 1; }
           python3 -I scripts/quality_gate.py sonar --project mtg-vault-frontend --require --report-task "$report"
+
+  # ------------------------------------------------------------------ publish (issue #52)
+  # Images for the exact commit, tagged with its SHA, once every job above is green on a push to
+  # develop or main. It lives in this workflow (not in a workflow_run workflow, which never fired
+  # for main). It never deploys: the operator rolls out manually (ADR-015).
+  publish-images:
+    name: publish-images
+    if: github.event_name == 'push'
+    needs:
+      - docs-sync
+      - commit-policy
+      - gate-tests
+      - backend-quality
+      - backend-tests
+      - frontend-quality
+      - quality-gate
+      - contract-drift
+      - e2e
+      - secret-scan
+      - dependency-audit
+      - container-scan
+      - sonar-backend
+      - sonar-frontend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build and push images (immutable SHA tags, never latest)
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          for pair in "api:backend" "frontend:frontend"; do
+            name="${pair%%:*}"; context="${pair##*:}"
+            image="ghcr.io/${owner}/mtg-vault-${name}:${GITHUB_SHA}"
+            docker build -t "$image" "$context"
+            docker push "$image"
+          done
