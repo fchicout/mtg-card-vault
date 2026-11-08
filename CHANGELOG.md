@@ -1,3 +1,40 @@
+## [0.4.0] - 2026-11-08
+
+### Bug fixes
+- **scan:** Clear the SonarQube findings of the scan code (00eb185)
+- **scan:** Rank a front-face name match above the same name on a back face (7bc3dae)
+- **ui:** Fall back to any camera when the rear camera or size is refused (cade082)
+- **ui:** Enable the scan button only when the camera preview has a frame (b6a5c6b)
+- **ui:** Attach the camera stream once the preview exists (f430db0)
+- **e2e:** Give the serial journeys the same fake camera as Chromium (60b5abc)
+- **e2e:** Look for the confirmation dialog by its role (e6ad1bb)
+
+
+### Build
+- **deploy:** Ship Tesseract in the API image and test it for real in CI (c32f1e1)
+
+
+### Documentation
+- **scan:** Record the OCR decision, scan design and settings (cf65bb7)
+
+
+### Features
+- **scan:** Interpret OCR text into a clean title and a collector number (e076678)
+- **scan:** Validate uploads by size, magic bytes and dimensions (0ad7872)
+- **scan:** Limit scans per user with a sliding window behind an interface (7142d17)
+- **scan:** Preprocess frames and extract the title and collector regions (fc51dce)
+- **scan:** Add the TextRecognizer port and the Tesseract adapter (9c2f391)
+- **scan:** Resolve candidates against Scryfall and rank by confidence (997a3fe)
+- **scan:** Add the scan service and POST /api/v1/scans (e067c19)
+- **ui:** Scan with the camera, pick a match, confirm and add to the vault (d3351f3)
+
+
+### Tests
+- **scan:** Add the OCR reference set, degradation levels and accuracy harness (d23bbe6)
+- **e2e:** The scan journey through the fake camera, real API and Tesseract (766e841)
+- **scan:** Accuracy and latency budgets measured every night (1eeb0d8)
+
+
 ## [0.3.0] - 2026-11-08
 
 ### Bug fixes
