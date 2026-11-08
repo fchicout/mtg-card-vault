@@ -13,6 +13,7 @@ import { AUTH_CONFIG } from './auth-config';
 export interface UserManagerLike {
   signinRedirect(args?: { state?: unknown }): Promise<void>;
   signinRedirectCallback(url?: string): Promise<User>;
+  signinSilent(): Promise<User | null>;
   getUser(): Promise<User | null>;
   removeUser(): Promise<void>;
   revokeTokens(types?: ('access_token' | 'refresh_token')[]): Promise<void>;
@@ -55,6 +56,10 @@ export function userManagerSettings(
 const SESSION_MARKER = 'mtgvault.session';
 const RESTORE_ATTEMPT = 'mtgvault.restore-attempt';
 const RESTORE_COOLDOWN_MS = 10_000;
+
+/** Renew this long before expiry (shorter for short-lived tokens), but never sooner than 1 s. */
+const RENEW_LEAD_MS = 60_000;
+const MAX_TIMER_MS = 2_147_483_647;
 
 interface SignInState {
   returnUrl?: string;
@@ -102,7 +107,7 @@ export class AuthService {
       throw new Error('The identity provider is not configured');
     }
     const user = await this.manager.signinRedirectCallback(callbackUrl);
-    this.current.set(user);
+    this.adopt(user);
     this.mark(true);
     const target = (user.state as SignInState | undefined)?.returnUrl;
     return target?.startsWith('/') && !target.startsWith('//') ? target : '/';
@@ -142,8 +147,72 @@ export class AuthService {
     }
   }
 
+  /**
+   * Gets a new access token with the refresh token (rotation: the provider returns a new refresh
+   * token each time). Callers that arrive while a renewal is running share it, so a burst of
+   * requests causes exactly one refresh call. Any failure ends the local session and returns false.
+   */
+  renew(): Promise<boolean> {
+    if (!this.manager) {
+      return Promise.resolve(false);
+    }
+    this.renewal ??= this.renewOnce(this.manager).finally(() => {
+      this.renewal = null;
+    });
+    return this.renewal;
+  }
+
+  /** Goes through the provider again and comes back to the current page. */
+  restartSignIn(): Promise<void> {
+    this.restarting ??= this.signIn(window.location.pathname + window.location.search);
+    return this.restarting;
+  }
+
+  private restarting: Promise<void> | null = null;
+
+  private renewal: Promise<boolean> | null = null;
+  private timer: ReturnType<typeof setTimeout> | null = null;
+
+  private async renewOnce(manager: UserManagerLike): Promise<boolean> {
+    try {
+      const user = await manager.signinSilent();
+      if (!user) {
+        throw new Error('no user returned');
+      }
+      this.adopt(user);
+      return true;
+    } catch {
+      // Includes the provider answering 4xx or 5xx: either way this session cannot continue.
+      await this.clear();
+      return false;
+    }
+  }
+
+  /** Makes this the signed-in user and plans the next renewal. */
+  private adopt(user: User): void {
+    this.current.set(user);
+    this.cancelTimer();
+    const lifetimeMs = (user.expires_in ?? 0) * 1000;
+    if (lifetimeMs <= 0) {
+      return;
+    }
+    const lead = Math.min(RENEW_LEAD_MS, lifetimeMs * 0.2);
+    const delay = Math.min(Math.max(lifetimeMs - lead, 1000), MAX_TIMER_MS);
+    this.timer = setTimeout(() => {
+      void this.renew().then((ok) => (ok ? undefined : this.restartSignIn()));
+    }, delay);
+  }
+
+  private cancelTimer(): void {
+    if (this.timer !== null) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+  }
+
   /** Forgets the local session (used by sign-out and by a failed renewal). */
   async clear(): Promise<void> {
+    this.cancelTimer();
     this.current.set(null);
     this.mark(false);
     await this.manager?.removeUser();

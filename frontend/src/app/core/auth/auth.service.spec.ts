@@ -21,6 +21,7 @@ function user(overrides: Partial<User> = {}): User {
 }
 
 let revokeFails = false;
+let silentResult: User | null | Error = null;
 
 function fakeManager(result: User | Error): UserManagerLike & { calls: string[] } {
   const calls: string[] = [];
@@ -29,6 +30,12 @@ function fakeManager(result: User | Error): UserManagerLike & { calls: string[] 
     signinRedirect: (args) => {
       calls.push(`redirect:${JSON.stringify(args?.state)}`);
       return Promise.resolve();
+    },
+    signinSilent: () => {
+      calls.push('silent');
+      return silentResult instanceof Error
+        ? Promise.reject(silentResult)
+        : Promise.resolve(silentResult);
     },
     signinRedirectCallback: () =>
       result instanceof Error ? Promise.reject(result) : Promise.resolve(result),
@@ -121,6 +128,87 @@ describe('AuthService', () => {
     const manager = fakeManager(user());
     await service(manager).restore('/');
     expect(manager.calls).toEqual([]);
+  });
+});
+
+describe('AuthService renewal', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    vi.useFakeTimers();
+    silentResult = null;
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const withLifetime = (seconds: number, token = 'access-abc'): User =>
+    user({ expires_in: seconds, access_token: token } as Partial<User>);
+
+  it('shares one refresh call between concurrent callers and adopts the new token', async () => {
+    const manager = fakeManager(withLifetime(600));
+    const auth = service(manager);
+    await auth.completeSignIn('x');
+    silentResult = withLifetime(600, 'access-new');
+    const results = await Promise.all([auth.renew(), auth.renew(), auth.renew()]);
+    expect(results).toEqual([true, true, true]);
+    expect(manager.calls.filter((c) => c === 'silent')).toHaveLength(1);
+    expect(auth.accessToken()).toBe('access-new');
+  });
+
+  it('renews on its own shortly before the token expires', async () => {
+    const manager = fakeManager(withLifetime(600));
+    const auth = service(manager);
+    await auth.completeSignIn('x');
+    silentResult = withLifetime(600, 'access-new');
+    await vi.advanceTimersByTimeAsync(539_000); // 60 s before the end of 600 s
+    expect(manager.calls).not.toContain('silent');
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(manager.calls.filter((c) => c === 'silent')).toHaveLength(1);
+    expect(auth.accessToken()).toBe('access-new');
+  });
+
+  it('plans short-lived tokens at 80 % of their life', async () => {
+    const manager = fakeManager(withLifetime(10));
+    const auth = service(manager);
+    await auth.completeSignIn('x');
+    silentResult = withLifetime(10, 'access-new');
+    await vi.advanceTimersByTimeAsync(8_100);
+    expect(manager.calls).toContain('silent');
+    expect(auth.accessToken()).toBe('access-new');
+  });
+
+  it.each([
+    ['the provider rejects the refresh token', new Error('invalid_grant')],
+    ['the provider answers HTTP 500', new Error('Internal Server Error')],
+    ['no user comes back', null],
+  ])('ends the session when %s', async (_name, outcome) => {
+    const manager = fakeManager(withLifetime(600));
+    const auth = service(manager);
+    await auth.completeSignIn('x');
+    silentResult = outcome;
+    expect(await auth.renew()).toBe(false);
+    expect(auth.authenticated()).toBe(false);
+    expect(manager.calls).toContain('remove');
+  });
+
+  it('restarts the sign-in when the planned renewal fails', async () => {
+    const manager = fakeManager(withLifetime(10));
+    const auth = service(manager);
+    await auth.completeSignIn('x');
+    silentResult = new Error('invalid_grant');
+    await vi.advanceTimersByTimeAsync(8_100);
+    expect(manager.calls.some((c) => c.startsWith('redirect'))).toBe(true);
+  });
+
+  it('stops the timer when the user signs out', async () => {
+    const manager = fakeManager(withLifetime(10));
+    const auth = service(manager);
+    await auth.completeSignIn('x');
+    await auth.clear();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(manager.calls).not.toContain('silent');
+  });
+
+  it('cannot renew without a provider', async () => {
+    expect(await service(null).renew()).toBe(false);
   });
 });
 

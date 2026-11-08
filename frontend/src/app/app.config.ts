@@ -20,7 +20,10 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(async () => {
       inject(AUTH_CONFIG).value = await fetchAuthConfig();
     }),
-    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    provideHttpClient(
+      // The error alert wraps the authentication handling: a 401 that renewal fixes raises no alert.
+      withInterceptors([errorInterceptor, authInterceptor]),
+    ),
     provideRouter(routes, withComponentInputBinding()),
     // Same origin: the reverse proxy (or the dev-server proxy) routes API paths to the back end.
     provideApiConfiguration(''),
