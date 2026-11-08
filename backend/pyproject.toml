@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mtgvault-backend"
-version = "0.2.0"
+version = "0.3.0"
 description = "MTG Card Vault REST API"
 readme = "README.md"
 license = "MIT"

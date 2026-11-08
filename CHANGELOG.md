@@ -1,3 +1,63 @@
+## [0.3.0] - 2026-11-08
+
+### Bug fixes
+- **scryfall:** Clear the SonarQube new-code issues of the adapter work (5fc54b8)
+- **catalog:** Clear the SonarQube new-code issues of the catalogue API (432199a)
+- **catalog:** Name the repeated message of the stand-in card source (6ba1f7e)
+- **auth:** A completed sign-in lets later reloads restore the session again (a97b9d4)
+- **ui:** Read form values as strings only (d074d0a)
+- **ui:** Render the side menu with Clarity's vertical navigation and polish the catalogue (1f6c64a)
+- **vault:** Clear the SonarQube new-code issues of the vault backend (37b7c28)
+- **ui:** Register Clarity's core global before @clr/angular creates its own (3189e32)
+
+
+### CI
+- **github:** Allow the commit scopes scryfall and resilience (ec0f938)
+
+
+### Documentation
+- **catalog:** Document the card model and the Scryfall adapter (fd10a1b)
+- **catalog:** Document the catalogue API and the query rules (f66bfe6)
+- **catalog:** Document the catalogue pages and journeys (cb46ba1)
+- **arch:** Record the navigation fix, admin enforcement and Dependabot decision (5a13da7)
+- **vault:** Document persistence, rules, endpoints, isolation and outage behaviour (2d8fb3d)
+- **vault:** Document the vault pages, dialogs and journeys (f715b3f)
+
+
+### Features
+- **catalog:** Card domain model, provider and cache ports, in-memory fake (1aa5bd5)
+- **resilience:** Circuit breaker with half-open probe (7c6d5e5)
+- **catalog:** Bounded TTL cache with single-flight loading (d0b6a0f)
+- **scryfall:** Compliant client with spacing, allow-list, backoff and typed errors (cc60497)
+- **scryfall:** Mapper, provider and recorded fixtures for every card layout (52e6958)
+- **scryfall:** Settings, composition root wiring and the double in the E2E overlay (72d1436)
+- **catalog:** Safe query translation with strict filter validation (5aba0a1)
+- **catalog:** Catalogue service and the search, detail and printings endpoints (7ddbada)
+- **frontend:** Generated client gains the catalogue operations (0c41739)
+- **ui:** Catalogue search page with filters kept in the address (8d6ec1f)
+- **ui:** Card detail page with printings and a disabled Add-to-vault entry point (5fb8379)
+- **scryfall:** Configurable circuit-breaker open time (a6d9cbe)
+- **db:** Cards and vault_entries tables, rules in the database, snapshot repository (2632cb3)
+- **vault:** User-scoped vault repository and validated list queries (20f98a7)
+- **vault:** Vault service and the add, list, edit and remove endpoints (e1382b4)
+- **frontend:** Generated client gains the vault operations (c1175f9)
+- **ui:** Vault page with paging, search, filters and sorting kept in the address (086267f)
+- **ui:** Add to vault from the card page with a shared entry form (f7aac2b)
+
+
+### Refactoring
+- **catalog:** Use the ResultPage name in the catalogue API (eff4060)
+
+
+### Tests
+- **e2e:** Catalogue journeys and the Scryfall outage and throttling journeys (6c39a3b)
+- **security:** Vault isolation suite, outage behaviour and the 10,000-entry benchmark (6b685cd)
+- **e2e:** Vault journeys and the privacy journey; serial specs chained as projects (6f326d4)
+- **auth:** The OIDC double keeps a single-sign-on-like session (4a56e39)
+- **db:** Migration round-trip tests follow the newest revision (d0331ca)
+- **ui:** Install the ResizeObserver stub in beforeAll (f1c0cc9)
+- **ui:** One setup file for Clarity's global and the ResizeObserver stub (41bf179)
+
 # Changelog
 
 All notable changes, generated from Conventional Commits.
