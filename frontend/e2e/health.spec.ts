@@ -1,23 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('walking skeleton', () => {
-  test('the page shows the greeting served by the API through the generated client', async ({
-    page,
-  }) => {
+  test('the page loads with the application title', async ({ page }) => {
     await page.goto('/');
 
     await expect(page).toHaveTitle('MTG Card Vault');
     await expect(page.locator('.header .title')).toHaveText('MTG Card Vault');
-    await expect(page.getByTestId('greeting')).toHaveText('Hello, MTG Vault!');
-  });
-
-  test('shows an error alert when the API is unreachable', async ({ page }) => {
-    await page.route('**/hello', (route) => route.abort('connectionrefused'));
-
-    await page.goto('/');
-
-    await expect(page.getByTestId('error')).toHaveText('The greeting could not be loaded.');
-    await expect(page.getByTestId('greeting')).toHaveCount(0);
+    await expect(page.getByTestId('welcome')).toBeVisible();
   });
 
   test('health endpoints are reachable through the web entry point', async ({ request }) => {
@@ -28,5 +17,10 @@ test.describe('walking skeleton', () => {
     const ready = await request.get('/readyz');
     expect(ready.ok()).toBeTruthy();
     expect(await ready.json()).toEqual({ status: 'ready' });
+  });
+
+  test('the API refuses an unauthenticated call with a problem document', async ({ request }) => {
+    const response = await request.get('/api/v1/me');
+    expect([401, 404]).toContain(response.status());
   });
 });

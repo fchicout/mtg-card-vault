@@ -116,15 +116,11 @@ describe('routes', () => {
     expect(harness.routeNativeElement?.querySelector('a[href="/"]')).toBeTruthy();
   });
 
-  it('the start page shows the skeleton greeting until /hello goes away', async () => {
-    const navigation = harness.navigateByUrl('/');
-    await navigation;
-    http.expectOne('/hello').flush({ message: 'Hello, MTG Vault!' });
-    await harness.fixture.whenStable();
-    await new Promise<void>((resolve) => setTimeout(resolve));
-    harness.detectChanges();
+  it('the start page welcomes the visitor without calling the API', async () => {
+    await harness.navigateByUrl('/');
     expect(
-      harness.routeNativeElement?.querySelector('[data-testid="greeting"]')?.textContent?.trim(),
-    ).toBe('Hello, MTG Vault!');
+      harness.routeNativeElement?.querySelector('[data-testid="welcome"]')?.textContent,
+    ).toContain('private');
+    http.expectNone(() => true);
   });
 });

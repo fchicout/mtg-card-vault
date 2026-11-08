@@ -11,7 +11,7 @@
     </unit>
     <unit id="theme.light">
       <notes>
-        <note category="location">src/app/app.html:22,23</note>
+        <note category="location">src/app/app.html:20,21</note>
       </notes>
       <segment>
         <source>Light theme</source>
@@ -19,7 +19,7 @@
     </unit>
     <unit id="theme.dark">
       <notes>
-        <note category="location">src/app/app.html:24,25</note>
+        <note category="location">src/app/app.html:22,23</note>
       </notes>
       <segment>
         <source>Dark theme</source>
@@ -27,7 +27,7 @@
     </unit>
     <unit id="nav.label">
       <notes>
-        <note category="location">src/app/app.html:35,37</note>
+        <note category="location">src/app/app.html:33,35</note>
       </notes>
       <segment>
         <source>Main navigation</source>
@@ -35,7 +35,7 @@
     </unit>
     <unit id="nav.vault">
       <notes>
-        <note category="location">src/app/app.html:39,40</note>
+        <note category="location">src/app/app.html:37,38</note>
       </notes>
       <segment>
         <source>Vault</source>
@@ -43,7 +43,7 @@
     </unit>
     <unit id="nav.catalogue">
       <notes>
-        <note category="location">src/app/app.html:43,45</note>
+        <note category="location">src/app/app.html:41,43</note>
       </notes>
       <segment>
         <source>Catalogue</source>
@@ -51,7 +51,7 @@
     </unit>
     <unit id="nav.scan">
       <notes>
-        <note category="location">src/app/app.html:47,48</note>
+        <note category="location">src/app/app.html:45,46</note>
       </notes>
       <segment>
         <source>Scan</source>
@@ -59,7 +59,7 @@
     </unit>
     <unit id="nav.account">
       <notes>
-        <note category="location">src/app/app.html:51,52</note>
+        <note category="location">src/app/app.html:49,50</note>
       </notes>
       <segment>
         <source>Account</source>
@@ -67,7 +67,7 @@
     </unit>
     <unit id="footer.scryfall">
       <notes>
-        <note category="location">src/app/app.html:63,64</note>
+        <note category="location">src/app/app.html:61,62</note>
       </notes>
       <segment>
         <source>Card data and images are provided by</source>
@@ -75,7 +75,7 @@
     </unit>
     <unit id="footer.scryfallNote">
       <notes>
-        <note category="location">src/app/app.html:66,69</note>
+        <note category="location">src/app/app.html:64,67</note>
       </notes>
       <segment>
         <source>which is not affiliated with this project.</source>
@@ -83,7 +83,7 @@
     </unit>
     <unit id="footer.fancontent">
       <notes>
-        <note category="location">src/app/app.html:70,74</note>
+        <note category="location">src/app/app.html:68,72</note>
       </notes>
       <segment>
         <source> MTG Card Vault is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. It is not approved or endorsed by Wizards of the Coast. Magic: The Gathering is a trademark of Wizards of the Coast LLC. </source>
@@ -307,18 +307,18 @@
     </unit>
     <unit id="page.home.title">
       <notes>
-        <note category="location">src/app/pages/home.ts:17,19</note>
+        <note category="location">src/app/pages/home.ts:8,10</note>
       </notes>
       <segment>
         <source>Welcome to MTG Card Vault</source>
       </segment>
     </unit>
-    <unit id="page.home.unreachable">
+    <unit id="page.home.welcome">
       <notes>
-        <note category="location">src/app/pages/home.ts:34</note>
+        <note category="location">src/app/pages/home.ts:12,14</note>
       </notes>
       <segment>
-        <source>The greeting could not be loaded.</source>
+        <source> Your private, priced inventory of Magic: The Gathering cards. </source>
       </segment>
     </unit>
     <unit id="page.notfound.title">
@@ -423,22 +423,6 @@
       </notes>
       <segment>
         <source>Your vault is empty</source>
-      </segment>
-    </unit>
-    <unit id="state.retry">
-      <notes>
-        <note category="location">src/app/shared/states/error-state.ts:15,16</note>
-      </notes>
-      <segment>
-        <source>Try again</source>
-      </segment>
-    </unit>
-    <unit id="state.loading">
-      <notes>
-        <note category="location">src/app/shared/states/loading-state.ts:12</note>
-      </notes>
-      <segment>
-        <source>Loading…</source>
       </segment>
     </unit>
   </file>
