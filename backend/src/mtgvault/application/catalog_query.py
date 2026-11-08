@@ -101,6 +101,15 @@ def _filter_terms(filters: CatalogFilters) -> Checked:
     return terms, errors
 
 
+def build_printing_query(set_code: str, number: str) -> str:
+    """An exact printing by set code and collector number; both are checked, never escaped."""
+    if not _SET.match(set_code) or not re.fullmatch(r"[0-9]{1,4}", number):
+        raise ValidationFailed(
+            "Invalid printing.", (FieldError("set", "Use a set code and a collector number."),)
+        )
+    return f"set:{set_code} cn:{number}"
+
+
 def build_query(text: str | None, filters: CatalogFilters) -> str:
     """The Scryfall query for the input; raises ``ValidationFailed`` with the offending fields."""
     text_terms, text_errors = _text_terms(text)

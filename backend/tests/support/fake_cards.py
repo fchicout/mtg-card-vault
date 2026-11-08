@@ -37,7 +37,7 @@ def make_card(
     return Card(**values)  # type: ignore[arg-type]
 
 
-_TERM = re.compile(r'(name|t):"([^"]*)"|(set|c|r):(\S+)')
+_TERM = re.compile(r'(name|t):"([^"]*)"|(set|c|r|cn):(\S+)')
 
 
 def _matches(card: Card, query: str) -> bool:
@@ -50,6 +50,8 @@ def _matches(card: Card, query: str) -> bool:
         if key == "t" and value not in (card.type_line or "").lower():
             return False
         if key == "set" and card.set_code != value:
+            return False
+        if key == "cn" and card.collector_number != value:
             return False
         if key == "r" and card.rarity != value:
             return False

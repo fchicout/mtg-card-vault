@@ -31,3 +31,4 @@ frontend/test-results/
 .vscode/
 .claude/worktrees/
 
+backend/tests/accuracy/data/
