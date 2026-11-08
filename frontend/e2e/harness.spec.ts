@@ -70,10 +70,9 @@ test.describe('Scryfall record/replay', () => {
 });
 
 test.describe('fake camera (Chromium)', () => {
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'the fake-device flags exist only in Chromium',
-  );
+  test.beforeEach(({ browserName }, testInfo) => {
+    testInfo.skip(browserName !== 'chromium', 'the fake-device flags exist only in Chromium');
+  });
 
   test('delivers real, changing frames of the fixture card to getUserMedia', async ({ page }) => {
     await page.goto('/');
