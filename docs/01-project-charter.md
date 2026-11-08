@@ -1,6 +1,6 @@
 # 01 — Project Charter
 
-**Docs set version:** 0.3.17
+**Docs set version:** 0.3.18
 **Document:** 01 Project Charter (PMBOK template)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -74,7 +74,7 @@ Objectives are SMART where possible. They are traced to requirements in `06-trac
 
 ### 4.1 Deliverables
 
-1. Source code monorepo: `backend/` (Python), `frontend/` (Angular), `docs/`, `deploy/` (docker compose + Authelia/proxy config), `scripts/`, `.github/workflows/`.
+1. Source code monorepo: `backend/` (Python), `frontend/` (Angular), `docs/`, `deploy/` (docker compose + proxy config; the OIDC provider is external), `scripts/`, `.github/workflows/`.
 2. A working application satisfying the MVP requirements (section 5.1).
 3. Automated test suites (unit, integration, contract, end-to-end).
 4. CI/CD pipeline on GitHub Actions with quality and security gates.
@@ -183,7 +183,7 @@ Versions follow semantic versioning. Pre-1.0 versions may change anything. Each 
 
 | Milestone | Version | Content | Epics / stories |
 |---|---|---|---|
-| M0 Foundation | 0.1.0 | Repo scaffolding, docs set, CI skeleton, quality gates, security scans, compose stack with Authelia, empty Angular/Clarity shell, FastAPI skeleton with health. | EP-06 (US-027..US-031, US-033 partial) |
+| M0 Foundation | 0.1.0 | Repo scaffolding, docs set, CI skeleton, quality gates, security scans, compose stack (proxy, API, front end, database; the identity provider is external), empty Angular/Clarity shell, FastAPI skeleton with health. | EP-06 (US-027..US-031, US-033 partial) |
 | M1 Identity | 0.2.0 | Sign in/out, JWT validation, user provisioning, CORS. | EP-01 (US-001..US-004), US-026 |
 | M2 Catalogue | 0.3.0 | Scryfall integration, search, card detail, printings, rate-limited client, resilience. (Needed first: adding to the vault requires choosing a printing.) | EP-03, US-024, US-025 |
 | M3 Vault | 0.4.0 | Vault CRUD, filtering, privacy, duplicate merge, card cache. | EP-02 (US-005..US-011) |

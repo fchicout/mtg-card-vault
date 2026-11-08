@@ -1,6 +1,6 @@
 # 05 — Architecture Plan
 
-**Docs set version:** 0.3.17
+**Docs set version:** 0.3.18
 **Document:** 05 Architecture Plan (arc42 template, 12 sections; decisions as ADRs; diagrams in Mermaid)
 **Status:** Draft
 **Last updated:** 2026-11-07
@@ -116,7 +116,7 @@ Channel table: browser↔proxy HTTPS/443 · proxy↔api HTTP on internal network
 | `api` | REST API: authentication, use cases, Scryfall access, OCR, persistence. | Python, FastAPI |
 | `worker` | Scheduled jobs (price refresh); same codebase and image as `api`, different entry command. | Python, APScheduler |
 | `db` | Persistent data. | PostgreSQL |
-| `authelia` | Identity provider (OIDC). | Authelia |
+| *(external)* Authelia | Identity provider (OIDC); operated outside this repository, not part of the compose stack. | Authelia |
 | `proxy` | TLS termination, HTTP to HTTPS redirect, HSTS. | Caddy (ADR-016) |
 
 ### 5.2 Level 2 — back end (`backend/`)
@@ -374,11 +374,10 @@ flowchart LR
   subgraph compose[docker compose network]
     proxy --> frontend
     proxy --> api
-    proxy --> authelia
     api --> db[(postgres)]
     worker --> db
-    api --> authelia
   end
+  api --> authelia[(OIDC provider, external)]
   api --> SF[(Scryfall)]
   worker --> SF
   subgraph sonar[Separate SonarQube stack]
@@ -394,7 +393,6 @@ flowchart LR
 | api | project image (non-root, slim) | internal | `/healthz`, `/readyz`; runs Alembic migrations before start. |
 | worker | same image, command `python -m mtgvault.worker` | none | Profile `worker`; idle until the price refresh job exists (BL-44). |
 | db | `postgres` 17 (pinned by digest) | none | On an internal network with no route out; named volume; backup stub in section 7.2a. |
-| authelia | `authelia/authelia` | via proxy | OIDC clients: `mtgvault-spa` (public, PKCE). Its configuration is under `deploy/authelia/`. |
 
 ### 7.2 Configuration (environment, validated at start-up)
 `DATABASE_URL`, `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_ALLOWED_ALGS` (default `RS256`), `BIND_HOST` (default `127.0.0.1`; the image sets `0.0.0.0`), `BIND_PORT` (8000), `CORS_ORIGINS`, `SCRYFALL_USER_AGENT`, `PRICE_REFRESH_CRON`, `PRICE_STALE_AFTER_HOURS` (24), `SCAN_MAX_BYTES` (2 MB), `SCAN_RATE_PER_MINUTE` (30), `LOG_LEVEL`. Only `.env.example` is committed.
@@ -404,6 +402,8 @@ Until the operator runbook exists, the minimum procedure for `NFR-REL-02` is: ba
 
 ### 7.3 Environments
 **Identity provider (issues #4, #10, #12; owner decision 2026-11-07):** every environment, including local development, signs in against the homelab Authelia (`https://auth.fchicout.dev`, Authelia 4.39.28, the version the ADR-003 spike was run against); the repository bundles no identity provider. Each environment has its own public OIDC client, registered in the homelab Authelia configuration: `mtgvault-staging` (redirect `https://staging.mtg.fchicout.dev/callback`), `mtgvault` (production, `https://mtg.fchicout.dev/callback`) and `mtgvault-local` (`https://localhost:8443/callback`), all with PKCE `S256`, the scopes `openid profile email offline_access`, RS256 JWT access tokens and the API audience `mtgvault-api` (the SPA requests it, ADR-003). The API is configured with the issuer and audience (`OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, issue #15). Lifetimes are the homelab provider's, not per client; the ADR-003 values (15 minutes, 8 hours) are what the spike measured and must be re-checked against the homelab settings. Tests that need a signed-in user wait for the SPA's own sign-in (issue #17) and a dedicated test account in the homelab directory.
+
+**Contract with the identity provider** (what an operator must provide, step by step in the operator guide of issue #65): an OIDC issuer reachable over HTTPS from the API (discovery and JWKS), one public client per environment (PKCE `S256`, the registered callback URLs above), RS256-signed JWT access tokens whose audience is the API audience, and the claims `sub` (identity key), a display name and optionally an email. The application is configured only through `OIDC_ISSUER_URL`, `OIDC_AUDIENCE` and the SPA's runtime settings.
 
 `dev` (compose on the developer machine, signing in at the homelab Authelia), `ci` (ephemeral compose for E2E), `staging` (https://staging.mtg.fchicout.dev, follows `develop`), `prod` (https://mtg.fchicout.dev, follows `main`). Same images across environments; differences only in configuration. Staging and production are served over HTTPS only (HTTP is redirected) and deployed manually as described in `ADR-015`.
 
@@ -435,7 +435,7 @@ Jobs of `ci.yml` (job ids are the required status checks):
 | `container-scan` | images run as non-root and have no unfixed High/Critical findings unless excepted (`NFR-SEC-05`); SARIF goes to GitHub code scanning; CycloneDX SBOMs are produced as an artifact | Trivy (pinned), Syft (pinned) |
 | `sonar-backend`, `sonar-frontend` | analysis published to `mtg-vault-backend` / `mtg-vault-frontend`; no open bugs, vulnerabilities or Blocker/Critical issues | `scripts/quality_gate.py sonar` (warns and passes until `SONAR_HOST_URL` and the project token - `SONAR_TOKEN` for the backend, `SONAR_FRONTEND_TOKEN` for the frontend - are configured) |
 
-Branch protection on `main` and `develop`: PR required, required checks = all `ci.yml` jobs, linear-friendly merge (squash for features keeps atomic history; merge commits for releases/hotfixes per gitflow). The Sonar jobs must reach the self-hosted instance (self-hosted runner or tunnel if needed; `ASM-05`, `RSK-04`, `OQ-08`). SonarQube is never the judge: the same `scripts/quality_gate.py` runs on developer machines through `scripts/run_local_gates.py` and in `ci.yml`.
+Branch protection on `main` and `develop`: PR required, required checks = all `ci.yml` jobs, linear-friendly merge (squash for features keeps atomic history; merge commits for releases/hotfixes per gitflow). The Sonar jobs must reach the self-hosted instance (self-hosted runner or tunnel if needed; `ASM-05`, `RSK-04`, `OQ-08`). SonarQube's own gate on new code decides together with the project's script (ADR-011): the same `scripts/quality_gate.py` runs on developer machines through `scripts/run_local_gates.py` and in `ci.yml`.
 
 ### 7.6 Operator quickstart (compose)
 1. `cp deploy/.env.example deploy/.env` and set `POSTGRES_PASSWORD` (`openssl rand -hex 32`). For production also set `APP_HOST` to your domain, `HTTP_PORT=80`, `HTTPS_PORT=443` and, once HTTPS works, `HSTS_MAX_AGE=31536000`; ports 80 and 443 must reach the host for the certificate.
