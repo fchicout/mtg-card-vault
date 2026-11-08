@@ -1,0 +1,52 @@
+# git-cliff: changelog and next version from Conventional Commits (ADR-010, OQ-04).
+# Releases stay human-driven (gitflow): git-cliff only proposes the version and writes the notes.
+#   uvx git-cliff --unreleased --bump            # preview: next version + changelog
+#   uvx git-cliff --bumped-version               # next version only
+#   uvx git-cliff --bump --unreleased -o CHANGELOG.md   # on the release branch
+[changelog]
+header = "# Changelog\n\nAll notable changes, generated from Conventional Commits.\n"
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+{% for commit in commits %}\
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | split(pat="\n") | first | split(pat=" [") | first | upper_first }}\
+{% if commit.breaking %} **BREAKING**{% endif %} ({{ commit.id | truncate(length=7, end="") }})
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true      # merge commits and other free-form messages are skipped
+split_commits = false
+protect_breaking_commits = true
+filter_commits = false
+topo_order = false
+sort_commits = "oldest"
+tag_pattern = "v[0-9]*"
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Bug fixes" },
+  { message = "^perf", group = "Performance" },
+  { message = "^refactor", group = "Refactoring" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^test", group = "Tests" },
+  { message = "^build", group = "Build" },
+  { message = "^ci", group = "CI" },
+  { message = "^security", group = "Security" },
+  { message = "^spike", group = "Spikes" },
+  { message = "^chore", group = "Chores" },
+  { message = "^revert", group = "Reverts" },
+]
+
+[bump]
+initial_tag = "v0.1.0"
+features_always_bump_minor = true
+# Pre-1.0 (docs/01 section 10): anything may change, so a breaking change bumps the minor version.
+breaking_always_bump_major = false

@@ -1,0 +1,65 @@
+name: Security nightly
+
+# New CVEs appear without any code change: rescan dependencies, images and the full git history
+# every night (issue #14). A failure here is the signal to fix or time-box an exception
+# (security/exceptions.yaml).
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rescan:
+    name: rescan-${{ matrix.ref }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: [develop, main]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Does the branch exist yet?
+        id: branch
+        run: |
+          if git ls-remote --exit-code --heads origin "${{ matrix.ref }}" >/dev/null; then
+            git checkout -q "origin/${{ matrix.ref }}"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Branch ${{ matrix.ref }} does not exist yet: nothing to rescan."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: astral-sh/setup-uv@v7
+        if: steps.branch.outputs.exists == 'true'
+      - uses: actions/setup-node@v7
+        if: steps.branch.outputs.exists == 'true'
+        with:
+          node-version: "24"
+      - name: Security exceptions are valid and none has expired
+        if: steps.branch.outputs.exists == 'true'
+        run: |
+          python3 -I scripts/security_exceptions.py check
+          python3 -I scripts/security_exceptions.py ids --tool trivy > "$RUNNER_TEMP/trivyignore"
+      - name: gitleaks over the full history
+        if: steps.branch.outputs.exists == 'true'
+        run: docker run --rm -v "$GITHUB_WORKSPACE:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --exit-code 1
+      - name: pip-audit and npm audit
+        if: steps.branch.outputs.exists == 'true'
+        run: |
+          uv sync --frozen --directory backend
+          uv run --directory backend pip-audit $(python3 -I scripts/security_exceptions.py ids --tool pip-audit --flag=--ignore-vuln)
+          python3 -I scripts/security_exceptions.py npm-audit --prefix frontend --level high
+      - name: Images built from the branch are free of fixable High/Critical findings
+        if: steps.branch.outputs.exists == 'true'
+        run: |
+          docker build -t mtgvault-api:nightly backend
+          docker build -t mtgvault-frontend:nightly frontend
+          for image in mtgvault-api:nightly mtgvault-frontend:nightly; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/trivyignore:/trivyignore:ro" \
+              aquasec/trivy:0.76.2 image --severity HIGH,CRITICAL --ignore-unfixed --ignorefile /trivyignore \
+              --exit-code 1 --no-progress "$image"
+          done

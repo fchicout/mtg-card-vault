@@ -1,0 +1,5 @@
+src/app/api/
+dist/
+coverage/
+.angular/
+package-lock.json

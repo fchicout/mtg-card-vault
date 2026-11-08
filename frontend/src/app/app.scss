@@ -1,0 +1,10 @@
+// Clarity does the layout; this only gives the footer Clarity's own spacing and colour tokens.
+.app-footer {
+  padding: 0.5rem 1.2rem;
+  border-top: 1px solid var(--clr-global-borders-color, currentColor);
+  color: var(--clr-p5-color);
+}
+
+.app-footer p {
+  margin: 0.2rem 0;
+}

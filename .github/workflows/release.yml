@@ -1,0 +1,155 @@
+name: Release
+
+# Issue #11, ADR-010, ADR-015. Pushing a tag vX.Y.Z (or a pre-release such as v1.0.0-rc.1) builds both
+# images, scans them, pushes them to GHCR and creates the GitHub Release with notes and SBOMs.
+# Releasing stays a human act: nothing here deploys anything.
+#
+# Rehearsal: run this workflow manually with a version (for example v0.0.0-rc.1). It builds, scans,
+# writes the notes and the SBOMs, but pushes nothing and creates no release.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to rehearse, e.g. v0.0.0-rc.1 (dry run: nothing is pushed or released)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: prepare
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+      minor: ${{ steps.resolve.outputs.minor }}
+      prerelease: ${{ steps.resolve.outputs.prerelease }}
+      publish: ${{ steps.resolve.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Resolve and validate the version
+        id: resolve
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = "push" ]; then tag="$GITHUB_REF_NAME"; publish=true; else tag="$INPUT_VERSION"; publish=false; fi
+          python3 -I scripts/check_commit_policy.py --tag "$tag"
+          version="${tag#v}"
+          prerelease=false
+          case "$version" in *-*) prerelease=true ;; esac
+          # A final release must come from main (gitflow); pre-releases may come from any branch.
+          if [ "$publish" = true ] && [ "$prerelease" = false ]; then
+            git fetch --quiet origin main
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main \
+              || { echo "::error::$tag is not on main: final releases are tagged on main only"; exit 1; }
+          fi
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "minor=$(echo "${version%%[-+]*}" | cut -d. -f1,2)"
+            echo "prerelease=$prerelease"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+
+  images:
+    name: image-${{ matrix.name }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            context: backend
+          - name: frontend
+            context: frontend
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      MINOR: ${{ needs.prepare.outputs.minor }}
+      PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+      PUBLISH: ${{ needs.prepare.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build the amd64 image for scanning
+        run: docker buildx build --load --platform linux/amd64 -t "mtgvault-${{ matrix.name }}:release" "${{ matrix.context }}"
+      - name: Security exceptions are valid and none has expired
+        run: |
+          python3 -I scripts/security_exceptions.py check
+          python3 -I scripts/security_exceptions.py ids --tool trivy > "$RUNNER_TEMP/trivyignore"
+      - name: Trivy scan, fail on unfixed High/Critical unless excepted (NFR-SEC-05)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/trivyignore:/trivyignore:ro" \
+            aquasec/trivy:0.76.2 image --severity HIGH,CRITICAL --ignore-unfixed --ignorefile /trivyignore \
+            --exit-code 1 --no-progress "mtgvault-${{ matrix.name }}:release"
+      - name: SBOM (CycloneDX)
+        run: |
+          mkdir -p "$RUNNER_TEMP/sbom"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$RUNNER_TEMP/sbom:/out" \
+            anchore/syft:v1.57.0 "mtgvault-${{ matrix.name }}:release" -o "cyclonedx-json=/out/sbom-${{ matrix.name }}-${VERSION}.cdx.json"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sbom-${{ matrix.name }}
+          path: ${{ runner.temp }}/sbom/*.cdx.json
+      - name: Push multi-arch images to GHCR (arm64 is best effort)
+        if: env.PUBLISH == 'true'
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          image="ghcr.io/${owner}/mtg-vault-${{ matrix.name }}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          tags=(-t "${image}:${VERSION}")
+          if [ "$PRERELEASE" = false ]; then tags+=(-t "${image}:${MINOR}" -t "${image}:latest"); fi
+          if ! docker buildx build --push --platform linux/amd64,linux/arm64 "${tags[@]}" "${{ matrix.context }}"; then
+            echo "::warning::The arm64 build failed: publishing amd64 only."
+            docker buildx build --push --platform linux/amd64 "${tags[@]}" "${{ matrix.context }}"
+          fi
+
+  release:
+    name: github-release
+    needs: [prepare, images]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
+      PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+      PUBLISH: ${{ needs.prepare.outputs.publish }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # git-cliff reads the whole history and the tags
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: sbom-*
+          path: sbom
+          merge-multiple: true
+      - name: Release notes from Conventional Commits (git-cliff)
+        run: |
+          if [ "$PUBLISH" = true ]; then
+            uvx git-cliff --latest --strip header -o notes.md
+          else
+            uvx git-cliff --unreleased --tag "$TAG" --strip header -o notes.md
+          fi
+          echo "----- notes -----"; cat notes.md
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-notes
+          path: notes.md
+      - name: Create the GitHub Release
+        if: env.PUBLISH == 'true'
+        run: |
+          flags=()
+          if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
+          gh release create "$TAG" --title "$TAG" --notes-file notes.md "${flags[@]}" sbom/*.cdx.json

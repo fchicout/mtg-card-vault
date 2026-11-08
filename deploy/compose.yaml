@@ -1,0 +1,133 @@
+# MTG Card Vault stack (issues #1, #10, #12, ADR-016).
+#
+#   cp .env.example .env            # set POSTGRES_PASSWORD (and APP_HOST for a real domain)
+#   docker compose up -d --build    # database, API, front end and the HTTPS edge proxy
+#
+# Profiles:  (none) the application; `worker` adds the scheduled-jobs worker (idle until BL-44).
+# Sign-in uses the homelab Authelia (https://auth.fchicout.dev), not a bundled identity provider.
+# Only the proxy publishes ports.
+name: mtgvault
+
+x-hardening: &hardening
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+
+services:
+  db:
+    <<: *hardening
+    image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mtgvault}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-mtgvault}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # The image entrypoint starts as root, fixes ownership of the data directory and drops to postgres.
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    networks: [backend]
+
+  api:
+    <<: *hardening
+    build:
+      context: ../backend
+    image: mtgvault-api:local
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mtgvault}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mtgvault}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks: [backend, edge]
+
+  # Scheduled jobs (ADR-012). Idle until issue BL-44; start it with `--profile worker`.
+  worker:
+    <<: *hardening
+    profiles: ["worker"]
+    build:
+      context: ../backend
+    image: mtgvault-api:local
+    command: ["python", "-m", "mtgvault.worker"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mtgvault}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mtgvault}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      disable: true # no HTTP port; supervision is the restart policy
+    networks: [backend, edge]
+
+  frontend:
+    <<: *hardening
+    build:
+      context: ../frontend
+    image: mtgvault-frontend:local
+    depends_on:
+      api:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks: [edge]
+
+  # The only published service: TLS termination, HTTP -> HTTPS redirect and HSTS (ADR-016).
+  proxy:
+    <<: *hardening
+    image: caddy:2-alpine@sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9
+    environment:
+      APP_HOST: ${APP_HOST:-localhost}
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      HTTPS_PORT: ${HTTPS_PORT:-8443}
+      HSTS_MAX_AGE: ${HSTS_MAX_AGE:-300}
+    ports:
+      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+      - "${HTTPS_PORT:-8443}:${HTTPS_PORT:-8443}"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_add:
+      - NET_BIND_SERVICE # ports below 1024 on a production host (80 and 443)
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider --no-check-certificate https://localhost:$${HTTPS_PORT}/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 6
+    networks: [edge]
+
+networks:
+  # The database is reachable only from the services that need it, and has no route out.
+  backend:
+    internal: true
+  edge: {}
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
