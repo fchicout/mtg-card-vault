@@ -31,9 +31,10 @@ packages = ["src/mtgvault"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -m 'not perf'"
 markers = [
     "integration: needs Docker (PostgreSQL via testcontainers)",
+    "perf: performance budgets (run with -m perf; not part of the pull request run)",
 ]
 
 [tool.coverage.run]
