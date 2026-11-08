@@ -6,7 +6,7 @@ leaks its message or stack trace to the caller (it is logged with the same id).
 """
 
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from http import HTTPStatus
 
 from fastapi import FastAPI, Request, status
@@ -98,7 +98,7 @@ def problem_response(
     )
 
 
-async def _domain_error(_: Request, error: Exception) -> JSONResponse:
+def _domain_error(_: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, DomainError)  # noqa: S101  # registered for DomainError only
     code, slug = _classify(error)
     errors = (
@@ -114,7 +114,7 @@ async def _domain_error(_: Request, error: Exception) -> JSONResponse:
     return problem_response(code, slug, error.detail, errors=errors or None, headers=headers)
 
 
-async def _request_validation(_: Request, error: Exception) -> JSONResponse:
+def _request_validation(_: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, RequestValidationError)  # noqa: S101  # registered for it only
     fields = [
         FieldProblem(
@@ -131,7 +131,7 @@ async def _request_validation(_: Request, error: Exception) -> JSONResponse:
     )
 
 
-async def _http_error(_: Request, error: Exception) -> JSONResponse:
+def _http_error(_: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, StarletteHTTPException)  # noqa: S101  # registered for it only
     detail = error.detail if isinstance(error.detail, str) else _title(error.status_code)
     slug = _title(error.status_code).lower().replace(" ", "-")
@@ -146,14 +146,12 @@ def unexpected_error_response(error: Exception) -> JSONResponse:
     )
 
 
-async def _unexpected(_: Request, error: Exception) -> JSONResponse:
+def _unexpected(_: Request, error: Exception) -> JSONResponse:
     return unexpected_error_response(error)
 
 
 def install_error_handlers(app: FastAPI) -> None:
-    handlers: list[
-        tuple[type[Exception], Callable[[Request, Exception], Awaitable[JSONResponse]]]
-    ] = [
+    handlers: list[tuple[type[Exception], Callable[[Request, Exception], JSONResponse]]] = [
         (DomainError, _domain_error),
         (RequestValidationError, _request_validation),
         (StarletteHTTPException, _http_error),
