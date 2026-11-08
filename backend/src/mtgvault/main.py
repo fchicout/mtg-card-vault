@@ -80,7 +80,7 @@ def create_app(
 
     app = FastAPI(
         title="MTG Card Vault API",
-        version="0.3.0",
+        version="0.4.0",
         summary="Private, priced inventory of a Magic: The Gathering collection.",
         description=(
             "REST API of MTG Card Vault. Every versioned route needs an OIDC bearer token. "
