@@ -1,6 +1,7 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
+  Injector,
   inject,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
@@ -11,6 +12,7 @@ import { provideApiConfiguration } from './api';
 import { routes } from './app.routes';
 import { AUTH_CONFIG, fetchAuthConfig } from './core/auth/auth-config';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { AuthService } from './core/auth/auth.service';
 import { errorInterceptor } from './core/http/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -18,7 +20,15 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     // Run-time settings of the identity provider (/config.json); the app still starts without them.
     provideAppInitializer(async () => {
-      inject(AUTH_CONFIG).value = await fetchAuthConfig();
+      const holder = inject(AUTH_CONFIG);
+      const injector = inject(Injector);
+      holder.value = await fetchAuthConfig();
+      // A reload drops the in-memory tokens: a visitor who was signed in goes through the
+      // provider again before any page renders (the provider still has its own session).
+      const { pathname, search } = window.location;
+      if (!pathname.startsWith('/callback')) {
+        await injector.get(AuthService).restore(pathname + search);
+      }
     }),
     provideHttpClient(
       // The error alert wraps the authentication handling: a 401 that renewal fixes raises no alert.
