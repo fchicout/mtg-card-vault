@@ -181,8 +181,7 @@ type Phase = 'idle' | 'live' | 'scanning' | 'results';
                 <img [src]="src" alt="" loading="lazy" />
               }
               <div class="meta">
-                <strong>{{ c.card.name }}</strong
-                ><br />
+                <strong>{{ c.card.name }}</strong><br />
                 {{ c.card.set_name }} ({{ c.card.set_code.toUpperCase() }})
                 {{ c.card.collector_number }}
                 @if (c.exact) {

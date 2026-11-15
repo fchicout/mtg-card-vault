@@ -25,8 +25,7 @@ import { NotificationService } from './notification.service';
               <ul class="list alert-text" data-testid="alert-fields">
                 @for (field of failure.fields; track field.field) {
                   <li>
-                    <strong>{{ field.field }}</strong
-                    >: {{ field.message }}
+                    <strong>{{ field.field }}</strong>: {{ field.message }}
                   </li>
                 }
               </ul>
