@@ -16,6 +16,8 @@ updates:
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
+      npm-major:
+        update-types: [major]
     ignore:
       # The TypeScript version is dictated by Angular (ADR-009 upgrade policy), never ahead of it.
       - dependency-name: typescript
@@ -28,6 +30,9 @@ updates:
       # Node is adopted on LTS releases only (even majors); Current lines such as 25 never reach LTS.
       - dependency-name: node
         update-types: ["version-update:semver-major"]
+      # The runtime image stays on the Python minor that CI tests; bump both together by hand.
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
