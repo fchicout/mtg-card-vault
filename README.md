@@ -1,33 +1,113 @@
 # MTG Card Vault
 
-A self-hosted, multi-user web application in which *Magic: The Gathering* collectors keep a private, priced inventory of their cards, adding cards by showing them to a webcam. Angular + Clarity front end, FastAPI back end, PostgreSQL, Authelia sign-in, Scryfall for card data and prices.
+> **Self-hosted, hardened multi-user web application for *Magic: The Gathering* card inventory with webcam OCR and automated market valuation.**
 
-**Status:** early development (milestone M0, foundations). Nothing here is a release yet; see the milestones in [`docs/01-project-charter.md`](docs/01-project-charter.md) section 10.
+MTG Card Vault allows collectors to maintain a private, real-time valued inventory of their physical card collections. Cards can be scanned via webcam using computer vision/OCR, matched against Scryfall's database with circuit-breaker resilience, and tracked under isolated multi-tenant vaults protected by OpenID Connect (OIDC).
 
-## Where to read
+Built with **FastAPI**, **Angular + Clarity Design System**, **PostgreSQL**, **Caddy**, and **Authelia**, running as a defense-in-depth, hardened container stack.
 
-Everything about what the product is, why, how it behaves and how it is built lives in the synchronized documentation set: start at [`docs/README.md`](docs/README.md). This file only points there so that nothing is stated twice.
+---
 
-- Contributing (branches, commits, quality gates, releases): [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- Reporting a vulnerability: [`SECURITY.md`](SECURITY.md)
-- Code of conduct: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+## 🏛️ System Architecture
 
-## Quickstart
-
-A first working stack arrives with issue #10; until then:
-
-```bash
-make gates                      # every quality gate that runs without containers
-make docs-check                 # the documentation set is synchronized
-cp deploy/.env.example deploy/.env && docker compose -f deploy/compose.yaml up -d --build   # the HTTPS stack
+```text
+                  HTTPS / TLS (Port 8443)
+                            │
+                            ▼
+               ┌─────────────────────────┐
+               │   Caddy Edge Reverse    │  ◄── HSTS, Strict TLS Termination,
+               │          Proxy          │      Non-root (Port 8443 / 8080)
+               └────────────┬────────────┘
+                            │ [edge network]
+             ┌──────────────┴──────────────┐
+             ▼                             ▼
+┌─────────────────────────┐   ┌─────────────────────────┐
+│     Angular Frontend    │   │       FastAPI API       │ ◄── OIDC JWT Bearer Validation
+│   (Clarity Design, PWA) │   │  (Python 3.12, Read-only│     (Authelia Integration)
+└─────────────────────────┘   │       Container)        │
+                              └────────────┬────────────┘
+                                           │ [backend network (internal)]
+                             ┌─────────────┴─────────────┐
+                             ▼                           ▼
+               ┌─────────────────────────┐ ┌─────────────────────────┐
+               │    PostgreSQL 17 DB     │ │  Background Task Worker │
+               │ (Isolated, No Outbound) │ │ (Price Sync & Cron Jobs)│
+               └─────────────────────────┘ └─────────────────────────┘
 ```
 
-The stack signs users in against your own OpenID Connect provider: set `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID` and `OIDC_AUDIENCE` in `deploy/.env` after creating the client described in [`docs/05-architecture.md`](docs/05-architecture.md) section 7.7.
+---
 
-## Licence
+## 🛡️ DevSecOps & Security Highlights
 
-[MIT](LICENSE).
+This repository serves as a reference implementation for **container hardening** and **automated supply chain security**:
 
-## Legal notice
+- **Least-Privilege Containers**:
+  - `cap_drop: ALL` across every service container.
+  - `security_opt: no-new-privileges:true`.
+  - `read_only: true` root filesystems on API, worker, frontend, and proxy with minimal `/tmp` tmpfs mounts.
+- **Zero-Trust Network Segmentation**:
+  - PostgreSQL database resides on an `internal: true` bridge network with no egress route to the internet.
+  - Only the Caddy reverse proxy publishes ports to the host.
+- **Supply-Chain Immutability**:
+  - Base container images pinned with strict **SHA-256 content digests**.
+- **Automated Quality & Security Gates (`make gates`)**:
+  - **Secret Detection**: `gitleaks` scanning in pre-commit and CI.
+  - **Vulnerability Assessment**: Container scanning via `trivy`.
+  - **Software Bill of Materials (SBOM)**: Manifest generation via `syft`.
+  - **Documentation Sync**: Python verification suite enforcing consistency between architecture ADRs, user stories, and requirements.
+  - **Conventional Commits & Semantic Releases**: Managed via `git-cliff`.
 
-MTG Card Vault is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. It is not approved or endorsed by Wizards of the Coast. *Magic: The Gathering* is a trademark of Wizards of the Coast LLC. Card data and images are provided by [Scryfall](https://scryfall.com), which is not affiliated with this project.
+---
+
+## 🚀 Quickstart
+
+### Prerequisites
+- Docker or Podman with Compose support
+- Python 3.12+ (for local development and gate validation)
+
+### 1. Run Local Quality Gates
+Verify linting, typing, documentation sync, and pre-commit checks:
+```bash
+make gates
+make docs-check
+```
+
+### 2. Launch the Hardened Container Stack
+```bash
+# Clone and enter the repository
+cd deploy
+
+# Configure environment variables (set POSTGRES_PASSWORD and OIDC provider)
+cp .env.example .env
+
+# Start the full stack (Edge proxy, API, Worker, Frontend, Database)
+docker compose up -d --build
+```
+
+Access the application at `https://localhost:8443` (or your configured `APP_HOST`).
+
+---
+
+## 📚 Documentation
+
+Detailed architecture decision records (ADRs), user stories, threat modeling, and trace matrices live in the synchronized documentation set:
+- **Project Charter & Scope**: [`docs/01-project-charter.md`](docs/01-project-charter.md)
+- **User Stories & Workflows**: [`docs/02-user-stories.md`](docs/02-user-stories.md)
+- **System Requirements**: [`docs/03-requirements-specification.md`](docs/03-requirements-specification.md)
+- **Detailed Architecture (arc42)**: [`docs/05-architecture.md`](docs/05-architecture.md)
+- **Traceability Matrix**: [`docs/06-traceability-matrix.md`](docs/06-traceability-matrix.md)
+
+---
+
+## 🤝 Contributing & Security
+
+- **Contribution Guidelines**: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- **Vulnerability Reporting**: [`SECURITY.md`](SECURITY.md)
+- **Code of Conduct**: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+
+---
+
+## 📄 License & Legal Notice
+
+- **Code License**: [MIT](LICENSE)
+- **Fan Content Notice**: MTG Card Vault is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. It is not approved or endorsed by Wizards of the Coast. *Magic: The Gathering* is a trademark of Wizards of the Coast LLC. Card data and images are provided by [Scryfall](https://scryfall.com).
